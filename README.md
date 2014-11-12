@@ -7,8 +7,9 @@ informed by:
 - http://golang.org/cmd/cgo/
 - https://code.google.com/p/go-wiki/wiki/LockOSThread
 
-After cloning it, you can run it from the local cloned directory using:
-
-`go run *.go`
+```
+go install github.com/getlantern/systray
+systray
+```
 
 For some reason, go install doesn't work - need to look into this.

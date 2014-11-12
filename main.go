@@ -3,12 +3,13 @@ package main
 /*
 #cgo CFLAGS: -x objective-c
 #cgo LDFLAGS: -framework Cocoa
-#include "systray.m"
+#include "systray.h"
 */
 import "C"
 
 import (
 	"log"
+	"os"
 	"runtime"
 	"time"
 )
@@ -35,4 +36,19 @@ func main() {
 
 func updateTitle(newTitle string) {
 	C.updateTitle(C.CString(newTitle))
+}
+
+//export OnAction
+func OnAction(actionChars *C.char) {
+	action := C.GoString(actionChars)
+	log.Printf("Got action: %s", action)
+	switch action {
+	case "dostuff":
+		updateTitle("New Title")
+	case "quit":
+		log.Printf("Quitting")
+		os.Exit(0)
+	default:
+		log.Printf("Got unexpected action: %s", action)
+	}
 }
