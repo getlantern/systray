@@ -6,3 +6,9 @@ informed by:
 - http://th30z.blogspot.com/2008/10/cocoa-system-statusbar-item-aka-traybar_2086.html (thanks @atavism)
 - http://golang.org/cmd/cgo/
 - https://code.google.com/p/go-wiki/wiki/LockOSThread
+
+After cloning it, you can run it from the local cloned directory using:
+
+`go run *.go`
+
+For some reason, go install doesn't work - need to look into this.
