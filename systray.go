@@ -14,6 +14,8 @@ func OnAction(actionChars *C.char) {
 	action := C.GoString(actionChars)
 	log.Printf("Got action: %s", action)
 	switch action {
+	case "dostuff":
+		updateTitle("New Title")
 	case "quit":
 		log.Printf("Quitting")
 		os.Exit(0)

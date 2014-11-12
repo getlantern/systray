@@ -32,3 +32,7 @@ func main() {
 	// Start the Cocoa app (this blocks)
 	C.StartApp()
 }
+
+func updateTitle(newTitle string) {
+	C.updateTitle(C.CString(newTitle))
+}
