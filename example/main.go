@@ -1,50 +1,45 @@
 package main
 
-/*
-#cgo CFLAGS: -x objective-c
-#cgo LDFLAGS: -framework Cocoa
-#include "systray.h"
-*/
 import "C"
 
 import (
+	"fmt"
 	"log"
 	"os"
-	"runtime"
 	"time"
-)
 
-// Arrange that main.main runs on main thread so that our calls into the Cocoa
-// app all happen from the main thread.
-func init() {
-	runtime.LockOSThread()
-}
+	"github.com/getlantern/systray"
+)
 
 func main() {
 	// Start a goroutine for doing stuff that our Go application will do
 	go func() {
+		ch1 := systray.AddMenu("change", "Change Me", "Change Me")
+		ch2 := systray.AddMenu("quit", "Quit", "Quit the whole app")
 		// This is just an example of some processing that happens outside of
 		// the Cocoa app.
 		for {
 			log.Print("Waiting")
 			time.Sleep(1 * time.Second)
+			systray.UpdateTitle("New Title")
+			clicked := systray.AddMenu("asdf", "New Title", "sadfds")
+			if ret := <-clicked; ret == true {
+				break
+			}
 		}
+		ret := <-ch1
+		ret = <-ch2
+		fmt.Println(ret)
 	}()
 	// Start the Cocoa app (this blocks)
-	C.StartApp()
+	systray.EnterLoop()
 }
 
-func updateTitle(newTitle string) {
-	C.updateTitle(C.CString(newTitle))
-}
-
-//export OnAction
-func OnAction(actionChars *C.char) {
-	action := C.GoString(actionChars)
+func OnAction(action string) {
 	log.Printf("Got action: %s", action)
 	switch action {
 	case "dostuff":
-		updateTitle("New Title")
+		systray.UpdateTitle("New Title")
 	case "quit":
 		log.Printf("Quitting")
 		os.Exit(0)

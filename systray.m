@@ -1,47 +1,83 @@
 #import <Cocoa/Cocoa.h>
+#import "systray.h"
 
-extern void OnAction(const char* item);
+typedef void(*CallbackFunc)();
 
-@interface TrayMenu : NSObject {
-  @private
-    NSStatusItem *_statusItem;
-    NSMenuItem *doStuff;
+@interface MenuItem : NSObject
+{
+  @public
+  NSString* name;
+  NSString* title;
+  NSString* tooltip;
+  CallbackFunc callback;
 }
-
-- (void) updateTitle:(NSString*)title;
-
+@end
+@implementation MenuItem
 @end
 
-@implementation TrayMenu
-
+@interface AppDelegate: NSObject <NSApplicationDelegate>
+- (IBAction)clicked:(id)sender;
+- (void) updateTitle:(NSString*)title;
+- (void) addMenu:(MenuItem*) item;
+- (void) createMenu;
 - (IBAction)menuHandler:(id)sender;
+@property (assign) IBOutlet NSWindow *window;
+@end
+
+@implementation AppDelegate
 {
-    const char *c = [[sender representedObject] UTF8String];
-    OnAction(c);
+    NSStatusItem *statusItem;
+    NSMenuItem *doStuff;
+    NSMenu *menu;
 }
 
-- (NSMenu *) createMenu
+@synthesize window = _window;
+
+- (void)applicationDidFinishLaunching:(NSNotification *)aNotification
+{
+  [self createMenu];
+  statusItem = [[[NSStatusBar systemStatusBar] statusItemWithLength:NSVariableStatusItemLength] retain];
+  [statusItem setAction:@selector(clicked:)];
+  NSImage *image = [[NSImage alloc] initWithContentsOfFile:@"icon.png"];
+  if (image == nil) {
+    NSLog(@"load icon error");
+  }
+  [statusItem setImage:image];
+  [statusItem setMenu:menu];
+  [statusItem setToolTip:@"Test Tray"];
+  [menu autorelease];
+}
+
+- (IBAction)clicked:(id)sender {
+    NSMutableDictionary *cmd = [NSMutableDictionary dictionaryWithObjectsAndKeys:@"clicked", @"action", nil];
+    NSLog(@"clicked");
+}
+
+- (IBAction)menuHandler:(id)sender
+{
+  MenuItem* item = [sender representedObject];
+  NSLog(@"menu %@", item->name);
+  CallbackFunc func = item->callback;
+  NSLog(@"func %i", (int)func);
+  func();
+}
+
+- (void)createMenu
 {
   NSZone *menuZone = [NSMenu menuZone];
-  NSMenu *menu = [[NSMenu allocWithZone:menuZone] init];
+  self->menu = [[NSMenu allocWithZone:menuZone] init];
+}
 
+- (void) addMenu:(MenuItem*) item
+
+{
   // Add DoStuff Action
-  self->doStuff = [menu addItemWithTitle:@"Change Me"
+  self->doStuff = [menu addItemWithTitle:item->title
                                action:@selector(menuHandler:)
                         keyEquivalent:@""];
-  [self->doStuff setToolTip:@"Click to change the title"];
-  [self->doStuff setRepresentedObject:@"dostuff"];
+  [self->doStuff setToolTip:item->tooltip];
+  [self->doStuff setRepresentedObject: item];
   [self->doStuff setTarget:self];
-
-  // Add Quit Action
-  NSMenuItem *quit = [menu addItemWithTitle:@"Quit"
-                     action:@selector(menuHandler:)
-                      keyEquivalent:@""];
-  [quit setToolTip:@"Click to Quit this App"];
-  [quit setRepresentedObject:@"quit"];
-  [quit setTarget:self];
-
-  return menu;
 }
 
 - (void) updateTitle:(NSString*)title
@@ -49,37 +85,27 @@ extern void OnAction(const char* item);
     self->doStuff.title = title;
 }
 
-- (void) applicationDidFinishLaunching:(NSNotification *)notification {
-  NSMenu *menu = [self createMenu];
-
-  _statusItem = [[[NSStatusBar systemStatusBar]
-  statusItemWithLength:NSSquareStatusItemLength] retain];
-  [_statusItem setImage:[[NSImage alloc] initWithContentsOfFile:@"icon.png"]];
-  [_statusItem setMenu:menu];
-  [_statusItem setHighlightMode:YES];
-  [_statusItem setToolTip:@"Test Tray"];
-  [menu release];
-}
-
 @end
 
-TrayMenu *menu;
-
-int StartApp(void) {
-  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-  [NSApplication sharedApplication];
-
-  //HandleItem("Hi There from C");
-
-  menu = [[TrayMenu alloc] init];
-  [NSApp setDelegate:menu];
+int nativeLoop(void) {
+  [NSAutoreleasePool new];
+  AppDelegate *delegate = [[[AppDelegate alloc] init] autorelease];
+  [[NSApplication sharedApplication] setDelegate:delegate];
   [NSApp run];
-
-  [pool release];
+  NSLog(@"Quiting...");
   return EXIT_SUCCESS;
+}
+
+void addMenu(char* name, char* title, char* tooltip, void* callback) {
+    MenuItem* item = [[MenuItem alloc] init];
+    item->name = [[NSString alloc] initWithCString:name encoding:NSUTF8StringEncoding];
+    item->title = [[NSString alloc] initWithCString:title encoding:NSUTF8StringEncoding];
+    item->tooltip = [[NSString alloc] initWithCString:tooltip encoding:NSUTF8StringEncoding];
+    item->callback = callback;
+    [(AppDelegate*)[NSApp delegate] performSelectorOnMainThread:@selector(addMenu:) withObject:(id)item waitUntilDone: YES];
 }
 
 void updateTitle(char* title) {
     NSString *titleString = [[NSString alloc] initWithCString:title encoding:NSUTF8StringEncoding];
-    [menu performSelectorOnMainThread:@selector(updateTitle:) withObject:(id)titleString waitUntilDone: YES];
+    [(AppDelegate*)[NSApp delegate] performSelectorOnMainThread:@selector(updateTitle:) withObject:(id)titleString waitUntilDone: YES];
 }
