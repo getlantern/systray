@@ -11,47 +11,31 @@ package systray
 */
 import "C"
 import (
-	"fmt"
 	"runtime"
-	"unsafe"
+	"sync"
 )
 
-/* type menuItem struct {
-	title   string
-	tooltip string
-	channel chan bool
-}
-
-var menuItems map[string]menuItem = make(map[string]menuItem)
-
-func callback(cname *C.char) {
-	name := C.GoString(cname)
-	menuItems[name].channel <- true
-}
-
-var theCallback = callback*/
+var menuItems map[string]chan bool = make(map[string]chan bool)
+var lock sync.RWMutex
 
 //export callMe
 func callMe(cname *C.char) {
 	name := C.GoString(cname)
-	fmt.Println(name)
-	fmt.Println("callMe!!!")
+	lock.RLock()
+	ch := menuItems[name]
+	lock.RUnlock()
+	ch <- true
 }
-
-var theCallMe = callMe
 
 func AddMenu(name string, title string, tooltip string) chan bool {
 	retChan := make(chan bool)
-	/*menuItems[name] = menuItem{
-		title,
-		tooltip,
-		retChan,
-	}*/
+	lock.Lock()
+	menuItems[name] = retChan
+	lock.Unlock()
 	C.addMenu(
 		C.CString(name),
 		C.CString(title),
 		C.CString(tooltip),
-		unsafe.Pointer(&theCallMe),
 	)
 	return retChan
 }
@@ -62,6 +46,6 @@ func EnterLoop() {
 	C.nativeLoop()
 }
 
-func UpdateTitle(newTitle string) {
-	C.updateTitle(C.CString(newTitle))
+func Quit() {
+	C.quit()
 }
