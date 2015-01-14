@@ -31,6 +31,18 @@ func callback(cname *C.char) {
 
 var theCallback = callback*/
 
+var callback = func() {
+	fmt.Println("adsfasdf")
+	//c <- true
+}
+
+//export callMe
+func callMe() {
+	fmt.Println("callMe!!!")
+}
+
+var theCallMe = callMe
+
 func AddMenu(name string, title string, tooltip string) chan bool {
 	retChan := make(chan bool)
 	/*menuItems[name] = menuItem{
@@ -38,37 +50,21 @@ func AddMenu(name string, title string, tooltip string) chan bool {
 		tooltip,
 		retChan,
 	}*/
-	callback := func(c chan bool) func() {
-		return func() {
-			fmt.Println("adsfasdf")
-			c <- true
-		}
-	}(retChan)
 	C.addMenu(
 		C.CString(name),
 		C.CString(title),
 		C.CString(tooltip),
-		unsafe.Pointer(&callback),
+		unsafe.Pointer(&theCallMe),
 	)
 	return retChan
 }
 
 // Start the Cocoa app (this blocks)
 func EnterLoop() {
+	runtime.LockOSThread()
 	C.nativeLoop()
 }
 
 func UpdateTitle(newTitle string) {
 	C.updateTitle(C.CString(newTitle))
-}
-
-// Arrange that main.main runs on main thread so that our calls into the Cocoa
-// app all happen from the main thread.
-func init() {
-	runtime.LockOSThread()
-}
-
-// export onAction
-func onAction(name *C.char) {
-	C.GoString(name)
 }

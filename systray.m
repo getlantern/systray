@@ -1,15 +1,13 @@
 #import <Cocoa/Cocoa.h>
 #import "systray.h"
 
-typedef void(*CallbackFunc)();
-
 @interface MenuItem : NSObject
 {
   @public
   NSString* name;
   NSString* title;
   NSString* tooltip;
-  CallbackFunc callback;
+  void(*callback)();
 }
 @end
 @implementation MenuItem
@@ -56,10 +54,7 @@ typedef void(*CallbackFunc)();
 - (IBAction)menuHandler:(id)sender
 {
   MenuItem* item = [sender representedObject];
-  NSLog(@"menu %@", item->name);
-  CallbackFunc func = item->callback;
-  NSLog(@"func %i", (int)func);
-  func();
+  item->callback();
 }
 
 - (void)createMenu
@@ -101,7 +96,7 @@ void addMenu(char* name, char* title, char* tooltip, void* callback) {
     item->name = [[NSString alloc] initWithCString:name encoding:NSUTF8StringEncoding];
     item->title = [[NSString alloc] initWithCString:title encoding:NSUTF8StringEncoding];
     item->tooltip = [[NSString alloc] initWithCString:tooltip encoding:NSUTF8StringEncoding];
-    item->callback = callback;
+    item->callback = callMe;
     [(AppDelegate*)[NSApp delegate] performSelectorOnMainThread:@selector(addMenu:) withObject:(id)item waitUntilDone: YES];
 }
 
