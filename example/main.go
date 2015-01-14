@@ -20,7 +20,7 @@ func main() {
 			log.Print("Waiting")
 			time.Sleep(1 * time.Second)
 			systray.UpdateTitle("New Title")
-			clicked := systray.AddMenu("asdf", "New Title", "sadfds")
+			clicked := systray.AddMenu("menu1", "New Menu", "special hint")
 			if ret := <-clicked; ret == true {
 				break
 			}

@@ -54,7 +54,7 @@
 - (IBAction)menuHandler:(id)sender
 {
   MenuItem* item = [sender representedObject];
-  item->callback();
+  item->callback([item->name cStringUsingEncoding: NSUTF8StringEncoding]);
 }
 
 - (void)createMenu

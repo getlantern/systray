@@ -31,13 +31,10 @@ func callback(cname *C.char) {
 
 var theCallback = callback*/
 
-var callback = func() {
-	fmt.Println("adsfasdf")
-	//c <- true
-}
-
 //export callMe
-func callMe() {
+func callMe(cname *C.char) {
+	name := C.GoString(cname)
+	fmt.Println(name)
 	fmt.Println("callMe!!!")
 }
 
