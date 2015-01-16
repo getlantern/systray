@@ -48,6 +48,11 @@
   [menu autorelease];
 }
 
+- (void)applicationWillTerminate:(NSNotification *)aNotification
+{
+  [[NSStatusBar systemStatusBar] removeStatusItem: statusItem];
+}
+
 - (IBAction)clicked:(id)sender {
     NSMutableDictionary *cmd = [NSMutableDictionary dictionaryWithObjectsAndKeys:@"clicked", @"action", nil];
     NSLog(@"clicked");
