@@ -63,7 +63,7 @@ func AddMenuItem(id string, title string, tooltip string) <-chan interface{} {
 	retChan := make(chan interface{})
 	menuItemsLock.Lock()
 	menuItems[id] = retChan
-	C.addMenu(
+	C.addMenuItem(
 		C.CString(id),
 		C.CString(title),
 		C.CString(tooltip),
