@@ -5,10 +5,6 @@ import (
 	"github.com/skratchdot/open-golang/open"
 )
 
-var (
-	clickedOnce = int32(0)
-)
-
 func main() {
 	systray.Run(onReady)
 }
