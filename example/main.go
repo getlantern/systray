@@ -15,7 +15,7 @@ func onReady() {
 	systray.SetTooltip("Pretty awesome")
 	chQuit := systray.AddMenu("quit", "Quit", "Quit the whole app")
 	go func() {
-		_ = <-chQuit
+		<-chQuit
 		systray.Quit()
 	}()
 
@@ -28,11 +28,11 @@ func onReady() {
 		// the Cocoa app.
 		for {
 			select {
-			case _ = <-ch:
+			case <-ch:
 				ch = systray.AddMenu("change", "I've Changed", "Catch Me")
-			case _ = <-chUrl:
+			case <-chUrl:
 				open.Run("https://www.getlantern.org")
-			case _ = <-chQuit:
+			case <-chQuit:
 				systray.Quit()
 				return
 			}
