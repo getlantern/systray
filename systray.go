@@ -52,13 +52,17 @@ func SetTooltip(tooltip string) {
 	C.setTooltip(C.CString(tooltip))
 }
 
-// Add menu item with designated title and tooltip, waiting on returned chan to get notified when menu item clicked.
-// Add again with same menuId will override previous one.
-// Can be invoked from different goroutines.
-func AddMenu(menuId string, title string, tooltip string) chan interface{} {
+// Add menu item with designated title and tooltip, returning a channel that
+// notifies whenever that menu item has been clicked.
+//
+// Menu items are keeyd to an id. If the same id is added twice, the 2nd one
+// overwrites the first.
+//
+// AddMenuItem can be safely invoked from different goroutines.
+func AddMenuItem(id string, title string, tooltip string) <-chan interface{} {
 	retChan := make(chan interface{})
 	menuItemsLock.Lock()
-	menuItems[menuId] = retChan
+	menuItems[id] = retChan
 	C.addMenu(
 		C.CString(menuId),
 		C.CString(title),
@@ -74,10 +78,10 @@ func systray_ready() {
 }
 
 //export systray_menu_item_selected
-func systray_menu_item_selected(cmenuId *C.char) {
-	menuId := C.GoString(cmenuId)
+func systray_menu_item_selected(cId *C.char) {
+	id := C.GoString(cId)
 	menuItemsLock.RLock()
-	ch := menuItems[menuId]
+	ch := menuItems[id]
 	menuItemsLock.RUnlock()
 	ch <- nil
 }
