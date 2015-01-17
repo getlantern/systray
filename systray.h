@@ -1,5 +1,5 @@
-extern void systray_clicked_call_back();
-extern void systray_menu_item_call_back(char* menu_id);
+extern void systray_ready();
+extern void systray_menu_item_selected(char* menu_id);
 int nativeLoop(void);
 
 void setIcon(const char* iconBytes, int length);

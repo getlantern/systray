@@ -1,52 +1,45 @@
 package main
 
 import (
-	"fmt"
-	"time"
-
 	"github.com/getlantern/systray"
 	"github.com/skratchdot/open-golang/open"
 )
 
+var (
+	clickedOnce = int32(0)
+)
+
 func main() {
-	// Start a goroutine for doing stuff that our Go application will do
+	systray.Run(onReady)
+}
+
+func onReady() {
+	systray.SetIcon(iconArray)
+	systray.SetTitle("Awesome App")
+	systray.SetTooltip("Pretty awesome")
+	chQuit := systray.AddMenu("quit", "Quit", "Quit the whole app")
 	go func() {
-		time.Sleep(1 * time.Second)
-		systray.SetIcon(iconArray)
-		systray.SetTitle("Click Me!")
-		ch := systray.WaitForSystrayClicked()
-		_ = <-ch
-		fmt.Println("systray clicked, set off now")
-
-		go func() {
-			systray.SetTitle("Awesome App")
-			systray.SetTooltip("Pretty awesome")
-			chQuit := systray.AddMenu("quit", "Quit", "Quit the whole app")
-			_ = <-chQuit
-			systray.Quit()
-		}()
-
-		// We can also manipulate systray in other goroutine
-		go func() {
-			time.Sleep(1 * time.Second)
-			ch := systray.AddMenu("change", "Change Me", "Change Me")
-			chUrl := systray.AddMenu("lantern", "Open Lantern.org", "my home")
-			chQuit := systray.AddMenu("quit2", "Another Quit", "Quit the whole app")
-			// This is just an example of some processing that happens outside of
-			// the Cocoa app.
-			for {
-				select {
-				case _ = <-ch:
-					ch = systray.AddMenu("change", "I've Changed", "Catch Me")
-				case _ = <-chUrl:
-					open.Run("https://www.getlantern.org")
-				case _ = <-chQuit:
-					systray.Quit()
-					return
-				}
-			}
-		}()
+		_ = <-chQuit
+		systray.Quit()
 	}()
-	// Start the Cocoa app (this blocks)
-	systray.EnterLoop()
+
+	// We can manipulate the systray in other goroutines
+	go func() {
+		ch := systray.AddMenu("change", "Change Me", "Change Me")
+		chUrl := systray.AddMenu("lantern", "Open Lantern.org", "my home")
+		chQuit := systray.AddMenu("quit2", "Another Quit", "Quit the whole app")
+		// This is just an example of some processing that happens outside of
+		// the Cocoa app.
+		for {
+			select {
+			case _ = <-ch:
+				ch = systray.AddMenu("change", "I've Changed", "Catch Me")
+			case _ = <-chUrl:
+				open.Run("https://www.getlantern.org")
+			case _ = <-chQuit:
+				systray.Quit()
+				return
+			}
+		}
+	}()
 }

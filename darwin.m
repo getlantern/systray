@@ -13,7 +13,6 @@
 @end
 
 @interface AppDelegate: NSObject <NSApplicationDelegate>
-   - (IBAction)clicked:(id)sender;
    - (void) addMenu:(MenuItem*) item;
    - (IBAction)menuHandler:(id)sender;
    @property (assign) IBOutlet NSWindow *window;
@@ -23,14 +22,12 @@
 {
   NSStatusItem *statusItem;
   NSMenu *menu;
-  volatile int32_t finishedLaunching;
   NSCondition* cond;
 }
 
 @synthesize window = _window;
 
 - (id) init {
-  finishedLaunching = 0;
   return self;
 }
 
@@ -40,8 +37,11 @@
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
   self->statusItem = [[[NSStatusBar systemStatusBar] statusItemWithLength:NSVariableStatusItemLength] retain];
-  [self->statusItem setAction:@selector(clicked:)];
-  finishedLaunching = 1;
+  NSZone *menuZone = [NSMenu menuZone];
+  self->menu = [[NSMenu allocWithZone:menuZone] init];
+  [self->statusItem setMenu:self->menu];
+  [menu autorelease];
+  systray_ready();
 }
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification
@@ -61,24 +61,14 @@
   [statusItem setToolTip:tooltip];
 }
 
-- (IBAction)clicked:(id)sender {
-  systray_clicked_call_back();
-}
-
 - (IBAction)menuHandler:(id)sender
 {
   NSString* menuId = [sender representedObject];
-  systray_menu_item_call_back((char*)[menuId cStringUsingEncoding: NSUTF8StringEncoding]);
+  systray_menu_item_selected((char*)[menuId cStringUsingEncoding: NSUTF8StringEncoding]);
 }
 
 - (void) addMenu:(MenuItem*) item
 {
-  if (self->menu == nil) {
-    NSZone *menuZone = [NSMenu menuZone];
-    self->menu = [[NSMenu allocWithZone:menuZone] init];
-    [self->statusItem setMenu:self->menu];
-    [menu autorelease];
-  }
   NSMenuItem* menuItem;
   int existedMenuIndex = [menu indexOfItemWithRepresentedObject: item->menuId];
   if (existedMenuIndex == -1) {

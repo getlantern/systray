@@ -16,6 +16,29 @@ import (
 	"unsafe"
 )
 
+var (
+	readyCh       = make(chan interface{})
+	clickedCh     = make(chan interface{})
+	menuItems     = make(map[string]chan interface{})
+	menuItemsLock sync.RWMutex
+)
+
+// Run the Cocoa app (this blocks)
+func Run(onReady func()) {
+	go func() {
+		<-readyCh
+		onReady()
+	}()
+
+	runtime.LockOSThread()
+	C.nativeLoop()
+}
+
+// Quit the Cocoa app
+func Quit() {
+	C.quit()
+}
+
 func SetIcon(iconBytes []byte) {
 	cstr := (*C.char)(unsafe.Pointer(&iconBytes[0]))
 	C.setIcon(cstr, (C.int)(len(iconBytes)))
@@ -29,17 +52,11 @@ func SetTooltip(tooltip string) {
 	C.setTooltip(C.CString(tooltip))
 }
 
-// Waiting on returned chan to get notified when systray clicked.
-// Only valid if no menu item added.
-func WaitForSystrayClicked() <-chan bool {
-	return systrayClickedChan
-}
-
 // Add menu item with designated title and tooltip, waiting on returned chan to get notified when menu item clicked.
 // Add again with same menuId will override previous one.
 // Can be invoked from different goroutines.
-func AddMenu(menuId string, title string, tooltip string) chan bool {
-	retChan := make(chan bool)
+func AddMenu(menuId string, title string, tooltip string) chan interface{} {
+	retChan := make(chan interface{})
 	menuItemsLock.Lock()
 	menuItems[menuId] = retChan
 	C.addMenu(
@@ -51,31 +68,16 @@ func AddMenu(menuId string, title string, tooltip string) chan bool {
 	return retChan
 }
 
-// Start the Cocoa app (this blocks)
-func EnterLoop() {
-	runtime.LockOSThread()
-	C.nativeLoop()
+//export systray_ready
+func systray_ready() {
+	readyCh <- nil
 }
 
-// Quit the Cocoa app
-func Quit() {
-	C.quit()
-}
-
-var systrayClickedChan chan bool = make(chan bool)
-var menuItems map[string]chan bool = make(map[string]chan bool)
-var menuItemsLock sync.RWMutex
-
-//export systray_clicked_call_back
-func systray_clicked_call_back() {
-	systrayClickedChan <- true
-}
-
-//export systray_menu_item_call_back
-func systray_menu_item_call_back(cmenuId *C.char) {
+//export systray_menu_item_selected
+func systray_menu_item_selected(cmenuId *C.char) {
 	menuId := C.GoString(cmenuId)
 	menuItemsLock.RLock()
 	ch := menuItems[menuId]
 	menuItemsLock.RUnlock()
-	ch <- true
+	ch <- nil
 }
