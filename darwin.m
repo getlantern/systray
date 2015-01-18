@@ -8,8 +8,30 @@
     NSString* title;
     NSString* tooltip;
 }
+-(id) initWithId: (const char*)theMenuId
+       withTitle: (const char*)theTitle
+     withTooltip: (const char*)theTooltip;
 @end
 @implementation MenuItem
+-(id) initWithId: (const char*)theMenuId
+       withTitle: (const char*)theTitle
+     withTooltip: (const char*)theTooltip
+{
+  menuId = [[NSString alloc] initWithCString:theMenuId
+                                     encoding:NSUTF8StringEncoding];
+  title = [[NSString alloc] initWithCString:theTitle
+                                    encoding:NSUTF8StringEncoding];
+  tooltip = [[NSString alloc] initWithCString:theTooltip
+                                      encoding:NSUTF8StringEncoding];
+  return self;
+}
+
+-(void) dealloc {
+  [menuId release];
+  [title release];
+  [tooltip release];
+  [super dealloc];
+}
 @end
 
 @interface AppDelegate: NSObject <NSApplicationDelegate>
@@ -27,13 +49,6 @@
 
 @synthesize window = _window;
 
-- (id) init {
-  return self;
-}
-
-- (void) waitForFinishLaunching {
-}
-
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
   self->statusItem = [[[NSStatusBar systemStatusBar] statusItemWithLength:NSVariableStatusItemLength] retain];
@@ -50,14 +65,17 @@
 
 - (void)setIcon:(NSImage *)image {
   [statusItem setImage:image];
+  [image release];
 }
 
 - (void)setTitle:(NSString *)title {
   [statusItem setTitle:title];
+  [title release];
 }
 
 - (void)setTooltip:(NSString *)tooltip {
   [statusItem setToolTip:tooltip];
+  [tooltip release];
 }
 
 - (IBAction)menuHandler:(id)sender
@@ -80,6 +98,7 @@
     [menuItem setTitle:item->title];
   }
   [menuItem setToolTip:item->tooltip];
+  [item release];
 }
 
 - (void) quit
@@ -90,16 +109,13 @@
 @end
 
 int nativeLoop(void) {
-  @autoreleasepool {
     AppDelegate *delegate = [[[AppDelegate alloc] init] autorelease];
     [[NSApplication sharedApplication] setDelegate:delegate];
     [NSApp run];
     return EXIT_SUCCESS;
-  }
 }
 
 void runInMainThread(SEL method, id object) {
-  [(AppDelegate*)[NSApp delegate] waitForFinishLaunching];
   [(AppDelegate*)[NSApp delegate]
     performSelectorOnMainThread:method
                      withObject:object
@@ -108,32 +124,26 @@ void runInMainThread(SEL method, id object) {
 
 void setIcon(const char* iconBytes, int length) {
   NSData* buffer = [NSData dataWithBytes: iconBytes length:length];
-  NSImage *image = [[[NSImage alloc] initWithData:buffer] autorelease];
+  NSImage *image = [[NSImage alloc] initWithData:buffer];
   runInMainThread(@selector(setIcon:), (id)image);
 }
 
 void setTitle(char* ctitle) {
-  NSString* title = [[[NSString alloc] initWithCString:ctitle
-                                              encoding:NSUTF8StringEncoding] autorelease];
+  NSString* title = [[NSString alloc] initWithCString:ctitle
+                                              encoding:NSUTF8StringEncoding];
   free(ctitle);
   runInMainThread(@selector(setTitle:), (id)title);
 }
 
 void setTooltip(char* ctooltip) {
-  NSString* tooltip = [[[NSString alloc] initWithCString:ctooltip
-                                                encoding:NSUTF8StringEncoding] autorelease];
+  NSString* tooltip = [[NSString alloc] initWithCString:ctooltip
+                                                encoding:NSUTF8StringEncoding];
   free(ctooltip);
   runInMainThread(@selector(setTooltip:), (id)tooltip);
 }
 
 void addMenuItem(char* menuId, char* title, char* tooltip) {
-  MenuItem* item = [[[MenuItem alloc] init] autorelease];
-  item->menuId = [[[NSString alloc] initWithCString:menuId
-                                           encoding:NSUTF8StringEncoding] autorelease];
-  item->title = [[[NSString alloc] initWithCString:title
-                                          encoding:NSUTF8StringEncoding] autorelease];
-  item->tooltip = [[[NSString alloc] initWithCString:tooltip
-                                            encoding:NSUTF8StringEncoding] autorelease];
+  MenuItem* item = [[MenuItem alloc] initWithId: menuId withTitle: title withTooltip: tooltip] ;
   free(menuId);
   free(title);
   free(tooltip);
