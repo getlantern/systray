@@ -55,7 +55,7 @@ func SetTooltip(tooltip string) {
 // Add menu item with designated title and tooltip, returning a channel that
 // notifies whenever that menu item has been clicked.
 //
-// Menu items are keeyd to an id. If the same id is added twice, the 2nd one
+// Menu items are keyed to an id. If the same id is added twice, the 2nd one
 // overwrites the first.
 //
 // AddMenuItem can be safely invoked from different goroutines.
