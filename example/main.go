@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/getlantern/systray"
 	"github.com/skratchdot/open-golang/open"
 )
@@ -10,13 +11,14 @@ func main() {
 }
 
 func onReady() {
-	systray.SetIcon(iconArray)
+	systray.SetIcon(iconData)
 	systray.SetTitle("Awesome App")
 	systray.SetTooltip("Pretty awesome")
 	chQuit := systray.AddMenuItem("quit", "Quit", "Quit the whole app")
 	go func() {
 		<-chQuit
 		systray.Quit()
+		fmt.Println("Quit now...")
 	}()
 
 	// We can manipulate the systray in other goroutines
@@ -34,6 +36,7 @@ func onReady() {
 				open.Run("https://www.getlantern.org")
 			case <-chQuit:
 				systray.Quit()
+				fmt.Println("Quit2 now...")
 				return
 			}
 		}

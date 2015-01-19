@@ -1,1 +1,4 @@
 example/example
+*~
+*.swp
+*.exe
