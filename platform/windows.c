@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <windows.h>
 #include <shellapi.h>
 
@@ -26,63 +27,17 @@
 
 #define MAX_LOADSTRING 100
 
-HINSTANCE hInst;
-TCHAR szTitle[MAX_LOADSTRING];
-TCHAR szWindowClass[MAX_LOADSTRING];
 NOTIFYICONDATA nid;
 HWND hWnd;
-HMENU hSubMenu;
+HMENU hTrayMenu;
 
-HWND                InitInstance(HINSTANCE, int);
-LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
-
-ATOM MyRegisterClass(HINSTANCE hInstance)
-{
-	WNDCLASSEX wcex;
-
-	wcex.cbSize = sizeof(WNDCLASSEX);
-
-	wcex.style          = CS_HREDRAW | CS_VREDRAW;
-	wcex.lpfnWndProc    = WndProc;
-	wcex.cbClsExtra     = 0;
-	wcex.cbWndExtra     = 0;
-	wcex.hInstance      = hInstance;
-	wcex.hIcon          = LoadIcon(NULL, IDI_APPLICATION);
-	wcex.hCursor        = LoadCursor(NULL, IDC_ARROW);
-	wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
-	wcex.lpszMenuName   = 0;
-	wcex.lpszClassName  = szWindowClass;
-	wcex.hIconSm        = LoadIcon(NULL, IDI_APPLICATION);
-
-	return RegisterClassEx(&wcex);
-}
-
-HWND InitInstance(HINSTANCE hInstance, int nCmdShow)
-{
-	HWND hWnd;
-
-	hInst = hInstance;
-
-	hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-			CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
-
-	if (!hWnd)
-	{
-		return 0;
-	}
-
-	ShowWindow(hWnd, nCmdShow);
-	UpdateWindow(hWnd);
-
-	return hWnd;
-}
 
 void ShowMenu(HWND hWnd)
 {
 	POINT p;
 	GetCursorPos(&p);
 	SetForegroundWindow(hWnd); // Win32 bug work-around
-	TrackPopupMenu(hSubMenu, TPM_BOTTOMALIGN | TPM_LEFTALIGN, p.x, p.y, 0, hWnd, NULL);
+	TrackPopupMenu(hTrayMenu, TPM_BOTTOMALIGN | TPM_LEFTALIGN, p.x, p.y, 0, hWnd, NULL);
 
 }
 
@@ -90,7 +45,7 @@ char* GetMenuItemId(int index) {
 	MENUITEMINFO menuItemInfo;
 	menuItemInfo.cbSize = sizeof(MENUITEMINFO);
 	menuItemInfo.fMask = MIIM_DATA;
-	GetMenuItemInfo(hSubMenu, index, TRUE, &menuItemInfo);
+	GetMenuItemInfo(hTrayMenu, index, TRUE, &menuItemInfo);
 	return (char*)menuItemInfo.dwItemData;
 }
 
@@ -124,25 +79,65 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
+ATOM MyRegisterClass(HINSTANCE hInstance, TCHAR* szWindowClass)
+{
+	WNDCLASSEX wcex;
+
+	wcex.cbSize = sizeof(WNDCLASSEX);
+
+	wcex.style          = CS_HREDRAW | CS_VREDRAW;
+	wcex.lpfnWndProc    = WndProc;
+	wcex.cbClsExtra     = 0;
+	wcex.cbWndExtra     = 0;
+	wcex.hInstance      = hInstance;
+	wcex.hIcon          = LoadIcon(NULL, IDI_APPLICATION);
+	wcex.hCursor        = LoadCursor(NULL, IDC_ARROW);
+	wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
+	wcex.lpszMenuName   = 0;
+	wcex.lpszClassName  = szWindowClass;
+	wcex.hIconSm        = LoadIcon(NULL, IDI_APPLICATION);
+
+	return RegisterClassEx(&wcex);
+}
+
+HWND InitInstance(HINSTANCE hInstance, int nCmdShow, TCHAR* szWindowClass)
+{
+	HWND hWnd;
+
+	hWnd = CreateWindow(szWindowClass, "", WS_OVERLAPPEDWINDOW,
+			CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
+
+	if (!hWnd)
+	{
+		return 0;
+	}
+
+	ShowWindow(hWnd, nCmdShow);
+	UpdateWindow(hWnd);
+
+	return hWnd;
+}
+
 
 int nativeLoop(void) {
 	HINSTANCE hInstance = GetModuleHandle(NULL);
 
+	TCHAR szWindowClass[MAX_LOADSTRING];
 	wcscpy((wchar_t*)szWindowClass, (wchar_t*)TEXT("MyClass"));
-	MyRegisterClass(hInstance);
+	MyRegisterClass(hInstance, szWindowClass);
 
-	hWnd = InitInstance(hInstance, FALSE); // Don't show window
+	hWnd = InitInstance(hInstance, FALSE, szWindowClass); // Don't show window
 	if (!hWnd)
 	{
 		return;
 	}
 
-	hSubMenu = CreatePopupMenu();
+	hTrayMenu = CreatePopupMenu();
 	MENUINFO menuInfo;
 	menuInfo.cbSize = sizeof(MENUINFO);
 	menuInfo.fMask = MIM_APPLYTOSUBMENUS | MIM_STYLE;
 	menuInfo.dwStyle = MNS_NOTIFYBYPOS;
-	SetMenuInfo(hSubMenu, &menuInfo);
+	SetMenuInfo(hTrayMenu, &menuInfo);
 
 	nid.cbSize = sizeof(NOTIFYICONDATA);
 	nid.hWnd = hWnd;
@@ -229,21 +224,19 @@ void addMenuItem(char* menuId, char* title, char* tooltip) {
 	menuItemInfo.cch = strlen(title) + 1;
 	menuItemInfo.dwItemData = (ULONG_PTR)menuId;
 
-	int itemCount = GetMenuItemCount(hSubMenu);
+	int itemCount = GetMenuItemCount(hTrayMenu);
 	int i;
 	for (i = 0; i < itemCount; i++) {
 		char * idString = GetMenuItemId(i);
 		if (strcmp(menuId, idString) == 0) {
+			free(idString);
+			SetMenuItemInfo(hTrayMenu, i, TRUE, &menuItemInfo);
 			break;
 		}
 	}
-	if (i < itemCount) {
-		SetMenuItemInfo(hSubMenu, i, TRUE, &menuItemInfo);
-	} else {
-		InsertMenuItem(hSubMenu, 0, TRUE, &menuItemInfo);
+	if (i == itemCount) {
+		InsertMenuItem(hTrayMenu, 0, TRUE, &menuItemInfo);
 	}
-
-	// free(menuId);
 	free(title);
 	free(tooltip);
 }

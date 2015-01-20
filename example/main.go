@@ -1,4 +1,4 @@
-package main
+﻿package main
 
 import (
 	"fmt"
@@ -25,7 +25,7 @@ func onReady() {
 	go func() {
 		ch := systray.AddMenuItem("change", "Change Me", "Change Me")
 		chUrl := systray.AddMenuItem("lantern", "Open Lantern.org", "my home")
-		chQuit := systray.AddMenuItem("quit2", "Another Quit", "Quit the whole app")
+		chQuit := systray.AddMenuItem("quit2", "退出", "Quit the whole app")
 		// This is just an example of some processing that happens outside of
 		// the Cocoa app.
 		for {
