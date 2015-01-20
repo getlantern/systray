@@ -1,5 +1,5 @@
 This is a cross platfrom Go library to place an icon and menu in the notification area.
-Supports Windows, Mac OSX and Linux systems with gtk+.
+Supports Windows and Mac OSX, Linux coming soon.
 
 ## Install
 
@@ -7,11 +7,18 @@ Supports Windows, Mac OSX and Linux systems with gtk+.
 go get github.com/getlantern/systray
 ```
 
+```sh
+sudo apt-get install libgtk-3-dev
+```
+if you don't have this package on Linux.
+
+
 ## Try
 
 `cd` into `example` folder, and
 
 ```sh
+go get
 go build
 ./example # example.exe for Windows
 ```
