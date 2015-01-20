@@ -3,28 +3,7 @@
 #include <windows.h>
 #include <shellapi.h>
 
-// Below are windows macros but not found in current header file,
-// so we define it manually
-#ifndef WM_MENUCOMMAND
-#define WM_MENUCOMMAND 0x0126
-#endif
-
-#ifndef MIM_APPLYTOSUBMENUS
-#define MIM_APPLYTOSUBMENUS 0x80000000
-#endif
-
-#ifndef MIM_STYLE
-#define MIM_STYLE 0x00000010
-#endif
-
-#ifndef MNS_NOTIFYBYPOS
-#define MNS_NOTIFYBYPOS 0x08000000
-#endif
-
-
-// Our own macros
 #define WM_SYSTRAY_MESSAGE (WM_USER + 1)
-
 #define MAX_LOADSTRING 100
 
 NOTIFYICONDATA nid;

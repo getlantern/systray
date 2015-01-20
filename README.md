@@ -3,15 +3,21 @@ Supports Windows and Mac OSX, Linux coming soon.
 
 ## Install
 
-```sh
-go get github.com/getlantern/systray
-```
+### Linux
 
 ```sh
 sudo apt-get install libgtk-3-dev
 ```
-if you don't have this package on Linux.
 
+### Windows
+
+Install [MinGW-W64](http://sourceforge.net/projects/mingw-w64) as it has up to date SDK headers we require.
+
+Then, simply
+
+```sh
+go get github.com/getlantern/systray
+```
 
 ## Try
 
