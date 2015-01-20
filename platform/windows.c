@@ -31,6 +31,15 @@ NOTIFYICONDATA nid;
 HWND hWnd;
 HMENU hTrayMenu;
 
+wchar_t* UTF8ToUnicode(const char* str)
+{
+	int textlen;
+	wchar_t * result;
+	textlen = MultiByteToWideChar(CP_UTF8, 0, str, -1, NULL ,0);
+	result = (wchar_t *)calloc((textlen+1), sizeof(wchar_t));
+	MultiByteToWideChar(CP_UTF8, 0, str, -1, (LPWSTR)result, textlen);
+	return result;
+}
 
 void ShowMenu(HWND hWnd)
 {
@@ -84,7 +93,6 @@ ATOM MyRegisterClass(HINSTANCE hInstance, TCHAR* szWindowClass)
 	WNDCLASSEX wcex;
 
 	wcex.cbSize = sizeof(WNDCLASSEX);
-
 	wcex.style          = CS_HREDRAW | CS_VREDRAW;
 	wcex.lpfnWndProc    = WndProc;
 	wcex.cbClsExtra     = 0;
@@ -102,11 +110,8 @@ ATOM MyRegisterClass(HINSTANCE hInstance, TCHAR* szWindowClass)
 
 HWND InitInstance(HINSTANCE hInstance, int nCmdShow, TCHAR* szWindowClass)
 {
-	HWND hWnd;
-
-	hWnd = CreateWindow(szWindowClass, "", WS_OVERLAPPEDWINDOW,
+	HWND hWnd = CreateWindow(szWindowClass, TEXT(""), WS_OVERLAPPEDWINDOW,
 			CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
-
 	if (!hWnd)
 	{
 		return 0;
@@ -119,26 +124,18 @@ HWND InitInstance(HINSTANCE hInstance, int nCmdShow, TCHAR* szWindowClass)
 }
 
 
-int nativeLoop(void) {
-	HINSTANCE hInstance = GetModuleHandle(NULL);
-
-	TCHAR szWindowClass[MAX_LOADSTRING];
-	wcscpy((wchar_t*)szWindowClass, (wchar_t*)TEXT("MyClass"));
-	MyRegisterClass(hInstance, szWindowClass);
-
-	hWnd = InitInstance(hInstance, FALSE, szWindowClass); // Don't show window
-	if (!hWnd)
-	{
-		return;
-	}
-
+void createMenu()
+{
 	hTrayMenu = CreatePopupMenu();
 	MENUINFO menuInfo;
 	menuInfo.cbSize = sizeof(MENUINFO);
 	menuInfo.fMask = MIM_APPLYTOSUBMENUS | MIM_STYLE;
 	menuInfo.dwStyle = MNS_NOTIFYBYPOS;
 	SetMenuInfo(hTrayMenu, &menuInfo);
+}
 
+void addNotifyIcon()
+{
 	nid.cbSize = sizeof(NOTIFYICONDATA);
 	nid.hWnd = hWnd;
 	nid.uID = 100;
@@ -146,6 +143,20 @@ int nativeLoop(void) {
 	nid.uFlags = NIF_MESSAGE;
 	Shell_NotifyIcon(NIM_ADD, &nid);
 
+}
+
+int nativeLoop(void) {
+	HINSTANCE hInstance = GetModuleHandle(NULL);
+	TCHAR* szWindowClass = TEXT("SystrayClass");
+	MyRegisterClass(hInstance, szWindowClass);
+	hWnd = InitInstance(hInstance, FALSE, szWindowClass); // Don't show window
+	if (!hWnd)
+	{
+		return;
+	}
+
+	createMenu();
+	addNotifyIcon();
 	systray_ready();
 
 	// Main message loop:
@@ -187,7 +198,7 @@ void setIcon(const char* iconBytes, int length) {
 		}
 
 		// Dump the icon to the temp file
-		FILE* fIcon = fopen(szTempFileName, "wb");
+		FILE* fIcon = _wfopen(szTempFileName, TEXT("wb"));
 		fwrite(iconBytes, 1, length, fIcon);
 		fclose(fIcon);
 
@@ -195,7 +206,7 @@ void setIcon(const char* iconBytes, int length) {
 		hIcon = LoadImage(NULL, szTempFileName, IMAGE_ICON, 64, 64, LR_LOADFROMFILE);
 
 		// Delete the temp file
-		remove(szTempFileName);
+		_wremove(szTempFileName);
 	}
 
 	nid.hIcon = hIcon;
@@ -209,19 +220,22 @@ void setTitle(char* ctitle) {
 }
 
 void setTooltip(char* ctooltip) {
-	strcpy(nid.szTip, ctooltip); // MinGW seems to use ANSI
+	wchar_t* tooltip = UTF8ToUnicode(ctooltip);
+	wcsncpy(nid.szTip, tooltip, 64);
 	nid.uFlags = NIF_TIP;
 	Shell_NotifyIcon(NIM_MODIFY, &nid);
+	free(tooltip);
 	free(ctooltip);
 }
 
-void addMenuItem(char* menuId, char* title, char* tooltip) {
+void addMenuItem(char* menuId, char* ctitle, char* ctooltip) {
+	wchar_t* title = UTF8ToUnicode(ctitle);
 	MENUITEMINFO menuItemInfo;
 	menuItemInfo.cbSize = sizeof(MENUITEMINFO);
 	menuItemInfo.fMask = MIIM_FTYPE | MIIM_STRING | MIIM_DATA;
 	menuItemInfo.fType = MFT_STRING;
 	menuItemInfo.dwTypeData = title;
-	menuItemInfo.cch = strlen(title) + 1;
+	menuItemInfo.cch = wcslen(title) + 1;
 	menuItemInfo.dwItemData = (ULONG_PTR)menuId;
 
 	int itemCount = GetMenuItemCount(hTrayMenu);
@@ -238,7 +252,8 @@ void addMenuItem(char* menuId, char* title, char* tooltip) {
 		InsertMenuItem(hTrayMenu, 0, TRUE, &menuItemInfo);
 	}
 	free(title);
-	free(tooltip);
+	free(ctitle);
+	free(ctooltip);
 }
 
 void quit() {

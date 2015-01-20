@@ -13,7 +13,7 @@ func main() {
 func onReady() {
 	systray.SetIcon(iconData)
 	systray.SetTitle("Awesome App")
-	systray.SetTooltip("Pretty awesome")
+	systray.SetTooltip("Pretty awesome棒")
 	chQuit := systray.AddMenuItem("quit", "Quit", "Quit the whole app")
 	go func() {
 		<-chQuit
