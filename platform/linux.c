@@ -1,6 +1,3 @@
-#ifndef NATIVE_C
-#define NATIVE_C
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -10,12 +7,11 @@
 
 static GtkWidget *global_tray_menu = NULL;
 static GtkStatusIcon *global_tray_icon = NULL;
-
-static void handle_open(GtkStatusIcon *status_icon, gpointer user_data)
-{
-	char* menuId = user_data;
-	systray_menu_item_selected(menuId);
-}
+static GList *global_menu_items = NULL;
+typedef struct {
+	GtkWidget *menu_item;
+	char *menu_id;
+} MenuItemNode;
 
 static void show_menu(GtkStatusIcon *status_icon, guint button, guint activate_time, gpointer user_data)
 {
@@ -50,27 +46,50 @@ void setTitle(char* ctitle) {
 	gdk_threads_enter();
 	gtk_status_icon_set_title(global_tray_icon, ctitle);
 	gdk_threads_leave();
-	//free(ctitle);
+	free(ctitle);
 }
 
 void setTooltip(char* ctooltip) {
 	gdk_threads_enter();
 	gtk_status_icon_set_tooltip_text(global_tray_icon, ctooltip);
 	gdk_threads_leave();
-	//free(ctooltip);
+	free(ctooltip);
 }
 
 void addMenuItem(char* menuId, char* title, char* tooltip) {
 
 	gdk_threads_enter();
-	GtkWidget *titleMenuItem = gtk_menu_item_new_with_label(title);
-	g_signal_connect(G_OBJECT(titleMenuItem), "activate", G_CALLBACK(handle_open), menuId);
-	gtk_menu_shell_append(GTK_MENU_SHELL(global_tray_menu), titleMenuItem);
+	GList* it;
+	for(it = global_menu_items; it != NULL; it = it->next) {
+		MenuItemNode* item = (MenuItemNode*)(it->data);
+		if (strcmp(item->menu_id, menuId) == 0){
+			gtk_menu_item_set_label(GTK_MENU_ITEM(item->menu_item), title);
+			break;
+		}
+	}
+
+	// menu id doesn't exist, add new item
+	if (it == NULL) {
+		GtkWidget *titleMenuItem = gtk_menu_item_new_with_label(title);
+		g_signal_connect_swapped(G_OBJECT(titleMenuItem), "activate", G_CALLBACK(systray_menu_item_selected), menuId);
+		gtk_menu_shell_append(GTK_MENU_SHELL(global_tray_menu), titleMenuItem);
+
+		MenuItemNode* new_item = malloc(sizeof(MenuItemNode));
+		new_item->menu_id = menuId;
+		new_item->menu_item = titleMenuItem;
+		GList* new_node = malloc(sizeof(GList));
+		new_node->data = new_item;
+		new_node->next = global_menu_items;
+		if (global_menu_items != NULL) {
+			global_menu_items->prev = new_node;
+		}
+		global_menu_items = new_node;
+	}
+
 	gdk_threads_leave();
 
-	// free(menuId);
-	// free(title);
-	// free(tooltip);
+	free(title);
+	free(tooltip);
 }
 
 void quit() {
@@ -78,5 +97,3 @@ void quit() {
 	gtk_main_quit();
 	gdk_threads_leave();
 }
-
-#endif // NATIVE_C
