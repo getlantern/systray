@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <windows.h>
 #include <shellapi.h>
+#include "systray.h"
 
 #define WM_SYSTRAY_MESSAGE (WM_USER + 1)
 #define MAX_LOADSTRING 100

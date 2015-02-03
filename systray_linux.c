@@ -4,6 +4,7 @@
 #include <gtk/gtk.h>
 #include <gio/gio.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
+#include "systray.h"
 
 static GtkWidget *global_tray_menu = NULL;
 static GtkStatusIcon *global_tray_icon = NULL;

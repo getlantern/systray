@@ -1,6 +1,9 @@
+// +build ignore
+
 #include <stdlib.h>
 #include <gtk/gtk.h>
 #include <libappindicator/app-indicator.h>
+#include "systray.h"
 
 static AppIndicator *indicator;
 static GtkWidget *indicator_menu;
