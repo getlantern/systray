@@ -59,7 +59,7 @@ void setTooltip(char* ctooltip) {
 	free(ctooltip);
 }
 
-void addMenuItem(char* menuId, char* title, char* tooltip) {
+void add_or_update_menu_item(char* menuId, char* title, char* tooltip) {
 
 	gdk_threads_enter();
 	GList* it;

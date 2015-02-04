@@ -7,22 +7,30 @@
     NSString* menuId;
     NSString* title;
     NSString* tooltip;
+    short disabled;
+    short checked;
 }
 -(id) initWithId: (const char*)theMenuId
        withTitle: (const char*)theTitle
-     withTooltip: (const char*)theTooltip;
-@end
-@implementation MenuItem
--(id) initWithId: (const char*)theMenuId
-       withTitle: (const char*)theTitle
      withTooltip: (const char*)theTooltip
+    withDisabled: (short)theDisabled
+     withChecked: (short)theChecked;
+     @end
+     @implementation MenuItem
+     -(id) initWithId: (const char*)theMenuId
+            withTitle: (const char*)theTitle
+          withTooltip: (const char*)theTooltip
+         withDisabled: (short)theDisabled
+          withChecked: (short)theChecked
 {
   menuId = [[NSString alloc] initWithCString:theMenuId
-                                     encoding:NSUTF8StringEncoding];
-  title = [[NSString alloc] initWithCString:theTitle
                                     encoding:NSUTF8StringEncoding];
+  title = [[NSString alloc] initWithCString:theTitle
+                                   encoding:NSUTF8StringEncoding];
   tooltip = [[NSString alloc] initWithCString:theTooltip
-                                      encoding:NSUTF8StringEncoding];
+                                     encoding:NSUTF8StringEncoding];
+  disabled = theDisabled;
+  checked = theChecked;
   return self;
 }
 
@@ -35,12 +43,12 @@
 @end
 
 @interface AppDelegate: NSObject <NSApplicationDelegate>
-   - (void) addMenuItem:(MenuItem*) item;
-   - (IBAction)menuHandler:(id)sender;
-   @property (assign) IBOutlet NSWindow *window;
-@end
+  - (void) add_or_update_menu_item:(MenuItem*) item;
+  - (IBAction)menuHandler:(id)sender;
+  @property (assign) IBOutlet NSWindow *window;
+  @end
 
-@implementation AppDelegate
+  @implementation AppDelegate
 {
   NSStatusItem *statusItem;
   NSMenu *menu;
@@ -54,6 +62,7 @@
   self->statusItem = [[[NSStatusBar systemStatusBar] statusItemWithLength:NSVariableStatusItemLength] retain];
   NSZone *menuZone = [NSMenu menuZone];
   self->menu = [[[NSMenu allocWithZone:menuZone] init] autorelease];
+  [self->menu setAutoenablesItems: FALSE];
   [self->statusItem setMenu:self->menu];
   systray_ready();
 }
@@ -84,7 +93,7 @@
   systray_menu_item_selected((char*)[menuId cStringUsingEncoding: NSUTF8StringEncoding]);
 }
 
-- (void) addMenuItem:(MenuItem*) item
+- (void) add_or_update_menu_item:(MenuItem*) item
 {
   NSMenuItem* menuItem;
   int existedMenuIndex = [menu indexOfItemWithRepresentedObject: item->menuId];
@@ -92,12 +101,23 @@
     menuItem = [menu addItemWithTitle:item->title action:@selector(menuHandler:) keyEquivalent:@""];
     [menuItem setTarget:self];
     [menuItem setRepresentedObject: item->menuId];
+
   }
   else {
     menuItem = [menu itemAtIndex: existedMenuIndex];
     [menuItem setTitle:item->title];
   }
   [menuItem setToolTip:item->tooltip];
+  if (item->disabled == 1) {
+    [menuItem setEnabled:FALSE];
+  } else {
+    [menuItem setEnabled:TRUE];
+  }
+  if (item->checked == 1) {
+    [menuItem setState:NSOnState];
+  } else {
+    [menuItem setState:NSOffState];
+  }
   [item release];
 }
 
@@ -109,10 +129,10 @@
 @end
 
 int nativeLoop(void) {
-    AppDelegate *delegate = [[[AppDelegate alloc] init] autorelease];
-    [[NSApplication sharedApplication] setDelegate:delegate];
-    [NSApp run];
-    return EXIT_SUCCESS;
+  AppDelegate *delegate = [[[AppDelegate alloc] init] autorelease];
+  [[NSApplication sharedApplication] setDelegate:delegate];
+  [NSApp run];
+  return EXIT_SUCCESS;
 }
 
 void runInMainThread(SEL method, id object) {
@@ -130,24 +150,24 @@ void setIcon(const char* iconBytes, int length) {
 
 void setTitle(char* ctitle) {
   NSString* title = [[NSString alloc] initWithCString:ctitle
-                                              encoding:NSUTF8StringEncoding];
+                                             encoding:NSUTF8StringEncoding];
   free(ctitle);
   runInMainThread(@selector(setTitle:), (id)title);
 }
 
 void setTooltip(char* ctooltip) {
   NSString* tooltip = [[NSString alloc] initWithCString:ctooltip
-                                                encoding:NSUTF8StringEncoding];
+                                               encoding:NSUTF8StringEncoding];
   free(ctooltip);
   runInMainThread(@selector(setTooltip:), (id)tooltip);
 }
 
-void addMenuItem(char* menuId, char* title, char* tooltip) {
-  MenuItem* item = [[MenuItem alloc] initWithId: menuId withTitle: title withTooltip: tooltip] ;
+void add_or_update_menu_item(char* menuId, char* title, char* tooltip, short disabled, short checked) {
+  MenuItem* item = [[MenuItem alloc] initWithId: menuId withTitle: title withTooltip: tooltip withDisabled: disabled withChecked: checked];
   free(menuId);
   free(title);
   free(tooltip);
-  runInMainThread(@selector(addMenuItem:), (id)item);
+  runInMainThread(@selector(add_or_update_menu_item:), (id)item);
 }
 
 void quit() {

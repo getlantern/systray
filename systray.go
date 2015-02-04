@@ -21,10 +21,21 @@ import (
 	"unsafe"
 )
 
+// MenuItem is used to keep track each menu item of systray
+// Don't create it, use systray.AddMenuItem() instead
+type MenuItem struct {
+	Id, Title, Tooltip string
+	Disabled           bool
+	Checked            bool
+
+	// channel to which caller wait to get notification when menu item clicked
+	Ch chan interface{}
+}
+
 var (
 	readyCh       = make(chan interface{})
 	clickedCh     = make(chan interface{})
-	menuItems     = make(map[string]chan interface{})
+	menuItems     = make(map[string]*MenuItem)
 	menuItemsLock sync.RWMutex
 )
 
@@ -70,17 +81,33 @@ func SetTooltip(tooltip string) {
 // overwrites the first.
 //
 // AddMenuItem can be safely invoked from different goroutines.
-func AddMenuItem(id string, title string, tooltip string) <-chan interface{} {
-	retChan := make(chan interface{})
+func AddMenuItem(id string, title string, tooltip string) *MenuItem {
+	item := &MenuItem{id, title, tooltip, false, false, nil}
+	item.Ch = make(chan interface{})
+	Update(item)
+	return item
+}
+
+// Update propogates changes on a menu item to systray
+func Update(item *MenuItem) {
 	menuItemsLock.Lock()
-	menuItems[id] = retChan
-	C.addMenuItem(
-		C.CString(id),
-		C.CString(title),
-		C.CString(tooltip),
+	defer menuItemsLock.Unlock()
+	menuItems[item.Id] = item
+	var disabled C.short = 0
+	if item.Disabled {
+		disabled = 1
+	}
+	var checked C.short = 0
+	if item.Checked {
+		checked = 1
+	}
+	C.add_or_update_menu_item(
+		C.CString(item.Id),
+		C.CString(item.Title),
+		C.CString(item.Tooltip),
+		disabled,
+		checked,
 	)
-	menuItemsLock.Unlock()
-	return retChan
 }
 
 //export systray_ready
@@ -92,7 +119,7 @@ func systray_ready() {
 func systray_menu_item_selected(cId *C.char) {
 	id := C.GoString(cId)
 	menuItemsLock.RLock()
-	ch := menuItems[id]
+	item := menuItems[id]
 	menuItemsLock.RUnlock()
-	ch <- nil
+	item.Ch <- nil
 }

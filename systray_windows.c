@@ -208,7 +208,7 @@ void setTooltip(char* ctooltip) {
 	free(ctooltip);
 }
 
-void addMenuItem(char* menuId, char* ctitle, char* ctooltip) {
+void add_or_update_menu_item(char* menuId, char* ctitle, char* ctooltip) {
 	wchar_t* title = UTF8ToUnicode(ctitle);
 	MENUITEMINFO menuItemInfo;
 	menuItemInfo.cbSize = sizeof(MENUITEMINFO);
