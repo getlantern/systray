@@ -30,6 +30,7 @@ void setIcon(const char* iconBytes, int length) {
 	strcpy(temp_file_name, "/tmp/systray_XXXXXX");
 	int fd = mkstemp(temp_file_name);
 	ssize_t written = write(fd, iconBytes, length);
+	close(fd);
 	if(written != length) {
 		printf("failed to write temp icon file: %s\n", strerror(errno));
 		return;
