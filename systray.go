@@ -7,7 +7,7 @@ package systray
 
 /*
 #cgo linux pkg-config: gtk+-3.0 appindicator3-0.1
-#cgo linux CFLAGS: -DLINUX
+#cgo linux CFLAGS: -DLINUX -Wno-deprecated-declarations
 #cgo windows CFLAGS: -DWIN32 -DUNICODE -D_UNICODE
 #cgo darwin CFLAGS: -DDARWIN -x objective-c
 #cgo darwin LDFLAGS: -framework Cocoa

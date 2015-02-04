@@ -62,13 +62,13 @@ void add_or_update_menu_item(char* menuId, char* title, char* tooltip, short dis
 
 	// menu id doesn't exist, add new item
 	if(it == NULL) {
-		GtkWidget *titleMenuItem = gtk_menu_item_new_with_label(title);
-		g_signal_connect_swapped(G_OBJECT(titleMenuItem), "activate", G_CALLBACK(systray_menu_item_selected), menuId);
-		gtk_menu_shell_append(GTK_MENU_SHELL(global_tray_menu), titleMenuItem);
+		GtkWidget *menu_item = gtk_menu_item_new_with_label(title);
+		g_signal_connect_swapped(G_OBJECT(menu_item), "activate", G_CALLBACK(systray_menu_item_selected), menuId);
+		gtk_menu_shell_append(GTK_MENU_SHELL(global_tray_menu), menu_item);
 
 		MenuItemNode* new_item = malloc(sizeof(MenuItemNode));
 		new_item->menu_id = menuId;
-		new_item->menu_item = titleMenuItem;
+		new_item->menu_item = menu_item;
 		GList* new_node = malloc(sizeof(GList));
 		new_node->data = new_item;
 		new_node->next = global_menu_items;
@@ -78,7 +78,8 @@ void add_or_update_menu_item(char* menuId, char* title, char* tooltip, short dis
 		global_menu_items = new_node;
 		it = new_node;
 	}
-	gtk_widget_set_sensitive(((MenuItemNode*)(it->data))->menu_item, disabled == 1 ? FALSE : TRUE);
+	GtkWidget * menu_item = GTK_WIDGET(((MenuItemNode*)(it->data))->menu_item);
+	gtk_widget_set_sensitive(menu_item, disabled == 1 ? FALSE : TRUE);
 	gtk_widget_show_all(global_tray_menu);
 	gdk_threads_leave();
 
