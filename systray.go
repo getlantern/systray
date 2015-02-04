@@ -22,13 +22,20 @@ import (
 )
 
 // MenuItem is used to keep track each menu item of systray
-// Don't create it, use systray.AddMenuItem() instead
+// Don't create it directly, use the one systray.AddMenuItem() returned
 type MenuItem struct {
-	Id, Title, Tooltip string
-	Disabled           bool
-	Checked            bool
+	// Id uniquely identify a menu item, not supposed to be modified
+	Id string
+	// Title is the text shows on menu item
+	Title string
+	// Tooltip is the text shows when point to menu item
+	Tooltip string
+	// Disabled menu item is gray out and has no effect when clicked
+	Disabled bool
+	// Checked menu item has a tick before title
+	Checked bool
 
-	// channel to which caller wait to get notification when menu item clicked
+	// Ch is the channel which will be notified when menu item clicked
 	Ch chan interface{}
 }
 
