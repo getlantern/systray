@@ -48,7 +48,7 @@ void setTooltip(char* ctooltip) {
 	free(ctooltip);
 }
 
-void add_or_update_menu_item(char* menuId, char* title, char* tooltip) {
+void add_or_update_menu_item(char* menuId, char* title, char* tooltip, short disabled, short checked) {
 	gdk_threads_enter();
 	GList* it;
 	for(it = global_menu_items; it != NULL; it = it->next) {
@@ -76,7 +76,9 @@ void add_or_update_menu_item(char* menuId, char* title, char* tooltip) {
 			global_menu_items->prev = new_node;
 		}
 		global_menu_items = new_node;
+		it = new_node;
 	}
+	gtk_widget_set_sensitive(((MenuItemNode*)(it->data))->menu_item, disabled == 1 ? FALSE : TRUE);
 	gtk_widget_show_all(global_tray_menu);
 	gdk_threads_leave();
 
