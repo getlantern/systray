@@ -1,5 +1,5 @@
 Package systray is a cross platfrom Go library to place an icon and menu in the notification area.
-Supports Windows and Mac OSX currently, Linux coming soon.
+Tested on Windows 8, Mac OSX, Ubuntu 14.10 and Debian 7.6.
 
 ## Usage
 ```go
@@ -12,10 +12,10 @@ func onReady() {
 	systray.SetIcon(iconData)
 	systray.SetTitle("Awesome App")
 	systray.SetTooltip("Pretty awesome超级棒")
-	chQuit := systray.AddMenuItem("quit", "Quit", "Quit the whole app")
+	mQuit := systray.AddMenuItem("quit", "Quit", "Quit the whole app")
 }
 ```
-
+Menu item can be checked and / or disabled. Methods except `Run()` can be invoked from any goroutine. See demo code under `example` folder.
 
 ## Platform specific concerns
 
@@ -24,6 +24,7 @@ func onReady() {
 ```sh
 sudo apt-get install libgtk-3-dev libappindicator3-dev
 ```
+Checked menu item not implemented on Linux yet.
 
 ### Windows
 
