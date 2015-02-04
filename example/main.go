@@ -7,13 +7,14 @@ import (
 )
 
 func main() {
+	// Should be called at the very beginning of main().
 	systray.Run(onReady)
 }
 
 func onReady() {
 	systray.SetIcon(iconData)
 	systray.SetTitle("Awesome App")
-	systray.SetTooltip("Pretty awesome棒")
+	systray.SetTooltip("Pretty awesome超级棒")
 	chQuit := systray.AddMenuItem("quit", "Quit", "Quit the whole app")
 	go func() {
 		<-chQuit
@@ -23,6 +24,9 @@ func onReady() {
 
 	// We can manipulate the systray in other goroutines
 	go func() {
+		systray.SetIcon(iconData)
+		systray.SetTitle("Awesome App")
+		systray.SetTooltip("Pretty awesome棒棒嗒")
 		ch := systray.AddMenuItem("change", "Change Me", "Change Me")
 		chUrl := systray.AddMenuItem("lantern", "Open Lantern.org", "my home")
 		chQuit := systray.AddMenuItem("quit2", "退出", "Quit the whole app")

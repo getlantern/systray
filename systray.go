@@ -1,3 +1,8 @@
+/*
+Package systray is a cross platfrom Go library to place an icon and menu in the notification area.
+Supports Windows and Mac OSX currently, Linux coming soon.
+Methods can be called from any goroutine except Run(), which should be called at the very beginning of main() to lock at main thread.
+*/
 package systray
 
 /*
@@ -23,31 +28,37 @@ var (
 	menuItemsLock sync.RWMutex
 )
 
-// Run the Cocoa app (this blocks)
+// Run initializes GUI and starts event loop, then invoke the onReady callback.
+// It blocks until systray.Quit() is called.
+// Should be called at the very beginning of main() to lock at main thread.
 func Run(onReady func()) {
+	runtime.LockOSThread()
 	go func() {
 		<-readyCh
 		onReady()
 	}()
 
-	runtime.LockOSThread()
 	C.nativeLoop()
 }
 
-// Quit the Cocoa app
+// Quit the systray and whole app
 func Quit() {
 	C.quit()
 }
 
+// SetIcon sets the systray icon.
+// iconBytes should be the content of .ico for windows and .png for other platforms.
 func SetIcon(iconBytes []byte) {
 	cstr := (*C.char)(unsafe.Pointer(&iconBytes[0]))
 	C.setIcon(cstr, (C.int)(len(iconBytes)))
 }
 
+// SetTitle sets the systray title, only available on Mac.
 func SetTitle(title string) {
 	C.setTitle(C.CString(title))
 }
 
+// SetTitle sets the systray tooltip after the mouse stayed on tray icon for a while, only available on Mac.
 func SetTooltip(tooltip string) {
 	C.setTooltip(C.CString(tooltip))
 }
