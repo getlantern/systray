@@ -208,15 +208,22 @@ void setTooltip(char* ctooltip) {
 	free(ctooltip);
 }
 
-void add_or_update_menu_item(char* menuId, char* ctitle, char* ctooltip) {
+void add_or_update_menu_item(char* menuId, char* ctitle, char* ctooltip, short disabled, short checked) {
 	wchar_t* title = UTF8ToUnicode(ctitle);
 	MENUITEMINFO menuItemInfo;
 	menuItemInfo.cbSize = sizeof(MENUITEMINFO);
-	menuItemInfo.fMask = MIIM_FTYPE | MIIM_STRING | MIIM_DATA;
+	menuItemInfo.fMask = MIIM_FTYPE | MIIM_STRING | MIIM_DATA | MIIM_STATE;
 	menuItemInfo.fType = MFT_STRING;
 	menuItemInfo.dwTypeData = title;
 	menuItemInfo.cch = wcslen(title) + 1;
 	menuItemInfo.dwItemData = (ULONG_PTR)menuId;
+	menuItemInfo.fState = 0;
+	if (disabled == 1) {
+		menuItemInfo.fState |= MFS_DISABLED;
+	}
+	if (checked == 1) {
+		menuItemInfo.fState |= MFS_CHECKED;
+	}
 
 	int itemCount = GetMenuItemCount(hTrayMenu);
 	int i;

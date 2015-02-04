@@ -28,7 +28,7 @@ func onReady() {
 		systray.SetTitle("Awesome App")
 		systray.SetTooltip("Pretty awesome棒棒嗒")
 		mChange := systray.AddMenuItem("change", "Change Me", "Change Me")
-		mChecked := systray.AddMenuItem("check", "Checked", "Check Me")
+		mChecked := systray.AddMenuItem("check", "Unchecked", "Check Me")
 		mEnabled := systray.AddMenuItem("enable", "Enabled", "Enabled")
 		mUrl := systray.AddMenuItem("lantern", "Open Lantern.org", "my home")
 		mQuit := systray.AddMenuItem("quit2", "退出", "Quit the whole app")
@@ -39,6 +39,11 @@ func onReady() {
 				systray.Update(mChange)
 			case <-mChecked.Ch:
 				mChecked.Checked = !mChecked.Checked
+				if mChecked.Checked {
+					mChecked.Title = "Checked"
+				} else {
+					mChecked.Title = "Unchecked"
+				}
 				systray.Update(mChecked)
 			case <-mEnabled.Ch:
 				mEnabled.Disabled = !mEnabled.Disabled
