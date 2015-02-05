@@ -30,6 +30,7 @@ func onReady() {
 		mChange := systray.AddMenuItem("change", "Change Me", "Change Me")
 		mChecked := systray.AddMenuItem("check", "Unchecked", "Check Me")
 		mEnabled := systray.AddMenuItem("enable", "Enabled", "Enabled")
+		systray.AddMenuItem("ignore", "Ignored", "Ignored")
 		mUrl := systray.AddMenuItem("lantern", "Open Lantern.org", "my home")
 		mQuit := systray.AddMenuItem("quit2", "退出", "Quit the whole app")
 		for {

@@ -128,5 +128,9 @@ func systray_menu_item_selected(cId *C.char) {
 	menuItemsLock.RLock()
 	item := menuItems[id]
 	menuItemsLock.RUnlock()
-	item.Ch <- nil
+	select {
+	case item.Ch <- nil:
+	// in case no one waiting for the channel
+	default:
+	}
 }
