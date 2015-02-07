@@ -26,16 +26,16 @@ import (
 type MenuItem struct {
 	// Id uniquely identify a menu item, not supposed to be modified
 	Id string
-	// Title is the text shows on menu item
+	// Title is the text shown on menu item
 	Title string
-	// Tooltip is the text shows when point to menu item
+	// Tooltip is the text shown when pointing to menu item
 	Tooltip string
-	// Disabled menu item is gray out and has no effect when clicked
+	// Disabled menu item is grayed out and has no effect when clicked
 	Disabled bool
-	// Checked menu item has a tick before title
+	// Checked menu item has a tick before the title
 	Checked bool
 
-	// Ch is the channel which will be notified when menu item clicked
+	// Ch is the channel which will be notified when the menu item is clicked
 	Ch chan interface{}
 }
 
@@ -46,7 +46,8 @@ var (
 	menuItemsLock sync.RWMutex
 )
 
-// Run initializes GUI and starts event loop, then invoke the onReady callback.
+// Run initializes GUI and starts the event loop, then invokes the onReady
+// callback.
 // It blocks until systray.Quit() is called.
 // Should be called at the very beginning of main() to lock at main thread.
 func Run(onReady func()) {
@@ -65,7 +66,8 @@ func Quit() {
 }
 
 // SetIcon sets the systray icon.
-// iconBytes should be the content of .ico for windows and .png for other platforms.
+// iconBytes should be the content of .ico for windows and .png for other
+// platforms.
 func SetIcon(iconBytes []byte) {
 	cstr := (*C.char)(unsafe.Pointer(&iconBytes[0]))
 	C.setIcon(cstr, (C.int)(len(iconBytes)))
@@ -76,7 +78,8 @@ func SetTitle(title string) {
 	C.setTitle(C.CString(title))
 }
 
-// SetTitle sets the systray tooltip after the mouse stayed on tray icon for a while, only available on Mac.
+// SetTitle sets the systray tooltip to display on mouse hover of the tray icon,
+// only available on Mac.
 func SetTooltip(tooltip string) {
 	C.setTooltip(C.CString(tooltip))
 }
