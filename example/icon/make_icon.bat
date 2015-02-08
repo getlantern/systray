@@ -8,7 +8,7 @@ IF NOT EXIST %1 GOTO BADFILE
 ECHO Creating iconwin.go
 ECHO //+build windows > iconwin.go
 ECHO. >> iconwin.go
-TYPE %1 | %GOPATH%\bin\2goarray iconData main >> iconwin.go
+TYPE %1 | %GOPATH%\bin\2goarray Data icon >> iconwin.go
 GOTO DONE
 
 :CREATEFAIL

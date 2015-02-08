@@ -9,7 +9,7 @@ func main() {
 }
 
 func onReady() {
-	systray.SetIcon(iconData)
+	systray.SetIcon(icon.Data)
 	systray.SetTitle("Awesome App")
 	systray.SetTooltip("Pretty awesome超级棒")
 	mQuit := systray.AddMenuItem("quit", "Quit", "Quit the whole app")
@@ -33,13 +33,13 @@ Install [MinGW-W64](http://sourceforge.net/projects/mingw-w64) as it has up to d
 
 ## Try
 
-Under `example` folder, place your tray icon there, and run `make_icon.bat` or `make_icon.sh`, whichever suit for you os.
-Your icon should be .ico file under Windows, and .png for other platform.
+Under `example` folder.
+Place tray icon under `icon`, and use `make_icon.bat` or `make_icon.sh`, whichever suit for your os, to convert the icon to byte array.
+Your icon should be .ico file under Windows, whereas .ico, .jpg and .png is supported on other platform.
 
 ```sh
 go get
-go build
-./example # example.exe for Windows
+go run main.go
 ```
 
 ## Credits

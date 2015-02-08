@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/getlantern/systray"
+	"github.com/getlantern/systray/example/icon"
 	"github.com/skratchdot/open-golang/open"
 )
 
@@ -12,7 +13,7 @@ func main() {
 }
 
 func onReady() {
-	systray.SetIcon(iconData)
+	systray.SetIcon(icon.Data)
 	systray.SetTitle("Awesome App")
 	systray.SetTooltip("Pretty awesome超级棒")
 	mQuit := systray.AddMenuItem("quit", "Quit", "Quit the whole app")
@@ -24,7 +25,7 @@ func onReady() {
 
 	// We can manipulate the systray in other goroutines
 	go func() {
-		systray.SetIcon(iconData)
+		systray.SetIcon(icon.Data)
 		systray.SetTitle("Awesome App")
 		systray.SetTooltip("Pretty awesome棒棒嗒")
 		mChange := systray.AddMenuItem("change", "Change Me", "Change Me")

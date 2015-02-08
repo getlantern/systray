@@ -1,6 +1,6 @@
 /*
 Package systray is a cross platfrom Go library to place an icon and menu in the notification area.
-Supports Windows and Mac OSX currently, Linux coming soon.
+Supports Windows, Mac OSX and Linux currently.
 Methods can be called from any goroutine except Run(), which should be called at the very beginning of main() to lock at main thread.
 */
 package systray
