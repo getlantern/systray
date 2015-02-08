@@ -96,12 +96,12 @@ func AddMenuItem(title string, tooltip string) *MenuItem {
 	id := uuid.New()
 	item := &MenuItem{id, title, tooltip, false, false, nil}
 	item.Ch = make(chan interface{})
-	Update(item)
+	item.Update()
 	return item
 }
 
 // Update propogates changes on a menu item to systray
-func Update(item *MenuItem) {
+func (item *MenuItem) Update() {
 	menuItemsLock.Lock()
 	defer menuItemsLock.Unlock()
 	menuItems[item.id] = item

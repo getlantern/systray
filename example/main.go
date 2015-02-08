@@ -38,7 +38,7 @@ func onReady() {
 			select {
 			case <-mChange.Ch:
 				mChange.Title = "I've Changed"
-				systray.Update(mChange)
+				mChange.Update()
 			case <-mChecked.Ch:
 				mChecked.Checked = !mChecked.Checked
 				if mChecked.Checked {
@@ -46,11 +46,11 @@ func onReady() {
 				} else {
 					mChecked.Title = "Unchecked"
 				}
-				systray.Update(mChecked)
+				mChecked.Update()
 			case <-mEnabled.Ch:
 				mEnabled.Disabled = !mEnabled.Disabled
 				mEnabled.Title = "Disabled"
-				systray.Update(mEnabled)
+				mEnabled.Update()
 			case <-mUrl.Ch:
 				open.Run("https://www.getlantern.org")
 			case <-mQuit.Ch:
