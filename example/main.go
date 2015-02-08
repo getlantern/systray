@@ -37,20 +37,18 @@ func onReady() {
 		for {
 			select {
 			case <-mChange.Ch:
-				mChange.Title = "I've Changed"
-				mChange.Update()
+				mChange.SetTitle("I've Changed")
 			case <-mChecked.Ch:
-				mChecked.Checked = !mChecked.Checked
-				if mChecked.Checked {
-					mChecked.Title = "Checked"
+				if mChecked.Checked() {
+					mChecked.Uncheck()
+					mChecked.SetTitle("Unchecked")
 				} else {
-					mChecked.Title = "Unchecked"
+					mChecked.Check()
+					mChecked.SetTitle("Checked")
 				}
-				mChecked.Update()
 			case <-mEnabled.Ch:
-				mEnabled.Disabled = !mEnabled.Disabled
-				mEnabled.Title = "Disabled"
-				mEnabled.Update()
+				mChange.SetTitle("Disabled")
+				mEnabled.Disable()
 			case <-mUrl.Ch:
 				open.Run("https://www.getlantern.org")
 			case <-mQuit.Ch:

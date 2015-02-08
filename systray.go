@@ -26,14 +26,14 @@ import (
 type MenuItem struct {
 	// id uniquely identify a menu item, not supposed to be modified
 	id string
-	// Title is the text shown on menu item
-	Title string
-	// Tooltip is the text shown when pointing to menu item
-	Tooltip string
-	// Disabled menu item is grayed out and has no effect when clicked
-	Disabled bool
-	// Checked menu item has a tick before the title
-	Checked bool
+	// title is the text shown on menu item
+	title string
+	// tooltip is the text shown when pointing to menu item
+	tooltip string
+	// disabled menu item is grayed out and has no effect when clicked
+	disabled bool
+	// checked menu item has a tick before the title
+	checked bool
 
 	// Ch is the channel which will be notified when the menu item is clicked
 	Ch chan interface{}
@@ -95,27 +95,65 @@ func AddMenuItem(title string, tooltip string) *MenuItem {
 	id := uuid.New()
 	item := &MenuItem{id, title, tooltip, false, false, nil}
 	item.Ch = make(chan interface{})
-	item.Update()
+	item.update()
 	return item
 }
 
-// Update propogates changes on a menu item to systray
-func (item *MenuItem) Update() {
+func (item *MenuItem) SetTitle(title string) {
+	item.title = title
+	item.update()
+}
+
+func (item *MenuItem) SetTooltip(tooltip string) {
+	item.tooltip = tooltip
+	item.update()
+}
+
+func (item *MenuItem) Disabled() bool {
+	return item.disabled
+}
+
+func (item *MenuItem) Enable() {
+	item.disabled = false
+	item.update()
+}
+
+func (item *MenuItem) Disable() {
+	item.disabled = true
+	item.update()
+}
+
+func (item *MenuItem) Checked() bool {
+	return item.checked
+}
+
+func (item *MenuItem) Check() {
+	item.checked = true
+	item.update()
+}
+
+func (item *MenuItem) Uncheck() {
+	item.checked = false
+	item.update()
+}
+
+// update propogates changes on a menu item to systray
+func (item *MenuItem) update() {
 	menuItemsLock.Lock()
 	defer menuItemsLock.Unlock()
 	menuItems[item.id] = item
 	var disabled C.short = 0
-	if item.Disabled {
+	if item.disabled {
 		disabled = 1
 	}
 	var checked C.short = 0
-	if item.Checked {
+	if item.checked {
 		checked = 1
 	}
 	C.add_or_update_menu_item(
 		C.CString(item.id),
-		C.CString(item.Title),
-		C.CString(item.Tooltip),
+		C.CString(item.title),
+		C.CString(item.tooltip),
 		disabled,
 		checked,
 	)
