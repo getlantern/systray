@@ -16,6 +16,7 @@ package systray
 */
 import "C"
 import (
+	"code.google.com/p/go-uuid/uuid"
 	"runtime"
 	"sync"
 	"unsafe"
@@ -24,8 +25,8 @@ import (
 // MenuItem is used to keep track each menu item of systray
 // Don't create it directly, use the one systray.AddMenuItem() returned
 type MenuItem struct {
-	// Id uniquely identify a menu item, not supposed to be modified
-	Id string
+	// id uniquely identify a menu item, not supposed to be modified
+	id string
 	// Title is the text shown on menu item
 	Title string
 	// Tooltip is the text shown when pointing to menu item
@@ -91,7 +92,8 @@ func SetTooltip(tooltip string) {
 // overwrites the first.
 //
 // AddMenuItem can be safely invoked from different goroutines.
-func AddMenuItem(id string, title string, tooltip string) *MenuItem {
+func AddMenuItem(title string, tooltip string) *MenuItem {
+	id := uuid.New()
 	item := &MenuItem{id, title, tooltip, false, false, nil}
 	item.Ch = make(chan interface{})
 	Update(item)
@@ -102,7 +104,7 @@ func AddMenuItem(id string, title string, tooltip string) *MenuItem {
 func Update(item *MenuItem) {
 	menuItemsLock.Lock()
 	defer menuItemsLock.Unlock()
-	menuItems[item.Id] = item
+	menuItems[item.id] = item
 	var disabled C.short = 0
 	if item.Disabled {
 		disabled = 1
@@ -112,7 +114,7 @@ func Update(item *MenuItem) {
 		checked = 1
 	}
 	C.add_or_update_menu_item(
-		C.CString(item.Id),
+		C.CString(item.id),
 		C.CString(item.Title),
 		C.CString(item.Tooltip),
 		disabled,

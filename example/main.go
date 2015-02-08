@@ -16,7 +16,7 @@ func onReady() {
 	systray.SetIcon(icon.Data)
 	systray.SetTitle("Awesome App")
 	systray.SetTooltip("Pretty awesome超级棒")
-	mQuit := systray.AddMenuItem("quit", "Quit", "Quit the whole app")
+	mQuit := systray.AddMenuItem("Quit", "Quit the whole app")
 	go func() {
 		<-mQuit.Ch
 		systray.Quit()
@@ -28,12 +28,12 @@ func onReady() {
 		systray.SetIcon(icon.Data)
 		systray.SetTitle("Awesome App")
 		systray.SetTooltip("Pretty awesome棒棒嗒")
-		mChange := systray.AddMenuItem("change", "Change Me", "Change Me")
-		mChecked := systray.AddMenuItem("check", "Unchecked", "Check Me")
-		mEnabled := systray.AddMenuItem("enable", "Enabled", "Enabled")
-		systray.AddMenuItem("ignore", "Ignored", "Ignored")
-		mUrl := systray.AddMenuItem("lantern", "Open Lantern.org", "my home")
-		mQuit := systray.AddMenuItem("quit2", "退出", "Quit the whole app")
+		mChange := systray.AddMenuItem("Change Me", "Change Me")
+		mChecked := systray.AddMenuItem("Unchecked", "Check Me")
+		mEnabled := systray.AddMenuItem("Enabled", "Enabled")
+		systray.AddMenuItem("Ignored", "Ignored")
+		mUrl := systray.AddMenuItem("Open Lantern.org", "my home")
+		mQuit := systray.AddMenuItem("退出", "Quit the whole app")
 		for {
 			select {
 			case <-mChange.Ch:
