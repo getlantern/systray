@@ -66,8 +66,8 @@ func Quit() {
 }
 
 // SetIcon sets the systray icon.
-// iconBytes should be the content of .ico for windows and .png for other
-// platforms.
+// iconBytes should be the content of .ico for windows and .ico/.jpg/.png
+// for other platforms.
 func SetIcon(iconBytes []byte) {
 	cstr := (*C.char)(unsafe.Pointer(&iconBytes[0]))
 	C.setIcon(cstr, (C.int)(len(iconBytes)))
