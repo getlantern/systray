@@ -24,6 +24,9 @@ import (
 // MenuItem is used to keep track each menu item of systray
 // Don't create it directly, use the one systray.AddMenuItem() returned
 type MenuItem struct {
+	// Ch is the channel which will be notified when the menu item is clicked
+	Ch chan interface{}
+
 	// id uniquely identify a menu item, not supposed to be modified
 	id string
 	// title is the text shown on menu item
@@ -34,9 +37,6 @@ type MenuItem struct {
 	disabled bool
 	// checked menu item has a tick before the title
 	checked bool
-
-	// Ch is the channel which will be notified when the menu item is clicked
-	Ch chan interface{}
 }
 
 var (
@@ -93,7 +93,7 @@ func SetTooltip(tooltip string) {
 // AddMenuItem can be safely invoked from different goroutines.
 func AddMenuItem(title string, tooltip string) *MenuItem {
 	id := uuid.New()
-	item := &MenuItem{id, title, tooltip, false, false, nil}
+	item := &MenuItem{nil, id, title, tooltip, false, false}
 	item.Ch = make(chan interface{})
 	item.update()
 	return item
