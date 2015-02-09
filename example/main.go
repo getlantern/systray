@@ -18,7 +18,7 @@ func onReady() {
 	systray.SetTooltip("Pretty awesome超级棒")
 	mQuit := systray.AddMenuItem("Quit", "Quit the whole app")
 	go func() {
-		<-mQuit.Ch
+		<-mQuit.ClickedCh
 		systray.Quit()
 		fmt.Println("Quit now...")
 	}()
@@ -36,9 +36,9 @@ func onReady() {
 		mQuit := systray.AddMenuItem("退出", "Quit the whole app")
 		for {
 			select {
-			case <-mChange.Ch:
+			case <-mChange.ClickedCh:
 				mChange.SetTitle("I've Changed")
-			case <-mChecked.Ch:
+			case <-mChecked.ClickedCh:
 				if mChecked.Checked() {
 					mChecked.Uncheck()
 					mChecked.SetTitle("Unchecked")
@@ -46,12 +46,12 @@ func onReady() {
 					mChecked.Check()
 					mChecked.SetTitle("Checked")
 				}
-			case <-mEnabled.Ch:
+			case <-mEnabled.ClickedCh:
 				mEnabled.SetTitle("Disabled")
 				mEnabled.Disable()
-			case <-mUrl.Ch:
+			case <-mUrl.ClickedCh:
 				open.Run("https://www.getlantern.org")
-			case <-mQuit.Ch:
+			case <-mQuit.ClickedCh:
 				systray.Quit()
 				fmt.Println("Quit2 now...")
 				return

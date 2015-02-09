@@ -24,8 +24,8 @@ import (
 // MenuItem is used to keep track each menu item of systray
 // Don't create it directly, use the one systray.AddMenuItem() returned
 type MenuItem struct {
-	// Ch is the channel which will be notified when the menu item is clicked
-	Ch chan interface{}
+	// ClickedCh is the channel which will be notified when the menu item is clicked
+	ClickedCh chan interface{}
 
 	// id uniquely identify a menu item, not supposed to be modified
 	id string
@@ -94,7 +94,7 @@ func SetTooltip(tooltip string) {
 func AddMenuItem(title string, tooltip string) *MenuItem {
 	id := uuid.New()
 	item := &MenuItem{nil, id, title, tooltip, false, false}
-	item.Ch = make(chan interface{})
+	item.ClickedCh = make(chan interface{})
 	item.update()
 	return item
 }
@@ -171,7 +171,7 @@ func systray_menu_item_selected(cId *C.char) {
 	item := menuItems[id]
 	menuItemsLock.RUnlock()
 	select {
-	case item.Ch <- nil:
+	case item.ClickedCh <- nil:
 	// in case no one waiting for the channel
 	default:
 	}
