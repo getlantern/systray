@@ -47,7 +47,7 @@ func onReady() {
 					mChecked.SetTitle("Checked")
 				}
 			case <-mEnabled.Ch:
-				mChange.SetTitle("Disabled")
+				mEnabled.SetTitle("Disabled")
 				mEnabled.Disable()
 			case <-mUrl.Ch:
 				open.Run("https://www.getlantern.org")
