@@ -4,12 +4,12 @@
 #include <shellapi.h>
 #include "systray.h"
 
+// Message posted into message loop when Notification Icon is clicked
 #define WM_SYSTRAY_MESSAGE (WM_USER + 1)
-#define MAX_LOADSTRING 100
 
-NOTIFYICONDATA nid;
-HWND hWnd;
-HMENU hTrayMenu;
+static NOTIFYICONDATA nid;
+static HWND hWnd;
+static HMENU hTrayMenu;
 
 wchar_t* UTF8ToUnicode(const char* str)
 {
