@@ -12,7 +12,7 @@ func onReady() {
 	systray.SetIcon(icon.Data)
 	systray.SetTitle("Awesome App")
 	systray.SetTooltip("Pretty awesome超级棒")
-	mQuit := systray.AddMenuItem("quit", "Quit", "Quit the whole app")
+	mQuit := systray.AddMenuItem("Quit", "Quit the whole app")
 }
 ```
 Menu item can be checked and / or disabled. Methods except `Run()` can be invoked from any goroutine. See demo code under `example` folder.
