@@ -23,6 +23,14 @@ void (*d_app_indicator_set_status)(AppIndicator*, AppIndicatorStatus);
 
 void (*d_app_indicator_set_menu)(AppIndicator*, GtkMenu*);
 
+void (*d_app_indicator_set_label)(AppIndicator*, const gchar*, const gchar*);
+
+void (*d_app_indicator_set_icon_full)(AppIndicator*, const gchar*, const gchar*);
+
+void (*d_app_indicator_set_attention_icon_full)(AppIndicator*, const gchar *icon_name);
+
+app_indicator_set_icon_full
+
 void *library(const char* name) {
     void *handle = dlopen(name, RTLD_LAZY);
     if (!handle) {
@@ -60,6 +68,13 @@ void load_libraries() {
     d_app_indicator_new = symbol(libappindicator3, "app_indicator_new");
     d_app_indicator_set_status = symbol(libappindicator3, "app_indicator_set_status");
     d_app_indicator_set_menu = symbol(libappindicator3, "app_indicator_set_menu");
+    d_app_indicator_set_label = symbol(libappindicator3, "app_indicator_set_label");
+    d_app_indicator_set_icon_full = symbol(libappindicator3, "app_indicator_set_icon_full");
+    d_app_indicator_set_attention_icon_full = symbol(libappindicator3, "app_indicator_set_attention_icon_full");
+    
+
+    
+    
 }
 
 int nativeLoop(void) {
@@ -95,8 +110,8 @@ gboolean do_set_icon(gpointer data) {
 		printf("failed to write temp icon file %s: %s\n", temp_file_name, strerror(errno));
 		return FALSE;
 	}
-	app_indicator_set_icon_full(global_app_indicator, temp_file_name, "");
-	app_indicator_set_attention_icon_full(global_app_indicator, temp_file_name, "");
+	d_app_indicator_set_icon_full(global_app_indicator, temp_file_name, "");
+	d_app_indicator_set_attention_icon_full(global_app_indicator, temp_file_name, "");
 	g_bytes_unref(bytes);
 	return FALSE;
 }
@@ -165,7 +180,7 @@ void setIcon(const char* iconBytes, int length) {
 }
 
 void setTitle(char* ctitle) {
-	app_indicator_set_label(global_app_indicator, ctitle, "");
+	d_app_indicator_set_label(global_app_indicator, ctitle, "");
 	free(ctitle);
 }
 
