@@ -33,13 +33,6 @@
   checked = theChecked;
   return self;
 }
-
--(void) dealloc {
-  [menuId release];
-  [title release];
-  [tooltip release];
-  [super dealloc];
-}
 @end
 
 @interface AppDelegate: NSObject <NSApplicationDelegate>
@@ -59,9 +52,9 @@
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
-  self->statusItem = [[[NSStatusBar systemStatusBar] statusItemWithLength:NSVariableStatusItemLength] retain];
+  self->statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSVariableStatusItemLength];
   NSZone *menuZone = [NSMenu menuZone];
-  self->menu = [[[NSMenu allocWithZone:menuZone] init] autorelease];
+  self->menu = [[NSMenu allocWithZone:menuZone] init];
   [self->menu setAutoenablesItems: FALSE];
   [self->statusItem setMenu:self->menu];
   systray_ready();
@@ -74,17 +67,14 @@
 
 - (void)setIcon:(NSImage *)image {
   [statusItem setImage:image];
-  [image release];
 }
 
 - (void)setTitle:(NSString *)title {
   [statusItem setTitle:title];
-  [title release];
 }
 
 - (void)setTooltip:(NSString *)tooltip {
   [statusItem setToolTip:tooltip];
-  [tooltip release];
 }
 
 - (IBAction)menuHandler:(id)sender
@@ -118,7 +108,6 @@
   } else {
     [menuItem setState:NSOffState];
   }
-  [item release];
 }
 
 - (void) quit
@@ -129,7 +118,7 @@
 @end
 
 int nativeLoop(void) {
-  AppDelegate *delegate = [[[AppDelegate alloc] init] autorelease];
+  AppDelegate *delegate = [[AppDelegate alloc] init];
   [[NSApplication sharedApplication] setDelegate:delegate];
   [NSApp run];
   return EXIT_SUCCESS;

@@ -8,7 +8,7 @@ package systray
 /*
 #cgo linux pkg-config: gtk+-3.0 appindicator3-0.1
 #cgo windows CFLAGS: -DWIN32 -DUNICODE -D_UNICODE
-#cgo darwin CFLAGS: -DDARWIN -x objective-c
+#cgo darwin CFLAGS: -DDARWIN -x objective-c -fobjc-arc
 #cgo darwin LDFLAGS: -framework Cocoa
 
 #include "systray.h"
