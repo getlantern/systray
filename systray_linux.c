@@ -8,6 +8,7 @@
 static AppIndicator *global_app_indicator;
 static GtkWidget *global_tray_menu = NULL;
 static GList *global_menu_items = NULL;
+// Keep track of all generated temp files to remove when app quits
 static GArray *global_temp_icon_file_names = NULL;
 
 typedef struct {
