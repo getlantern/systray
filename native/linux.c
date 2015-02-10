@@ -29,8 +29,6 @@ void (*d_app_indicator_set_icon_full)(AppIndicator*, const gchar*, const gchar*)
 
 void (*d_app_indicator_set_attention_icon_full)(AppIndicator*, const gchar*, const gchar*);
 
-app_indicator_set_icon_full
-
 void *library(const char* name) {
     void *handle = dlopen(name, RTLD_LAZY);
     if (!handle) {
