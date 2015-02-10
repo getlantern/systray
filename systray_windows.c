@@ -64,7 +64,12 @@ char* GetMenuItemId(int index) {
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
 	switch (message) {
 		case WM_MENUCOMMAND:
-			systray_menu_item_selected(GetMenuItemId(wParam));
+			{
+				char * menuId = GetMenuItemId(wParam);
+				if (menuId != NULL) {
+					systray_menu_item_selected(menuId);
+				}
+			}
 			break;
 		case WM_DESTROY:
 			Shell_NotifyIcon(NIM_DELETE, &nid);
