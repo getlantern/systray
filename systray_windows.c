@@ -168,39 +168,47 @@ int nativeLoop(void) {
 
 void setIcon(const char* iconBytes, int length) {
 	HICON hIcon;
-	{
-		// This is really hacky, but LoadImage won't let me load an image from memory.
-		// So we have to write out a temporary file, load it from there, then delete the file.
+	// This is really hacky, but LoadImage won't let me load an image from memory.
+	// So we have to write out a temporary file, load it from there, then delete the file.
 
-		// From http://msdn.microsoft.com/en-us/library/windows/desktop/aa363875.aspx
-		TCHAR szTempFileName[MAX_PATH+1];
-		TCHAR lpTempPathBuffer[MAX_PATH+1];
-		int dwRetVal = GetTempPath(MAX_PATH+1, lpTempPathBuffer);
-		if (dwRetVal > MAX_PATH+1 || (dwRetVal == 0)) {
-			reportWindowsError("get temp icon path");
-			return;
-		}
-
-		int uRetVal = GetTempFileName(lpTempPathBuffer, TEXT("systray_"), 0, szTempFileName);
-		if (uRetVal == 0) {
-			reportWindowsError("get temp icon file name");
-			return;
-		}
-
-		FILE* fIcon = _wfopen(szTempFileName, TEXT("wb"));
-		if (length != fwrite(iconBytes, 1, length, fIcon)) {
-			printf("error write temp icon file\n");
-		};
-		fclose(fIcon);
-
-		hIcon = LoadImage(NULL, szTempFileName, IMAGE_ICON, 64, 64, LR_LOADFROMFILE);
-
-		_wremove(szTempFileName);
+	// From http://msdn.microsoft.com/en-us/library/windows/desktop/aa363875.aspx
+	TCHAR szTempFileName[MAX_PATH+1];
+	TCHAR lpTempPathBuffer[MAX_PATH+1];
+	int dwRetVal = GetTempPath(MAX_PATH+1, lpTempPathBuffer);
+	if (dwRetVal > MAX_PATH+1 || (dwRetVal == 0)) {
+		reportWindowsError("get temp icon path");
+		return;
 	}
 
-	nid.hIcon = hIcon;
-	nid.uFlags = NIF_ICON;
-	Shell_NotifyIcon(NIM_MODIFY, &nid);
+	int uRetVal = GetTempFileName(lpTempPathBuffer, TEXT("systray_"), 0, szTempFileName);
+	if (uRetVal == 0) {
+		reportWindowsError("get temp icon file name");
+		return;
+	}
+
+	FILE* fIcon = _wfopen(szTempFileName, TEXT("wb"));
+	if (fIcon == NULL) {
+		reportWindowsError("open temp icon file to write");
+		return;
+	}
+	ssize_t bytesWritten = fwrite(iconBytes, 1, length, fIcon);
+	fclose(fIcon);
+	if (bytesWritten != length) {
+		printf("error write temp icon file\n");
+	} else {
+
+		hIcon = LoadImage(NULL, szTempFileName, IMAGE_ICON, 64, 64, LR_LOADFROMFILE);
+		if (hIcon == NULL) {
+			reportWindowsError("load icon image");
+		} else {
+
+			nid.hIcon = hIcon;
+			nid.uFlags = NIF_ICON;
+			Shell_NotifyIcon(NIM_MODIFY, &nid);
+		}
+	}
+	_wremove(szTempFileName);
+
 }
 
 // Don't support for Windows
