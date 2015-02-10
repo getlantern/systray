@@ -36,6 +36,7 @@ int nativeLoop(void) {
 	return;
 }
 
+// runs in main thread, should always return FALSE to prevent gtk to execute it again
 gboolean do_set_icon(gpointer data) {
 	GBytes* bytes = (GBytes*)data;
 	char* temp_file_name = malloc(PATH_MAX);
@@ -60,6 +61,7 @@ gboolean do_set_icon(gpointer data) {
 	return FALSE;
 }
 
+// runs in main thread, should always return FALSE to prevent gtk to execute it again
 gboolean do_add_or_update_menu_item(gpointer data) {
 	MenuItemInfo *mii = (MenuItemInfo*)data;
 	GList* it;
@@ -100,6 +102,7 @@ gboolean do_add_or_update_menu_item(gpointer data) {
 	return FALSE;
 }
 
+// runs in main thread, should always return FALSE to prevent gtk to execute it again
 gboolean do_quit(gpointer data) {
 	int i;
 	for (i = 0; i < INT_MAX; ++i) {
