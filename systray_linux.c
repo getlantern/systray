@@ -30,25 +30,28 @@ int nativeLoop(void) {
 	app_indicator_set_status(global_app_indicator, APP_INDICATOR_STATUS_ACTIVE);
 	global_tray_menu = gtk_menu_new();
 	app_indicator_set_menu(global_app_indicator, GTK_MENU(global_tray_menu));
+	global_temp_icon_file_names = g_array_new(TRUE, FALSE, sizeof(char*));
 	systray_ready();
 	gtk_main();
+	return;
 }
 
 gboolean do_set_icon(gpointer data) {
 	GBytes* bytes = (GBytes*)data;
-	if (global_temp_icon_file_names == NULL) {
-		global_temp_icon_file_names = g_array_new(TRUE, FALSE, sizeof(char*));
-	}
 	char* temp_file_name = malloc(PATH_MAX);
-	g_array_append_val(global_temp_icon_file_names, temp_file_name);
 	strcpy(temp_file_name, "/tmp/systray_XXXXXX");
 	int fd = mkstemp(temp_file_name);
+	if (fd == -1) {
+		printf("failed to create temp icon file %s: %s\n", temp_file_name, strerror(errno));
+		return FALSE;
+	}
+	g_array_append_val(global_temp_icon_file_names, temp_file_name);
 	gsize size = 0;
 	gconstpointer icon_data = g_bytes_get_data(bytes, &size);
 	ssize_t written = write(fd, icon_data, size);
 	close(fd);
 	if(written != size) {
-		printf("failed to write temp icon file: %s\n", strerror(errno));
+		printf("failed to write temp icon file %s: %s\n", temp_file_name, strerror(errno));
 		return FALSE;
 	}
 	app_indicator_set_icon_full(global_app_indicator, temp_file_name, "");
@@ -104,7 +107,10 @@ gboolean do_quit(gpointer data) {
 		if (temp_file_name == NULL) {
 			break;
 		}
-		unlink(temp_file_name);
+		int ret = unlink(temp_file_name);
+		if (ret == -1) {
+			printf("failed to remove temp icon file %s: %s\n", temp_file_name, strerror(errno));
+		}
 	}
 	gtk_main_quit();
 	return FALSE;
