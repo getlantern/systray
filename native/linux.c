@@ -1,4 +1,6 @@
 #include <stdlib.h>
+#include <stdio.h>
+#include <dlfcn.h>
 #include <string.h>
 #include <errno.h>
 #include <limits.h>
@@ -10,6 +12,35 @@ static GtkWidget *global_tray_menu = NULL;
 static GList *global_menu_items = NULL;
 // Keep track of all generated temp files to remove when app quits
 static GArray *global_temp_icon_file_names = NULL;
+
+// Dynamically loaded libraries and functions from libappindicator and libgtk. We do this to support cross-compiling from platforms that don't have these libraries
+
+void *libappindicator3;
+
+AppIndicator* (*d_app_indicator_new)(const gchar*, const gchar*, AppIndicatorCategory);
+
+void (*d_app_indicator_set_status)(AppIndicator*, AppIndicatorStatus);
+
+void (*d_app_indicator_set_menu)(AppIndicator*, GtkMenu*);
+
+void *library(const char* name) {
+    void *handle = dlopen(name, RTLD_LAZY);
+    if (!handle) {
+        fputs(dlerror(), stderr);
+        exit(1);
+    }
+    return handle;
+}
+
+void *symbol(void *library, const char* name) {
+    char *error;
+    void *sym = dlsym(library, name);
+    if ((error = dlerror()) != NULL) {
+        fputs(error, stderr);
+        exit(1);
+    }
+    return sym;
+}
 
 typedef struct {
 	GtkWidget *menu_item;
@@ -24,13 +55,21 @@ typedef struct {
 	short checked;
 } MenuItemInfo;
 
+void load_libraries() {
+    libappindicator3 = library("libappindicator3");
+    d_app_indicator_new = symbol(libappindicator3, "app_indicator_new");
+    d_app_indicator_set_status = symbol(libappindicator3, "app_indicator_set_status");
+    d_app_indicator_set_menu = symbol(libappindicator3, "app_indicator_set_menu");
+}
+
 int nativeLoop(void) {
+    load_libraries();
 	gtk_init(0, NULL);
-	global_app_indicator = app_indicator_new("systray", "",
+	global_app_indicator = d_app_indicator_new("systray", "",
 			APP_INDICATOR_CATEGORY_APPLICATION_STATUS);
-	app_indicator_set_status(global_app_indicator, APP_INDICATOR_STATUS_ACTIVE);
+	d_app_indicator_set_status(global_app_indicator, APP_INDICATOR_STATUS_ACTIVE);
 	global_tray_menu = gtk_menu_new();
-	app_indicator_set_menu(global_app_indicator, GTK_MENU(global_tray_menu));
+	d_app_indicator_set_menu(global_app_indicator, GTK_MENU(global_tray_menu));
 	global_temp_icon_file_names = g_array_new(TRUE, FALSE, sizeof(char*));
 	systray_ready();
 	gtk_main();
