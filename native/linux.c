@@ -27,7 +27,7 @@ void (*d_app_indicator_set_label)(AppIndicator*, const gchar*, const gchar*);
 
 void (*d_app_indicator_set_icon_full)(AppIndicator*, const gchar*, const gchar*);
 
-void (*d_app_indicator_set_attention_icon_full)(AppIndicator*, const gchar *icon_name);
+void (*d_app_indicator_set_attention_icon_full)(AppIndicator*, const gchar*, const gchar*);
 
 app_indicator_set_icon_full
 
