@@ -1,6 +1,4 @@
 #include <stdlib.h>
-#include <stdio.h>
-#include <dlfcn.h>
 #include <string.h>
 #include <errno.h>
 #include <limits.h>
@@ -12,42 +10,6 @@ static GtkWidget *global_tray_menu = NULL;
 static GList *global_menu_items = NULL;
 // Keep track of all generated temp files to remove when app quits
 static GArray *global_temp_icon_file_names = NULL;
-
-// Dynamically loaded libraries and functions from libappindicator and libgtk. We do this to support cross-compiling from platforms that don't have these libraries
-
-void *libglib2;
-GArray* (*d_g_array_new());
-
-void *libgtk3;
-void (*d_gtk_main)();
-GtkWidget* (*d_gtk_menu_new())();
-
-void *libappindicator3;
-AppIndicator* (*d_app_indicator_new)(const gchar*, const gchar*, AppIndicatorCategory);
-void (*d_app_indicator_set_status)(AppIndicator*, AppIndicatorStatus);
-void (*d_app_indicator_set_menu)(AppIndicator*, GtkMenu*);
-void (*d_app_indicator_set_label)(AppIndicator*, const gchar*, const gchar*);
-void (*d_app_indicator_set_icon_full)(AppIndicator*, const gchar*, const gchar*);
-void (*d_app_indicator_set_attention_icon_full)(AppIndicator*, const gchar*, const gchar*);
-
-void *library(const char* name) {
-    void *handle = dlopen(name, RTLD_LAZY);
-    if (!handle) {
-        fputs(dlerror(), stderr);
-        exit(1);
-    }
-    return handle;
-}
-
-void *symbol(void *library, const char* name) {
-    char *error;
-    void *sym = dlsym(library, name);
-    if ((error = dlerror()) != NULL) {
-        fputs(error, stderr);
-        exit(1);
-    }
-    return sym;
-}
 
 typedef struct {
 	GtkWidget *menu_item;
@@ -62,60 +24,16 @@ typedef struct {
 	short checked;
 } MenuItemInfo;
 
-void load_libraries() {
-	libglib2 = library("libglib-2.0");
-	d_g_array_new = symbol(libglib2, "g_array_new");
-	d_g_array_append_val = symbol(libglib2, "g_array_append_val");
-    d_ = symbol(libglib2, "replaceme");
-    d_ = symbol(libglib2, "replaceme");
-    d_ = symbol(libglib2, "replaceme");
-    d_ = symbol(libglib2, "replaceme");
-    d_ = symbol(libglib2, "replaceme");
-    d_ = symbol(libglib2, "replaceme");
-    d_ = symbol(libglib2, "replaceme");
-    d_ = symbol(libglib2, "replaceme");
-    d_ = symbol(libglib2, "replaceme");
-    d_ = symbol(libglib2, "replaceme");
-        
-
-	libgtk3 = library("libgtk-3");
-    d_gtk_init = symbol(libgtk3, "gtk_init");
-    d_gtk_menu_new = symbol(libgtk3, "gtk_menu_new");
-    d_gtk_main = symbol(libgtk3, "gtk_main");
-    d_ = symbol(libgtk3, "replaceme");
-    d_ = symbol(libgtk3, "replaceme");
-    d_ = symbol(libgtk3, "replaceme");
-    d_ = symbol(libgtk3, "replaceme");
-    d_ = symbol(libgtk3, "replaceme");
-    d_ = symbol(libgtk3, "replaceme");
-    d_ = symbol(libgtk3, "replaceme");
-    d_ = symbol(libgtk3, "replaceme");
-    d_ = symbol(libgtk3, "replaceme");
-
-    libappindicator3 = library("libappindicator3");
-    d_app_indicator_new = symbol(libappindicator3, "app_indicator_new");
-    d_app_indicator_set_status = symbol(libappindicator3, "app_indicator_set_status");
-    d_app_indicator_set_menu = symbol(libappindicator3, "app_indicator_set_menu");
-    d_app_indicator_set_label = symbol(libappindicator3, "app_indicator_set_label");
-    d_app_indicator_set_icon_full = symbol(libappindicator3, "app_indicator_set_icon_full");
-    d_app_indicator_set_attention_icon_full = symbol(libappindicator3, "app_indicator_set_attention_icon_full");
-    
-
-    
-    
-}
-
 int nativeLoop(void) {
-    load_libraries();
-	d_gtk_init(0, NULL);
-	global_app_indicator = d_app_indicator_new("systray", "",
+	gtk_init(0, NULL);
+	global_app_indicator = app_indicator_new("systray", "",
 			APP_INDICATOR_CATEGORY_APPLICATION_STATUS);
-	d_app_indicator_set_status(global_app_indicator, APP_INDICATOR_STATUS_ACTIVE);
-	global_tray_menu = d_gtk_menu_new();
-	d_app_indicator_set_menu(global_app_indicator, GTK_MENU(global_tray_menu));
-	global_temp_icon_file_names = d_g_array_new(TRUE, FALSE, sizeof(char*));
+	app_indicator_set_status(global_app_indicator, APP_INDICATOR_STATUS_ACTIVE);
+	global_tray_menu = gtk_menu_new();
+	app_indicator_set_menu(global_app_indicator, GTK_MENU(global_tray_menu));
+	global_temp_icon_file_names = g_array_new(TRUE, FALSE, sizeof(char*));
 	systray_ready();
-	d_gtk_main();
+	gtk_main();
 	return;
 }
 
@@ -138,8 +56,8 @@ gboolean do_set_icon(gpointer data) {
 		printf("failed to write temp icon file %s: %s\n", temp_file_name, strerror(errno));
 		return FALSE;
 	}
-	d_app_indicator_set_icon_full(global_app_indicator, temp_file_name, "");
-	d_app_indicator_set_attention_icon_full(global_app_indicator, temp_file_name, "");
+	app_indicator_set_icon_full(global_app_indicator, temp_file_name, "");
+	app_indicator_set_attention_icon_full(global_app_indicator, temp_file_name, "");
 	g_bytes_unref(bytes);
 	return FALSE;
 }
@@ -208,7 +126,7 @@ void setIcon(const char* iconBytes, int length) {
 }
 
 void setTitle(char* ctitle) {
-	d_app_indicator_set_label(global_app_indicator, ctitle, "");
+	app_indicator_set_label(global_app_indicator, ctitle, "");
 	free(ctitle);
 }
 
