@@ -6,7 +6,7 @@ Methods can be called from any goroutine except Run(), which should be called at
 package systray
 
 /*
-#cgo linux,amd64 LDFLAGS: libsystray_linux_amd64.a
+#cgo linux,amd64 LDFLAGS: libsystray_linux_amd64.a -ldl
 #cgo windows CFLAGS: -DWIN32 -DUNICODE -D_UNICODE
 #cgo darwin CFLAGS: -DDARWIN -x objective-c -fobjc-arc
 #cgo darwin LDFLAGS: -framework Cocoa
