@@ -6,10 +6,11 @@ Methods can be called from any goroutine except Run(), which should be called at
 package systray
 
 /*
+#cgo LDFLAGS: -L /Users/merlin/workspace/go/src/github.com/getlantern/systray
 #cgo linux pkg-config: gtk+-3.0 appindicator3-0.1
 #cgo windows CFLAGS: -DWIN32 -DUNICODE -D_UNICODE
-#cgo darwin CFLAGS: -DDARWIN -x objective-c -fobjc-arc
-#cgo darwin LDFLAGS: -framework Cocoa
+#cgo darwin 386 LDFLAGS: -framework Cocoa -lsystray_darwin_386
+#cgo darwin amd64 LDFLAGS: -framework Cocoa -lsystray_darwin_amd64
 
 #include "systray.h"
 */

@@ -1,5 +1,5 @@
 #import <Cocoa/Cocoa.h>
-#include "systray.h"
+#include "../systray.h"
 
 @interface MenuItem : NSObject
 {
@@ -49,7 +49,7 @@
 }
 
 @synthesize window = _window;
-
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
   self->statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSVariableStatusItemLength];
@@ -64,6 +64,7 @@
 {
   [[NSStatusBar systemStatusBar] removeStatusItem: statusItem];
 }
+#pragma GCC diagnostic warning "-Wunused-parameter"
 
 - (void)setIcon:(NSImage *)image {
   [statusItem setImage:image];
