@@ -33,6 +33,12 @@ XP and build for Release (not Debug). Check the resulting dll into git at Git at
 dll/systray.dll and run ./embeddll.bash to generate the systraydll_windows.go
 file.
 
+The solution is configured to build with platform toolset v90 and dynamic
+linking to save on size and support Windows XP.  To get platform toolset v90,
+you need to install Visual Studio 2008 (express edition is okay). You can
+build with a more recent Visual Studio, you just need the old one for the
+toolset.
+
 ## Try
 
 Under `example` folder.

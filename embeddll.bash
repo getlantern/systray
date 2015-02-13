@@ -6,4 +6,5 @@
 #
 ###############################################################################
 
+go get github.com/jteeuwen/go-bindata/go-bindata
 go-bindata -nomemcopy -nocompress -pkg systray -prefix dll -o systraydll_windows.go dll
