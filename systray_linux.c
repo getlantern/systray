@@ -13,7 +13,7 @@ static GArray *global_temp_icon_file_names = NULL;
 
 typedef struct {
 	GtkWidget *menu_item;
-	char *menu_id;
+	int menu_id;
 } MenuItemNode;
 
 typedef struct {
