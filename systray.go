@@ -5,20 +5,12 @@ Methods can be called from any goroutine except Run(), which should be called at
 */
 package systray
 
-/*
-#cgo linux pkg-config: gtk+-3.0 appindicator3-0.1
-#cgo windows CFLAGS: -DWIN32 -DUNICODE -D_UNICODE
-#cgo darwin CFLAGS: -DDARWIN -x objective-c -fobjc-arc
-#cgo darwin LDFLAGS: -framework Cocoa
-
-#include "systray.h"
-*/
-import "C"
 import (
-	"code.google.com/p/go-uuid/uuid"
 	"runtime"
 	"sync"
-	"unsafe"
+
+	"code.google.com/p/go-uuid/uuid"
+	"github.com/getlantern/golog"
 )
 
 // MenuItem is used to keep track each menu item of systray
@@ -40,6 +32,8 @@ type MenuItem struct {
 }
 
 var (
+	log = golog.LoggerFor("systray")
+
 	readyCh       = make(chan interface{})
 	clickedCh     = make(chan interface{})
 	menuItems     = make(map[string]*MenuItem)
@@ -57,31 +51,12 @@ func Run(onReady func()) {
 		onReady()
 	}()
 
-	C.nativeLoop()
+	nativeLoop()
 }
 
 // Quit the systray and whole app
 func Quit() {
-	C.quit()
-}
-
-// SetIcon sets the systray icon.
-// iconBytes should be the content of .ico for windows and .ico/.jpg/.png
-// for other platforms.
-func SetIcon(iconBytes []byte) {
-	cstr := (*C.char)(unsafe.Pointer(&iconBytes[0]))
-	C.setIcon(cstr, (C.int)(len(iconBytes)))
-}
-
-// SetTitle sets the systray title, only available on Mac.
-func SetTitle(title string) {
-	C.setTitle(C.CString(title))
-}
-
-// SetTitle sets the systray tooltip to display on mouse hover of the tray icon,
-// only available on Mac.
-func SetTooltip(tooltip string) {
-	C.setTooltip(C.CString(tooltip))
+	quit()
 }
 
 // Add menu item with designated title and tooltip, returning a channel that
@@ -142,31 +117,14 @@ func (item *MenuItem) update() {
 	menuItemsLock.Lock()
 	defer menuItemsLock.Unlock()
 	menuItems[item.id] = item
-	var disabled C.short = 0
-	if item.disabled {
-		disabled = 1
-	}
-	var checked C.short = 0
-	if item.checked {
-		checked = 1
-	}
-	C.add_or_update_menu_item(
-		C.CString(item.id),
-		C.CString(item.title),
-		C.CString(item.tooltip),
-		disabled,
-		checked,
-	)
+	addOrUpdateMenuItem(item)
 }
 
-//export systray_ready
-func systray_ready() {
+func systrayReady() {
 	readyCh <- nil
 }
 
-//export systray_menu_item_selected
-func systray_menu_item_selected(cId *C.char) {
-	id := C.GoString(cId)
+func systrayMenuItemSelected(id string) {
 	menuItemsLock.RLock()
 	item := menuItems[id]
 	menuItemsLock.RUnlock()
