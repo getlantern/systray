@@ -62,6 +62,10 @@ gboolean do_set_icon(gpointer data) {
 	return FALSE;
 }
 
+void _systray_menu_item_selected(int *id) {
+	systray_menu_item_selected(*id);
+}
+
 // runs in main thread, should always return FALSE to prevent gtk to execute it again
 gboolean do_add_or_update_menu_item(gpointer data) {
 	MenuItemInfo *mii = (MenuItemInfo*)data;
@@ -119,10 +123,6 @@ gboolean do_quit(gpointer data) {
 	}
 	gtk_main_quit();
 	return FALSE;
-}
-
-void _systray_menu_item_selected(int *id) {
-	systray_menu_item_selected(*id);
 }
 
 void setIcon(const char* iconBytes, int length) {
