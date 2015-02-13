@@ -1,7 +1,8 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <windows.h>
-#include <shellapi.h>
+// systray.cpp : Defines the exported functions for the DLL application.
+//
+
+// dllmain.cpp : Defines the entry point for the DLL application.
+#include "stdafx.h"
 #include "systray.h"
 
 // Message posted into message loop when Notification Icon is clicked
@@ -10,6 +11,8 @@
 static NOTIFYICONDATA nid;
 static HWND hWnd;
 static HMENU hTrayMenu;
+
+void (*systray_menu_item_selected)(int menu_id);
 
 void reportWindowsError(const char* action) {
 	LPTSTR pErrMsg = NULL;
@@ -50,23 +53,28 @@ void ShowMenu(HWND hWnd) {
 
 }
 
-char* GetMenuItemId(int index) {
+int GetMenuItemId(int index) {
 	MENUITEMINFO menuItemInfo;
 	menuItemInfo.cbSize = sizeof(MENUITEMINFO);
 	menuItemInfo.fMask = MIIM_DATA;
 	if (0 == GetMenuItemInfo(hTrayMenu, index, TRUE, &menuItemInfo)) {
 		reportWindowsError("get menu item id");
-		return NULL;
+		return -1;
 	}
-	return (char*)menuItemInfo.dwItemData;
+	idholder *idh;
+	idh = (idholder*)menuItemInfo.dwItemData;
+	if (idh == NULL) {
+		return -1;
+	}
+	return idh->id;
 }
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
 	switch (message) {
 		case WM_MENUCOMMAND:
 			{
-				char * menuId = GetMenuItemId(wParam);
-				if (menuId != NULL) {
+				int menuId = GetMenuItemId(wParam);
+				if (menuId != -1) {
 					systray_menu_item_selected(menuId);
 				}
 			}
@@ -144,7 +152,9 @@ BOOL addNotifyIcon() {
 	return Shell_NotifyIcon(NIM_ADD, &nid);
 }
 
-int nativeLoop(void) {
+int nativeLoop(void (*systray_ready)(), void (*_systray_menu_item_selected)(int menu_id)) {
+	systray_menu_item_selected = _systray_menu_item_selected;
+
 	HINSTANCE hInstance = GetModuleHandle(NULL);
 	TCHAR* szWindowClass = TEXT("SystrayClass");
 	MyRegisterClass(hInstance, szWindowClass);
@@ -166,49 +176,16 @@ int nativeLoop(void) {
 }
 
 
-void setIcon(const char* iconBytes, int length) {
-	HICON hIcon;
-	// This is really hacky, but LoadImage won't let me load an image from memory.
-	// So we have to write out a temporary file, load it from there, then delete the file.
-
-	// From http://msdn.microsoft.com/en-us/library/windows/desktop/aa363875.aspx
-	TCHAR szTempFileName[MAX_PATH+1];
-	TCHAR lpTempPathBuffer[MAX_PATH+1];
-	int dwRetVal = GetTempPath(MAX_PATH+1, lpTempPathBuffer);
-	if (dwRetVal > MAX_PATH+1 || (dwRetVal == 0)) {
-		reportWindowsError("get temp icon path");
-		return;
-	}
-
-	int uRetVal = GetTempFileName(lpTempPathBuffer, TEXT("systray_"), 0, szTempFileName);
-	if (uRetVal == 0) {
-		reportWindowsError("get temp icon file name");
-		return;
-	}
-
-	FILE* fIcon = _wfopen(szTempFileName, TEXT("wb"));
-	if (fIcon == NULL) {
-		reportWindowsError("open temp icon file to write");
-		return;
-	}
-	ssize_t bytesWritten = fwrite(iconBytes, 1, length, fIcon);
-	fclose(fIcon);
-	if (bytesWritten != length) {
-		printf("error write temp icon file\n");
+void setIcon(const char* ciconFile) {
+	wchar_t* iconFile = UTF8ToUnicode(ciconFile); 
+	HICON hIcon = (HICON) LoadImage(NULL, iconFile, IMAGE_ICON, 64, 64, LR_LOADFROMFILE);
+	if (hIcon == NULL) {
+		reportWindowsError("load icon image");
 	} else {
-
-		hIcon = LoadImage(NULL, szTempFileName, IMAGE_ICON, 64, 64, LR_LOADFROMFILE);
-		if (hIcon == NULL) {
-			reportWindowsError("load icon image");
-		} else {
-
-			nid.hIcon = hIcon;
-			nid.uFlags = NIF_ICON;
-			Shell_NotifyIcon(NIM_MODIFY, &nid);
-		}
+		nid.hIcon = hIcon;
+		nid.uFlags = NIF_ICON;
+		Shell_NotifyIcon(NIM_MODIFY, &nid);
 	}
-	_wremove(szTempFileName);
-
 }
 
 // Don't support for Windows
@@ -218,22 +195,30 @@ void setTitle(char* ctitle) {
 
 void setTooltip(char* ctooltip) {
 	wchar_t* tooltip = UTF8ToUnicode(ctooltip);
-	wcsncpy(nid.szTip, tooltip, 64);
+	wcsncpy_s(nid.szTip, tooltip, 64);
 	nid.uFlags = NIF_TIP;
 	Shell_NotifyIcon(NIM_MODIFY, &nid);
 	free(tooltip);
 	free(ctooltip);
 }
 
-void add_or_update_menu_item(char* menuId, char* ctitle, char* ctooltip, short disabled, short checked) {
+void add_or_update_menu_item(int menuId, char* ctitle, char* ctooltip, short disabled, short checked) {
 	wchar_t* title = UTF8ToUnicode(ctitle);
+	idholder *idh;
+	idh = (idholder*) malloc(sizeof *idh);
+	if (idh == NULL) {
+		printf("Unable to allocate space for id holder");
+		return;
+	}
+	idh->id = menuId;
+
 	MENUITEMINFO menuItemInfo;
 	menuItemInfo.cbSize = sizeof(MENUITEMINFO);
 	menuItemInfo.fMask = MIIM_FTYPE | MIIM_STRING | MIIM_DATA | MIIM_STATE;
 	menuItemInfo.fType = MFT_STRING;
 	menuItemInfo.dwTypeData = title;
 	menuItemInfo.cch = wcslen(title) + 1;
-	menuItemInfo.dwItemData = (ULONG_PTR)menuId;
+	menuItemInfo.dwItemData = (ULONG_PTR)idh;
 	menuItemInfo.fState = 0;
 	if (disabled == 1) {
 		menuItemInfo.fState |= MFS_DISABLED;
@@ -245,12 +230,11 @@ void add_or_update_menu_item(char* menuId, char* ctitle, char* ctooltip, short d
 	int itemCount = GetMenuItemCount(hTrayMenu);
 	int i;
 	for (i = 0; i < itemCount; i++) {
-		char * idString = GetMenuItemId(i);
-		if (NULL == idString) {
+		int id = GetMenuItemId(i);
+		if (-1 == id) {
 			continue;
 		}
-		if (strcmp(menuId, idString) == 0) {
-			free(idString);
+		if (menuId == id) {
 			SetMenuItemInfo(hTrayMenu, i, TRUE, &menuItemInfo);
 			break;
 		}
@@ -258,9 +242,6 @@ void add_or_update_menu_item(char* menuId, char* ctitle, char* ctooltip, short d
 	if (i == itemCount) {
 		InsertMenuItem(hTrayMenu, -1, TRUE, &menuItemInfo);
 	}
-	free(title);
-	free(ctitle);
-	free(ctooltip);
 }
 
 void quit() {
