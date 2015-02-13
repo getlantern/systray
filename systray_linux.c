@@ -17,7 +17,7 @@ typedef struct {
 } MenuItemNode;
 
 typedef struct {
-	char* menu_id;
+	int menu_id;
 	char* title;
 	char* tooltip;
 	short disabled;
@@ -68,9 +68,8 @@ gboolean do_add_or_update_menu_item(gpointer data) {
 	GList* it;
 	for(it = global_menu_items; it != NULL; it = it->next) {
 		MenuItemNode* item = (MenuItemNode*)(it->data);
-		if(strcmp(item->menu_id, mii->menu_id) == 0){
+		if(item->menu_id == mii->menu_id){
 			gtk_menu_item_set_label(GTK_MENU_ITEM(item->menu_item), mii->title);
-			free(mii->menu_id);
 			break;
 		}
 	}
@@ -134,7 +133,7 @@ void setTooltip(char* ctooltip) {
 	free(ctooltip);
 }
 
-void add_or_update_menu_item(char* menu_id, char* title, char* tooltip, short disabled, short checked) {
+void add_or_update_menu_item(int menu_id, char* title, char* tooltip, short disabled, short checked) {
 	MenuItemInfo *mii = malloc(sizeof(MenuItemInfo));
 	mii->menu_id = menu_id;
 	mii->title = title;
