@@ -1,25 +1,52 @@
-// +build windows
-
 package systray
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"syscall"
 	"unsafe"
+
+	"github.com/getlantern/tarfs"
 )
 
 var (
-	mod                      = syscall.NewLazyDLL("systray.dll")
+	iconFiles = make([]*os.File, 0)
+	dllDir    = path.Join(os.Getenv("APPDATA"), "systray")
+	dllFile   = path.Join(dllDir, "systray.dll")
+
+	mod                      = syscall.NewLazyDLL(dllFile)
 	_nativeLoop              = mod.NewProc("nativeLoop")
 	_quit                    = mod.NewProc("quit")
 	_setIcon                 = mod.NewProc("setIcon")
 	_setTitle                = mod.NewProc("setTitle")
 	_setTooltip              = mod.NewProc("setTooltip")
 	_add_or_update_menu_item = mod.NewProc("add_or_update_menu_item")
-
-	iconFiles = make([]*os.File, 0)
 )
+
+func init() {
+	// Write DLL to file
+	fs, err := tarfs.New(systraydll, "")
+	if err != nil {
+		panic(fmt.Errorf("Unable to open systray.dll: %v", err))
+	}
+
+	b, err := fs.Get("systray.dll")
+	if err != nil {
+		panic(fmt.Errorf("Unable to read systray.dll: %v", err))
+	}
+
+	err = os.MkdirAll(dllDir, 755)
+	if err != nil {
+		panic(fmt.Errorf("Unable to create directory %v to hold systray.dll: %v", dllDir, err))
+	}
+
+	err = ioutil.WriteFile(dllFile, b, 0644)
+	if err != nil {
+		panic(fmt.Errorf("Unable to save systray.dll to %v: %v", dllFile, err))
+	}
+}
 
 func nativeLoop() {
 	_nativeLoop.Call(
