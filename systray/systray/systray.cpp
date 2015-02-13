@@ -61,12 +61,11 @@ int GetMenuItemId(int index) {
 		reportWindowsError("get menu item id");
 		return -1;
 	}
-	idholder *idh;
-	idh = (idholder*)menuItemInfo.dwItemData;
-	if (idh == NULL) {
+	int *id = (int*)menuItemInfo.dwItemData;
+	if (id == NULL) {
 		return -1;
 	}
-	return idh->id;
+	return *id;
 }
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
@@ -188,11 +187,6 @@ void setIcon(const char* ciconFile) {
 	}
 }
 
-// Don't support for Windows
-void setTitle(char* ctitle) {
-	free(ctitle);
-}
-
 void setTooltip(char* ctooltip) {
 	wchar_t* tooltip = UTF8ToUnicode(ctooltip);
 	wcsncpy_s(nid.szTip, tooltip, 64);
@@ -204,13 +198,12 @@ void setTooltip(char* ctooltip) {
 
 void add_or_update_menu_item(int menuId, char* ctitle, char* ctooltip, short disabled, short checked) {
 	wchar_t* title = UTF8ToUnicode(ctitle);
-	idholder *idh;
-	idh = (idholder*) malloc(sizeof *idh);
-	if (idh == NULL) {
-		printf("Unable to allocate space for id holder");
+	int *id = (int *) malloc(sizeof(int));
+	if (id == NULL) {
+		printf("Unable to allocate space for id");
 		return;
 	}
-	idh->id = menuId;
+	*id = menuId;
 
 	MENUITEMINFO menuItemInfo;
 	menuItemInfo.cbSize = sizeof(MENUITEMINFO);
@@ -218,7 +211,7 @@ void add_or_update_menu_item(int menuId, char* ctitle, char* ctooltip, short dis
 	menuItemInfo.fType = MFT_STRING;
 	menuItemInfo.dwTypeData = title;
 	menuItemInfo.cch = wcslen(title) + 1;
-	menuItemInfo.dwItemData = (ULONG_PTR)idh;
+	menuItemInfo.dwItemData = (ULONG_PTR)id;
 	menuItemInfo.fState = 0;
 	if (disabled == 1) {
 		menuItemInfo.fState |= MFS_DISABLED;

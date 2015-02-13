@@ -37,7 +37,7 @@ func SetTitle(title string) {
 }
 
 // SetTitle sets the systray tooltip to display on mouse hover of the tray icon,
-// only available on Mac.
+// only available on Mac and Windows.
 func SetTooltip(tooltip string) {
 	C.setTooltip(C.CString(tooltip))
 }

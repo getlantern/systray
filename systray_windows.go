@@ -63,16 +63,11 @@ func SetIcon(iconBytes []byte) {
 
 // SetTitle sets the systray title, only available on Mac.
 func SetTitle(title string) {
-	t, err := strPtr(title)
-	if err != nil {
-		log.Errorf("Unable to convert title to string pointer: %v", err)
-		return
-	}
-	_setTitle.Call(t)
+	// do nothing
 }
 
-// SetTitle sets the systray tooltip to display on mouse hover of the tray icon,
-// only available on Mac.
+// SetTooltip sets the systray tooltip to display on mouse hover of the tray icon,
+// only available on Mac and Windows.
 func SetTooltip(tooltip string) {
 	t, err := strPtr(tooltip)
 	if err != nil {
