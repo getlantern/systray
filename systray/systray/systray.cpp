@@ -242,6 +242,8 @@ void add_or_update_menu_item(int menuId, char* ctitle, char* ctooltip, short dis
 	if (i == itemCount) {
 		InsertMenuItem(hTrayMenu, -1, TRUE, &menuItemInfo);
 	}
+
+	free(ctooltip);
 }
 
 void quit() {
