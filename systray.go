@@ -8,8 +8,8 @@ package systray
 import (
 	"runtime"
 	"sync"
+	"sync/atomic"
 
-	"code.google.com/p/go-uuid/uuid"
 	"github.com/getlantern/golog"
 )
 
@@ -20,7 +20,7 @@ type MenuItem struct {
 	ClickedCh chan interface{}
 
 	// id uniquely identify a menu item, not supposed to be modified
-	id string
+	id int32
 	// title is the text shown on menu item
 	title string
 	// tooltip is the text shown when pointing to menu item
@@ -36,8 +36,10 @@ var (
 
 	readyCh       = make(chan interface{})
 	clickedCh     = make(chan interface{})
-	menuItems     = make(map[string]*MenuItem)
+	menuItems     = make(map[int32]*MenuItem)
 	menuItemsLock sync.RWMutex
+
+	currentId int32
 )
 
 // Run initializes GUI and starts the event loop, then invokes the onReady
@@ -67,7 +69,7 @@ func Quit() {
 //
 // AddMenuItem can be safely invoked from different goroutines.
 func AddMenuItem(title string, tooltip string) *MenuItem {
-	id := uuid.New()
+	id := atomic.AddInt32(&currentId, 1)
 	item := &MenuItem{nil, id, title, tooltip, false, false}
 	item.ClickedCh = make(chan interface{})
 	item.update()
@@ -124,7 +126,7 @@ func systrayReady() {
 	readyCh <- nil
 }
 
-func systrayMenuItemSelected(id string) {
+func systrayMenuItemSelected(id int32) {
 	menuItemsLock.RLock()
 	item := menuItems[id]
 	menuItemsLock.RUnlock()
