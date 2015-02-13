@@ -28,8 +28,10 @@ Checked menu item not implemented on Linux yet.
 
 ### Windows
 
-Use the Visual Studio solution to build systray.dll and then check that in to
-Git. Make sure to target Windows XP.
+Use the Visual Studio solution to build systray.dll. Make sure to target Windows
+XP and build for Release (not Debug). Check the resulting dll into git at Git at
+dll/systray.dll and run ./embeddll.bash to generate the systraydll_windows.go
+file.
 
 ## Try
 

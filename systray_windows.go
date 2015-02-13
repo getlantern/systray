@@ -7,8 +7,6 @@ import (
 	"path"
 	"syscall"
 	"unsafe"
-
-	"github.com/getlantern/tarfs"
 )
 
 var (
@@ -27,12 +25,7 @@ var (
 
 func init() {
 	// Write DLL to file
-	fs, err := tarfs.New(systraydll, "")
-	if err != nil {
-		panic(fmt.Errorf("Unable to open systray.dll: %v", err))
-	}
-
-	b, err := fs.Get("systray.dll")
+	b, err := Asset("systray.dll")
 	if err != nil {
 		panic(fmt.Errorf("Unable to read systray.dll: %v", err))
 	}
