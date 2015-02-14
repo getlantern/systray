@@ -72,6 +72,7 @@ func SetIcon(iconBytes []byte) {
 		log.Errorf("Unable to write icon to temp file %v: %v", f.Name(), f)
 		return
 	}
+	// Need to close file before we load it to make sure contents is flushed.
 	f.Close()
 	name, err := strPtr(f.Name())
 	if err != nil {
