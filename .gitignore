@@ -4,3 +4,5 @@ example/example
 *.exe
 Release
 Debug
+*.sdf
+dll/systray_unsigned.dll
