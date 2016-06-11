@@ -21,6 +21,8 @@ type MenuItem struct {
 
 	// id uniquely identify a menu item, not supposed to be modified
 	id int32
+	// seperator
+	isSeparator bool
 	// title is the text shown on menu item
 	title string
 	// tooltip is the text shown when pointing to menu item
@@ -67,8 +69,15 @@ func Quit() {
 // It can be safely invoked from different goroutines.
 func AddMenuItem(title string, tooltip string) *MenuItem {
 	id := atomic.AddInt32(&currentID, 1)
-	item := &MenuItem{nil, id, title, tooltip, false, false}
+	item := &MenuItem{nil, id, false, title, tooltip, false, false}
 	item.ClickedCh = make(chan interface{})
+	item.update()
+	return item
+}
+
+func AddMenuSeparatorItem() *MenuItem {
+	id := atomic.AddInt32(&currentID, 1)
+	item := &MenuItem{nil, id, true, "", "", false, false}
 	item.update()
 	return item
 }

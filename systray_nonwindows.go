@@ -44,6 +44,10 @@ func SetTooltip(tooltip string) {
 
 func addOrUpdateMenuItem(item *MenuItem) {
 	var disabled C.short
+	var isSeparator C.short
+	if item.isSeparator {
+		isSeparator = 1
+	}
 	if item.disabled {
 		disabled = 1
 	}
@@ -53,6 +57,7 @@ func addOrUpdateMenuItem(item *MenuItem) {
 	}
 	C.add_or_update_menu_item(
 		C.int(item.id),
+		isSeparator,
 		C.CString(item.title),
 		C.CString(item.tooltip),
 		disabled,
