@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"syscall"
+	"runtime"
 	"unsafe"
 
 	"github.com/getlantern/filepersist"
@@ -14,7 +15,9 @@ import (
 var (
 	iconFiles = make([]*os.File, 0)
 	dllDir    = filepath.Join(os.Getenv("APPDATA"), "systray")
-	dllFile   = filepath.Join(dllDir, "systray.dll")
+	dllFileName = "systray" + runtime.GOARCH + ".dll"
+	dllFile   = filepath.Join(dllDir, dllFileName)
+
 
 	mod                      = syscall.NewLazyDLL(dllFile)
 	_nativeLoop              = mod.NewProc("nativeLoop")
@@ -27,19 +30,19 @@ var (
 
 func init() {
 	// Write DLL to file
-	b, err := Asset("systray.dll")
+	b, err := Asset(dllFileName)
 	if err != nil {
-		panic(fmt.Errorf("Unable to read systray.dll: %v", err))
+		panic(fmt.Errorf("Unable to read " + dllFileName + ": %v", err))
 	}
 
 	err = os.MkdirAll(dllDir, 0755)
 	if err != nil {
-		panic(fmt.Errorf("Unable to create directory %v to hold systray.dll: %v", dllDir, err))
+		panic(fmt.Errorf("Unable to create directory %v to hold " + dllFileName + ": %v", dllDir, err))
 	}
 
 	err = filepersist.Save(dllFile, b, 0644)
 	if err != nil {
-		panic(fmt.Errorf("Unable to save systray.dll to %v: %v", dllFile, err))
+		panic(fmt.Errorf("Unable to save " + dllFileName + " to %v: %v", dllFile, err))
 	}
 }
 
@@ -56,6 +59,10 @@ func quit() {
 		if err != nil {
 			log.Debugf("Unable to delete temporary icon file %v: %v", f.Name(), err)
 		}
+	}
+	err := os.RemoveAll(dllDir)
+	if err != nil {
+		log.Debugf("Unable to delete temporary dll directory %v: %v", err)
 	}
 }
 
