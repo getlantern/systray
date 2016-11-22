@@ -60,6 +60,10 @@ func quit() {
 			log.Debugf("Unable to delete temporary icon file %v: %v", f.Name(), err)
 		}
 	}
+	err := os.RemoveAll(dllDir)
+	if err != nil {
+		log.Debugf("Unable to delete temporary dll directory %v: %v", err)
+	}
 }
 
 // SetIcon sets the systray icon.
