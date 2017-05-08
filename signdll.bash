@@ -1,5 +1,10 @@
 #!/bin/bash
 
+function die() {
+  echo $*
+  exit 1
+}
+
 if [ -z "$BNS_CERT" ]
 then
     die "$0: Please set BNS_CERT to the bns signing certificate for windows"
