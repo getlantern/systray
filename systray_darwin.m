@@ -6,6 +6,7 @@
   @public
     NSNumber* menuId;
     NSString* title;
+    short isSeperator;
     NSString* tooltip;
     short disabled;
     short checked;
@@ -78,6 +79,9 @@
 
 - (void) add_or_update_menu_item:(MenuItem*) item
 {
+  if (item->isSeperator)
+     [menu addItem:[NSMenuItem separatorItem]];
+  else  {
   NSMenuItem* menuItem;
   int existedMenuIndex = [menu indexOfItemWithRepresentedObject: item->menuId];
   if (existedMenuIndex == -1) {
@@ -101,6 +105,7 @@
   } else {
     [menuItem setState:NSOffState];
   }
+ }
 }
 
 - (void) quit
@@ -144,8 +149,10 @@ void setTooltip(char* ctooltip) {
   runInMainThread(@selector(setTooltip:), (id)tooltip);
 }
 
-void add_or_update_menu_item(int menuId, char* title, char* tooltip, short disabled, short checked) {
-  MenuItem* item = [[MenuItem alloc] initWithId: menuId withTitle: title withTooltip: tooltip withDisabled: disabled withChecked: checked];
+void add_or_update_menu_item(int menuId, short separator, char* title, char* tooltip, short disabled, short checked) {
+  MenuItem* item = nil;
+  item = [[MenuItem alloc] initWithId: menuId withTitle: title withTooltip: tooltip withDisabled: disabled withChecked: checked];
+  item->isSeperator = separator;
   free(title);
   free(tooltip);
   runInMainThread(@selector(add_or_update_menu_item:), (id)item);
