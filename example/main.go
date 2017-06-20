@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/getlantern/systray"
 	"github.com/getlantern/systray/example/icon"
 	"github.com/skratchdot/open-golang/open"
@@ -9,7 +11,7 @@ import (
 
 func main() {
 	// Should be called at the very beginning of main().
-	systray.Run(onReady)
+	systray.Run(onReady, onExit)
 }
 
 func onReady() {
@@ -58,4 +60,10 @@ func onReady() {
 			}
 		}
 	}()
+}
+
+func onExit() {
+	file, _ := os.Create("out.txt")
+	defer file.Close()
+	file.Write([]byte("On Exit..."))
 }

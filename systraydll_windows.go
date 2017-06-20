@@ -8,13 +8,14 @@ package systray
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 	"reflect"
 	"strings"
-	"time"
 	"unsafe"
+	"os"
+	"time"
+	"io/ioutil"
+	"path"
+	"path/filepath"
 )
 
 func bindataRead(data, name string) ([]byte, error) {
@@ -34,9 +35,9 @@ type asset struct {
 }
 
 type bindataFileInfo struct {
-	name    string
-	size    int64
-	mode    os.FileMode
+	name string
+	size int64
+	mode os.FileMode
 	modTime time.Time
 }
 
@@ -74,8 +75,8 @@ func systray386Dll() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "systray386.dll", size: 94208, mode: os.FileMode(438), modTime: time.Unix(1471643142, 0)}
-	a := &asset{bytes: bytes, info: info}
+	info := bindataFileInfo{name: "systray386.dll", size: 94208, mode: os.FileMode(420), modTime: time.Unix(1497931828, 0)}
+	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
 
@@ -94,8 +95,8 @@ func systrayamd64Dll() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "systrayamd64.dll", size: 111104, mode: os.FileMode(438), modTime: time.Unix(1471643140, 0)}
-	a := &asset{bytes: bytes, info: info}
+	info := bindataFileInfo{name: "systrayamd64.dll", size: 111104, mode: os.FileMode(420), modTime: time.Unix(1497931828, 0)}
+	a := &asset{bytes: bytes, info:  info}
 	return a, nil
 }
 
@@ -118,7 +119,7 @@ func Asset(name string) ([]byte, error) {
 // It simplifies safe initialization of global variables.
 func MustAsset(name string) []byte {
 	a, err := Asset(name)
-	if err != nil {
+	if (err != nil) {
 		panic("asset: Asset(" + name + "): " + err.Error())
 	}
 
@@ -191,58 +192,60 @@ func AssetDir(name string) ([]string, error) {
 }
 
 type bintree struct {
-	Func     func() (*asset, error)
+	Func func() (*asset, error)
 	Children map[string]*bintree
 }
 var _bintree = &bintree{nil, map[string]*bintree{
-	"systray386.dll": &bintree{systray386Dll, map[string]*bintree{}},
-	"systrayamd64.dll": &bintree{systrayamd64Dll, map[string]*bintree{}},
+	"systray386.dll": &bintree{systray386Dll, map[string]*bintree{
+	}},
+	"systrayamd64.dll": &bintree{systrayamd64Dll, map[string]*bintree{
+	}},
 }}
 
 // RestoreAsset restores an asset under the given directory
 func RestoreAsset(dir, name string) error {
-	data, err := Asset(name)
-	if err != nil {
-		return err
-	}
-	info, err := AssetInfo(name)
-	if err != nil {
-		return err
-	}
-	err = os.MkdirAll(_filePath(dir, filepath.Dir(name)), os.FileMode(0755))
-	if err != nil {
-		return err
-	}
-	err = ioutil.WriteFile(_filePath(dir, name), data, info.Mode())
-	if err != nil {
-		return err
-	}
-	err = os.Chtimes(_filePath(dir, name), info.ModTime(), info.ModTime())
-	if err != nil {
-		return err
-	}
-	return nil
+        data, err := Asset(name)
+        if err != nil {
+                return err
+        }
+        info, err := AssetInfo(name)
+        if err != nil {
+                return err
+        }
+        err = os.MkdirAll(_filePath(dir, path.Dir(name)), os.FileMode(0755))
+        if err != nil {
+                return err
+        }
+        err = ioutil.WriteFile(_filePath(dir, name), data, info.Mode())
+        if err != nil {
+                return err
+        }
+        err = os.Chtimes(_filePath(dir, name), info.ModTime(), info.ModTime())
+        if err != nil {
+                return err
+        }
+        return nil
 }
 
 // RestoreAssets restores an asset under the given directory recursively
 func RestoreAssets(dir, name string) error {
-	children, err := AssetDir(name)
-	// File
-	if err != nil {
-		return RestoreAsset(dir, name)
-	}
-	// Dir
-	for _, child := range children {
-		err = RestoreAssets(dir, filepath.Join(name, child))
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+        children, err := AssetDir(name)
+        // File
+        if err != nil {
+                return RestoreAsset(dir, name)
+        }
+        // Dir
+        for _, child := range children {
+                err = RestoreAssets(dir, path.Join(name, child))
+                if err != nil {
+                        return err
+                }
+        }
+        return nil
 }
 
 func _filePath(dir, name string) string {
-	cannonicalName := strings.Replace(name, "\\", "/", -1)
-	return filepath.Join(append([]string{dir}, strings.Split(cannonicalName, "/")...)...)
+        cannonicalName := strings.Replace(name, "\\", "/", -1)
+        return filepath.Join(append([]string{dir}, strings.Split(cannonicalName, "/")...)...)
 }
 
