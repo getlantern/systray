@@ -12,6 +12,7 @@ static NOTIFYICONDATA nid;
 static HWND hWnd;
 static HMENU hTrayMenu;
 
+void (*systray_on_exit)(int ignored);
 void (*systray_menu_item_selected)(int menu_id);
 
 void reportWindowsError(const char* action) {
@@ -26,7 +27,7 @@ void reportWindowsError(const char* action) {
 			pErrMsg,
 			0,
 			NULL);
-	printf("Systray error %s: %d %s\n", action, errCode, pErrMsg);
+	printf("Systray error %s: %d %ls\n", action, errCode, pErrMsg);
 }
 
 void ShowMenu(HWND hWnd) {
@@ -62,7 +63,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 			}
 			break;
 		case WM_DESTROY:
+			systray_on_exit(0/*ignored*/);
 			PostQuitMessage(0);
+			break;
+		case WM_ENDSESSION:
+			systray_on_exit(0/*ignored*/);
 			break;
 		case WM_SYSTRAY_MESSAGE:
 			switch(lParam) {
@@ -133,7 +138,10 @@ BOOL addNotifyIcon() {
 	return Shell_NotifyIcon(NIM_ADD, &nid);
 }
 
-int nativeLoop(void (*systray_ready)(int ignored), void (*_systray_menu_item_selected)(int menu_id)) {
+int nativeLoop(void (*systray_ready)(int ignored),
+	void (*_systray_on_exit)(int ignored),
+    void (*_systray_menu_item_selected)(int menu_id)) {
+	systray_on_exit = _systray_on_exit;
 	systray_menu_item_selected = _systray_menu_item_selected;
 
 	HINSTANCE hInstance = GetModuleHandle(NULL);
@@ -152,7 +160,7 @@ int nativeLoop(void (*systray_ready)(int ignored), void (*_systray_menu_item_sel
 	while (GetMessage(&msg, NULL, 0, 0)) {
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
-	}   
+	}
 	return EXIT_SUCCESS;
 }
 
