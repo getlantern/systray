@@ -10,6 +10,16 @@ import (
 )
 
 func main() {
+	file, err := os.Create("out.txt")
+	if err != nil {
+		fmt.Println("Couldn't create out.txt")
+		return
+	}
+	defer file.Close()
+	onExit := func() {
+		file.Write([]byte("On Exit..."))
+		file.Sync()
+	}
 	// Should be called at the very beginning of main().
 	systray.Run(onReady, onExit)
 }
@@ -60,10 +70,4 @@ func onReady() {
 			}
 		}
 	}()
-}
-
-func onExit() {
-	file, _ := os.Create("out.txt")
-	defer file.Close()
-	file.Write([]byte("On Exit..."))
 }
