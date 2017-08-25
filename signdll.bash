@@ -21,4 +21,5 @@ then
     echo "Installing osslsigncode"
     brew install osslsigncode || die "Could not install osslsigncode"
 fi
-osslsigncode sign -pkcs12 "$BNS_CERT" -pass "$BNS_CERT_PASS" -in dll/systray_unsigned.dll -out dll/systray.dll || die "Could not sign windows dll"
+osslsigncode sign -pkcs12 "$BNS_CERT" -pass "$BNS_CERT_PASS" -in dll/systray386.dll_unsigned -out dll/systray386.dll || die "Could not sign windows 386 dll"
+osslsigncode sign -pkcs12 "$BNS_CERT" -pass "$BNS_CERT_PASS" -in dll/systrayamd64.dll_unsigned -out dll/systrayamd64.dll || die "Could not sign windows 386 dll"

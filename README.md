@@ -5,7 +5,7 @@ Tested on Windows 8, Mac OSX, Ubuntu 14.10 and Debian 7.6.
 ```go
 func main() {
 	// Should be called at the very beginning of main().
-	systray.Run(onReady)
+	systray.Run(onReady, onExit)
 }
 
 func onReady() {
@@ -13,6 +13,10 @@ func onReady() {
 	systray.SetTitle("Awesome App")
 	systray.SetTooltip("Pretty awesome超级棒")
 	mQuit := systray.AddMenuItem("Quit", "Quit the whole app")
+}
+
+func onExit() {
+	// clean up here
 }
 ```
 Menu item can be checked and / or disabled. Methods except `Run()` can be invoked from any goroutine. See demo code under `example` folder.

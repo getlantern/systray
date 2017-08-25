@@ -58,6 +58,11 @@
   systray_ready();
 }
 
+- (void)applicationWillTerminate:(NSNotification *)aNotification
+{
+  systray_on_exit();
+}
+
 - (void)setIcon:(NSImage *)image {
   [statusItem setImage:image];
 }
@@ -105,7 +110,7 @@
 
 - (void) quit
 {
-  [[NSStatusBar systemStatusBar] removeStatusItem: statusItem];
+  [NSApp terminate:self];
 }
 
 @end

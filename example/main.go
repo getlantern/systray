@@ -17,8 +17,10 @@ func main() {
 	}
 	defer file.Close()
 	onExit := func() {
-		file.Write([]byte("On Exit..."))
+		fmt.Println("Starting onExit")
+		file.Write([]byte("On Exit...\n"))
 		file.Sync()
+		fmt.Println("Finished onExit")
 	}
 	// Should be called at the very beginning of main().
 	systray.Run(onReady, onExit)
@@ -31,8 +33,9 @@ func onReady() {
 	mQuit := systray.AddMenuItem("Quit", "Quit the whole app")
 	go func() {
 		<-mQuit.ClickedCh
+		fmt.Println("Requesting quit")
 		systray.Quit()
-		fmt.Println("Quit now...")
+		fmt.Println("Finished quitting")
 	}()
 
 	// We can manipulate the systray in other goroutines
