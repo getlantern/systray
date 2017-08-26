@@ -68,8 +68,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 			Shell_NotifyIcon(NIM_DELETE, &nid);
 			PostQuitMessage(0);
 			break;
-		case WM_ENDSESSION:
-			printf("Session ended\n");
+		case WM_QUERYENDSESSION:
+			printf("Session ending\n");
+			// We call on_exit here so that the program has a chance to do cleanup
+			// before the final session ending sequence occurs.
 			systray_on_exit(0/*ignored*/);
 			Shell_NotifyIcon(NIM_DELETE, &nid);
 			break;

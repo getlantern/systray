@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-	"os"
+	"io/ioutil"
+	"time"
 
 	"github.com/getlantern/systray"
 	"github.com/getlantern/systray/example/icon"
@@ -10,16 +11,10 @@ import (
 )
 
 func main() {
-	file, err := os.Create("out.txt")
-	if err != nil {
-		fmt.Println("Couldn't create out.txt")
-		return
-	}
-	defer file.Close()
 	onExit := func() {
 		fmt.Println("Starting onExit")
-		file.Write([]byte("On Exit...\n"))
-		file.Sync()
+		now := time.Now()
+		ioutil.WriteFile(fmt.Sprintf(`on_exit_%d.txt`, now.UnixNano()), []byte(now.String()), 0644)
 		fmt.Println("Finished onExit")
 	}
 	// Should be called at the very beginning of main().
