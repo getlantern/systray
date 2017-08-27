@@ -53,8 +53,22 @@ func Run(onReady func(), onExit func()) {
 
 	if onReady == nil {
 		onReady = func() {}
+	} else {
+		// Run onReady on separate goroutine to avoid blocking event loop
+		origOnReady := onReady
+		readyCh := make(chan interface{})
+		go func() {
+			<-readyCh
+			origOnReady()
+		}()
+		onReady = func() {
+			close(readyCh)
+		}
 	}
 	systrayReady = onReady
+
+	// unlike onReady, onExit runs in the event loop to make sure it has time to
+	// finish before the process terminates
 	if onExit == nil {
 		onExit = func() {}
 	}
