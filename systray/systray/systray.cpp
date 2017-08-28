@@ -63,11 +63,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 			}
 			break;
 		case WM_DESTROY:
+			printf("Window destroyed\n");
 			systray_on_exit(0/*ignored*/);
+			Shell_NotifyIcon(NIM_DELETE, &nid);
 			PostQuitMessage(0);
 			break;
 		case WM_ENDSESSION:
+			printf("Session ending\n");
+			// When the system shuts down (or logs off), we don't receive WM_DESTROY,
+			// so we capture WM_ENDSESSION instead and call on_exit here too.
 			systray_on_exit(0/*ignored*/);
+			Shell_NotifyIcon(NIM_DELETE, &nid);
 			break;
 		case WM_SYSTRAY_MESSAGE:
 			switch(lParam) {
@@ -216,5 +222,5 @@ void add_or_update_menu_item(int menuId, wchar_t* title, wchar_t* tooltip, short
 }
 
 void quit() {
-	Shell_NotifyIcon(NIM_DELETE, &nid);
+	PostMessage(hWnd, WM_CLOSE, 0, 0);
 }

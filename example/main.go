@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-	"os"
+	"io/ioutil"
+	"time"
 
 	"github.com/getlantern/systray"
 	"github.com/getlantern/systray/example/icon"
@@ -10,15 +11,11 @@ import (
 )
 
 func main() {
-	file, err := os.Create("out.txt")
-	if err != nil {
-		fmt.Println("Couldn't create out.txt")
-		return
-	}
-	defer file.Close()
 	onExit := func() {
-		file.Write([]byte("On Exit..."))
-		file.Sync()
+		fmt.Println("Starting onExit")
+		now := time.Now()
+		ioutil.WriteFile(fmt.Sprintf(`on_exit_%d.txt`, now.UnixNano()), []byte(now.String()), 0644)
+		fmt.Println("Finished onExit")
 	}
 	// Should be called at the very beginning of main().
 	systray.Run(onReady, onExit)
@@ -31,8 +28,9 @@ func onReady() {
 	mQuit := systray.AddMenuItem("Quit", "Quit the whole app")
 	go func() {
 		<-mQuit.ClickedCh
+		fmt.Println("Requesting quit")
 		systray.Quit()
-		fmt.Println("Quit now...")
+		fmt.Println("Finished quitting")
 	}()
 
 	// We can manipulate the systray in other goroutines

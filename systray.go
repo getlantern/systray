@@ -36,8 +36,8 @@ type MenuItem struct {
 var (
 	log = golog.LoggerFor("systray")
 
-	readyCh       = make(chan struct{})
-	exitCh        = make(chan struct{})
+	systrayReady  func()
+	systrayExit   func()
 	menuItems     = make(map[int32]*MenuItem)
 	menuItemsLock sync.RWMutex
 
@@ -50,17 +50,27 @@ var (
 // Should be called at the very beginning of main() to lock at main thread.
 func Run(onReady func(), onExit func()) {
 	runtime.LockOSThread()
-	go func() {
-		for {
-			select {
-			case <-readyCh:
-				onReady()
-			case <-exitCh:
-				onExit()
-				return
-			}
+
+	if onReady == nil {
+		systrayReady = func() {}
+	} else {
+		// Run onReady on separate goroutine to avoid blocking event loop
+		readyCh := make(chan interface{})
+		go func() {
+			<-readyCh
+			onReady()
+		}()
+		systrayReady = func() {
+			close(readyCh)
 		}
-	}()
+	}
+
+	// unlike onReady, onExit runs in the event loop to make sure it has time to
+	// finish before the process terminates
+	if onExit == nil {
+		onExit = func() {}
+	}
+	systrayExit = onExit
 
 	nativeLoop()
 }
@@ -134,14 +144,6 @@ func (item *MenuItem) update() {
 	defer menuItemsLock.Unlock()
 	menuItems[item.id] = item
 	addOrUpdateMenuItem(item)
-}
-
-func systrayReady() {
-	readyCh <- struct{}{}
-}
-
-func systrayExit() {
-	exitCh <- struct{}{}
 }
 
 func systrayMenuItemSelected(id int32) {

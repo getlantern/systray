@@ -65,6 +65,11 @@ func systray_ready() {
 	systrayReady()
 }
 
+//export systray_on_exit
+func systray_on_exit() {
+	systrayExit()
+}
+
 //export systray_menu_item_selected
 func systray_menu_item_selected(cID C.int) {
 	systrayMenuItemSelected(int32(cID))
