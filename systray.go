@@ -15,6 +15,11 @@ import (
 	"github.com/getlantern/golog"
 )
 
+var (
+	hasStarted = int64(0)
+	hasQuit    = int64(0)
+)
+
 // MenuItem is used to keep track each menu item of systray
 // Don't create it directly, use the one systray.AddMenuItem() returned
 type MenuItem struct {
@@ -50,6 +55,7 @@ var (
 // Should be called at the very beginning of main() to lock at main thread.
 func Run(onReady func(), onExit func()) {
 	runtime.LockOSThread()
+	atomic.StoreInt64(&hasStarted, 1)
 
 	if onReady == nil {
 		systrayReady = func() {}
@@ -77,7 +83,9 @@ func Run(onReady func(), onExit func()) {
 
 // Quit the systray
 func Quit() {
-	quit()
+	if atomic.LoadInt64(&hasStarted) == 1 && atomic.CompareAndSwapInt64(&hasQuit, 0, 1) {
+		quit()
+	}
 }
 
 // AddMenuItem adds menu item with designated title and tooltip, returning a channel
