@@ -5,19 +5,18 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"syscall"
 	"runtime"
+	"syscall"
 	"unsafe"
 
 	"github.com/getlantern/filepersist"
 )
 
 var (
-	iconFiles = make([]*os.File, 0)
-	dllDir    = filepath.Join(os.Getenv("APPDATA"), "systray")
+	iconFiles   = make([]*os.File, 0)
+	dllDir      = filepath.Join(os.Getenv("APPDATA"), "systray")
 	dllFileName = "systray" + runtime.GOARCH + ".dll"
-	dllFile   = filepath.Join(dllDir, dllFileName)
-
+	dllFile     = filepath.Join(dllDir, dllFileName)
 
 	mod                      = syscall.NewLazyDLL(dllFile)
 	_nativeLoop              = mod.NewProc("nativeLoop")
@@ -32,23 +31,24 @@ func init() {
 	// Write DLL to file
 	b, err := Asset(dllFileName)
 	if err != nil {
-		panic(fmt.Errorf("Unable to read " + dllFileName + ": %v", err))
+		panic(fmt.Errorf("Unable to read "+dllFileName+": %v", err))
 	}
 
 	err = os.MkdirAll(dllDir, 0755)
 	if err != nil {
-		panic(fmt.Errorf("Unable to create directory %v to hold " + dllFileName + ": %v", dllDir, err))
+		panic(fmt.Errorf("Unable to create directory %v to hold "+dllFileName+": %v", dllDir, err))
 	}
 
 	err = filepersist.Save(dllFile, b, 0644)
 	if err != nil {
-		panic(fmt.Errorf("Unable to save " + dllFileName + " to %v: %v", dllFile, err))
+		panic(fmt.Errorf("Unable to save "+dllFileName+" to %v: %v", dllFile, err))
 	}
 }
 
 func nativeLoop() {
 	_nativeLoop.Call(
 		syscall.NewCallbackCDecl(systray_ready),
+		syscall.NewCallbackCDecl(systray_on_exit),
 		syscall.NewCallbackCDecl(systray_menu_item_selected))
 }
 
@@ -148,6 +148,11 @@ func strUTF16(s string) (utf16, error) {
 // parameter to the function).
 func systray_ready(ignore uintptr) uintptr {
 	systrayReady()
+	return 0
+}
+
+func systray_on_exit(ignore uintptr) uintptr {
+	systrayExit()
 	return 0
 }
 

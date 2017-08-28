@@ -1,7 +1,9 @@
 /*
-Package systray is a cross platfrom Go library to place an icon and menu in the notification area.
+Package systray is a cross platfrom Go library to place an icon and menu in the
+notification area.
 Supports Windows, Mac OSX and Linux currently.
-Methods can be called from any goroutine except Run(), which should be called at the very beginning of main() to lock at main thread.
+Methods can be called from any goroutine except Run(), which should be called
+at the very beginning of main() to lock at main thread.
 */
 package systray
 
@@ -17,7 +19,7 @@ import (
 // Don't create it directly, use the one systray.AddMenuItem() returned
 type MenuItem struct {
 	// ClickedCh is the channel which will be notified when the menu item is clicked
-	ClickedCh chan interface{}
+	ClickedCh chan struct{}
 
 	// id uniquely identify a menu item, not supposed to be modified
 	id int32
@@ -34,8 +36,8 @@ type MenuItem struct {
 var (
 	log = golog.LoggerFor("systray")
 
-	readyCh       = make(chan interface{})
-	clickedCh     = make(chan interface{})
+	systrayReady  func()
+	systrayExit   func()
 	menuItems     = make(map[int32]*MenuItem)
 	menuItemsLock sync.RWMutex
 
@@ -46,12 +48,29 @@ var (
 // callback.
 // It blocks until systray.Quit() is called.
 // Should be called at the very beginning of main() to lock at main thread.
-func Run(onReady func()) {
+func Run(onReady func(), onExit func()) {
 	runtime.LockOSThread()
-	go func() {
-		<-readyCh
-		onReady()
-	}()
+
+	if onReady == nil {
+		systrayReady = func() {}
+	} else {
+		// Run onReady on separate goroutine to avoid blocking event loop
+		readyCh := make(chan interface{})
+		go func() {
+			<-readyCh
+			onReady()
+		}()
+		systrayReady = func() {
+			close(readyCh)
+		}
+	}
+
+	// unlike onReady, onExit runs in the event loop to make sure it has time to
+	// finish before the process terminates
+	if onExit == nil {
+		onExit = func() {}
+	}
+	systrayExit = onExit
 
 	nativeLoop()
 }
@@ -68,7 +87,7 @@ func Quit() {
 func AddMenuItem(title string, tooltip string) *MenuItem {
 	id := atomic.AddInt32(&currentID, 1)
 	item := &MenuItem{nil, id, title, tooltip, false, false}
-	item.ClickedCh = make(chan interface{})
+	item.ClickedCh = make(chan struct{})
 	item.update()
 	return item
 }
@@ -127,16 +146,12 @@ func (item *MenuItem) update() {
 	addOrUpdateMenuItem(item)
 }
 
-func systrayReady() {
-	readyCh <- nil
-}
-
 func systrayMenuItemSelected(id int32) {
 	menuItemsLock.RLock()
 	item := menuItems[id]
 	menuItemsLock.RUnlock()
 	select {
-	case item.ClickedCh <- nil:
+	case item.ClickedCh <- struct{}{}:
 	// in case no one waiting for the channel
 	default:
 	}

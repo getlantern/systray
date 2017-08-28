@@ -34,6 +34,7 @@ int nativeLoop(void) {
 	global_temp_icon_file_names = g_array_new(TRUE, FALSE, sizeof(char*));
 	systray_ready();
 	gtk_main();
+	systray_on_exit();
 	return;
 }
 
