@@ -52,20 +52,18 @@ func Run(onReady func(), onExit func()) {
 	runtime.LockOSThread()
 
 	if onReady == nil {
-		onReady = func() {}
+		systrayReady = func() {}
 	} else {
 		// Run onReady on separate goroutine to avoid blocking event loop
-		origOnReady := onReady
 		readyCh := make(chan interface{})
 		go func() {
 			<-readyCh
-			origOnReady()
+			onReady()
 		}()
-		onReady = func() {
+		systrayReady = func() {
 			close(readyCh)
 		}
 	}
-	systrayReady = onReady
 
 	// unlike onReady, onExit runs in the event loop to make sure it has time to
 	// finish before the process terminates
