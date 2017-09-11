@@ -110,6 +110,32 @@ gboolean do_add_or_update_menu_item(gpointer data) {
 }
 
 // runs in main thread, should always return FALSE to prevent gtk to execute it again
+gboolean do_hide_menu_item(gpointer data) {
+	MenuItemInfo *mii = (MenuItemInfo*)data;
+	GList* it;
+	for(it = global_menu_items; it != NULL; it = it->next) {
+		MenuItemNode* item = (MenuItemNode*)(it->data);
+		if(item->menu_id == mii->menu_id){
+			gtk_widget_hide(GTK_MENU_ITEM(item->menu_item));
+			return;
+		}
+	}
+}
+
+// runs in main thread, should always return FALSE to prevent gtk to execute it again
+gboolean do_show_menu_item(gpointer data) {
+	MenuItemInfo *mii = (MenuItemInfo*)data;
+	GList* it;
+	for(it = global_menu_items; it != NULL; it = it->next) {
+		MenuItemNode* item = (MenuItemNode*)(it->data);
+		if(item->menu_id == mii->menu_id){
+			gtk_widget_show(GTK_MENU_ITEM(item->menu_item));
+			return;
+		}
+	}
+}
+
+// runs in main thread, should always return FALSE to prevent gtk to execute it again
 gboolean do_quit(gpointer data) {
 	int i;
 	for (i = 0; i < INT_MAX; ++i) {
@@ -149,6 +175,18 @@ void add_or_update_menu_item(int menu_id, char* title, char* tooltip, short disa
 	mii->disabled = disabled;
 	mii->checked = checked;
 	g_idle_add(do_add_or_update_menu_item, mii);
+}
+
+void hide_menu_item(int menu_id) {
+	MenuItemInfo *mii = malloc(sizeof(MenuItemInfo));
+	mii->menu_id = menu_id;
+	g_idle_add(do_hide_menu_item, mii);
+}
+
+void show_menu_item(int menu_id) {
+	MenuItemInfo *mii = malloc(sizeof(MenuItemInfo));
+	mii->menu_id = menu_id;
+	g_idle_add(do_show_menu_item, mii);
 }
 
 void quit() {
