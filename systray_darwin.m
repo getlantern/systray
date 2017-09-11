@@ -108,6 +108,28 @@
   }
 }
 
+- (void) hide_menu_item:(NSNumber*) menuId
+{
+  NSMenuItem* menuItem;
+  int existedMenuIndex = [menu indexOfItemWithRepresentedObject: menuId];
+  if (existedMenuIndex == -1) {
+    return;
+  }
+  menuItem = [menu itemAtIndex: existedMenuIndex];
+  [menuItem setHidden:TRUE];
+}
+
+- (void) show_menu_item:(NSNumber*) menuId
+{
+  NSMenuItem* menuItem;
+  int existedMenuIndex = [menu indexOfItemWithRepresentedObject: menuId];
+  if (existedMenuIndex == -1) {
+    return;
+  }
+  menuItem = [menu itemAtIndex: existedMenuIndex];
+  [menuItem setHidden:NO];
+}
+
 - (void) quit
 {
   [NSApp terminate:self];
@@ -154,6 +176,16 @@ void add_or_update_menu_item(int menuId, char* title, char* tooltip, short disab
   free(title);
   free(tooltip);
   runInMainThread(@selector(add_or_update_menu_item:), (id)item);
+}
+
+void hide_menu_item(int menuId) {
+  NSNumber *mId = [NSNumber numberWithInt:menuId];
+  runInMainThread(@selector(hide_menu_item:), (id)mId);
+}
+
+void show_menu_item(int menuId) {
+  NSNumber *mId = [NSNumber numberWithInt:menuId];
+  runInMainThread(@selector(show_menu_item:), (id)mId);
 }
 
 void quit() {

@@ -60,6 +60,18 @@ func addOrUpdateMenuItem(item *MenuItem) {
 	)
 }
 
+func hideMenuItem(item *MenuItem) {
+	C.hide_menu_item(
+		C.int(item.id),
+	)
+}
+
+func showMenuItem(item *MenuItem) {
+	C.show_menu_item(
+		C.int(item.id),
+	)
+}
+
 //export systray_ready
 func systray_ready() {
 	systrayReady()
