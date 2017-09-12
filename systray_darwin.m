@@ -108,6 +108,11 @@
   }
 }
 
+- (void) add_separator:id
+{
+  [menu addItem: [NSMenuItem separatorItem]];
+}
+
 - (void) hide_menu_item:(NSNumber*) menuId
 {
   NSMenuItem* menuItem;
@@ -176,6 +181,10 @@ void add_or_update_menu_item(int menuId, char* title, char* tooltip, short disab
   free(title);
   free(tooltip);
   runInMainThread(@selector(add_or_update_menu_item:), (id)item);
+}
+
+void add_separator() {
+  runInMainThread(@selector(add_separator:), NULL);
 }
 
 void hide_menu_item(int menuId) {

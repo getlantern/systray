@@ -8,3 +8,4 @@ Debug
 dll/systray_unsigned.dll
 out.txt
 .vs
+on_exit*.txt
