@@ -192,8 +192,12 @@ void add_or_update_menu_item(int menuId, wchar_t* title, wchar_t* tooltip, short
 		menuItemInfo.fState |= MFS_CHECKED;
 	}
 
+	// We set the menu item info based on the menuID
 	BOOL setOK = SetMenuItemInfo(hTrayMenu, menuId, FALSE, &menuItemInfo);
 	if (!setOK) {
+		// We insert the menu item using the menuID as a position. This is important
+		// because hidden items will end up here when shown again, so this ensures
+		// that their position stays consistent.
 		InsertMenuItem(hTrayMenu, menuId, TRUE, &menuItemInfo);
 	}
 }
