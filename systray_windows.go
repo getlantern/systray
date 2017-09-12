@@ -25,6 +25,7 @@ var (
 	_setTitle                = mod.NewProc("setTitle")
 	_setTooltip              = mod.NewProc("setTooltip")
 	_add_or_update_menu_item = mod.NewProc("add_or_update_menu_item")
+	_hide_menu_item          = mod.NewProc("hide_menu_item")
 )
 
 func init() {
@@ -129,6 +130,14 @@ func addOrUpdateMenuItem(item *MenuItem) {
 		uintptr(disabled),
 		uintptr(checked),
 	)
+}
+
+func hideMenuItem(item *MenuItem) {
+	_hide_menu_item.Call(uintptr(item.id))
+}
+
+func showMenuItem(item *MenuItem) {
+	addOrUpdateMenuItem(item)
 }
 
 type utf16 []uint16

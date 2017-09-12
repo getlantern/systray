@@ -46,7 +46,7 @@ var (
 	menuItems     = make(map[int32]*MenuItem)
 	menuItemsLock sync.RWMutex
 
-	currentID int32
+	currentID = int32(-1)
 )
 
 // Run initializes GUI and starts the event loop, then invokes the onReady

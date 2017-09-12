@@ -66,9 +66,11 @@ func onReady() {
 			case <-mToggle.ClickedCh:
 				if shown {
 					mQuitOrig.Hide()
+					mEnabled.Hide()
 					shown = false
 				} else {
 					mQuitOrig.Show()
+					mEnabled.Show()
 					shown = true
 				}
 			case <-mQuit.ClickedCh:
