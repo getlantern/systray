@@ -5,5 +5,6 @@ EXPORTS
 	setIcon						@2
 	setTooltip					@3
 	add_or_update_menu_item		@4
-	hide_menu_item              @5
-	quit						@6
+	add_separator             @5
+	hide_menu_item              @6
+	quit						@7

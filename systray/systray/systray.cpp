@@ -202,6 +202,14 @@ void add_or_update_menu_item(int menuId, wchar_t* title, wchar_t* tooltip, short
 	}
 }
 
+void add_separator(int menuId) {
+	InsertMenu(hTrayMenu, // parent menu
+	           menuId,    // position
+						 MF_BYPOSITION | MF_SEPARATOR,
+						 menuId,    // identifier
+						 NULL);
+}
+
 void hide_menu_item(int menuId) {
 	DeleteMenu(hTrayMenu, menuId, MF_BYCOMMAND);
 }

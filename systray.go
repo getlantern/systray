@@ -102,7 +102,7 @@ func AddMenuItem(title string, tooltip string) *MenuItem {
 
 // AddSeparator adds a separator bar to the menu
 func AddSeparator() {
-	addSeparator()
+	addSeparator(atomic.AddInt32(&currentID, 1))
 }
 
 // SetTitle set the text to display on a menu item
