@@ -7,3 +7,4 @@ Debug
 *.sdf
 dll/systray_unsigned.dll
 out.txt
+.vs
