@@ -46,7 +46,7 @@ var (
 	menuItems     = make(map[int32]*MenuItem)
 	menuItemsLock sync.RWMutex
 
-	currentID int32
+	currentID = int32(-1)
 )
 
 // Run initializes GUI and starts the event loop, then invokes the onReady
@@ -127,6 +127,16 @@ func (item *MenuItem) Enable() {
 func (item *MenuItem) Disable() {
 	item.disabled = true
 	item.update()
+}
+
+// Hide hides a menu item
+func (item *MenuItem) Hide() {
+	hideMenuItem(item)
+}
+
+// Show shows a previously hidden menu item
+func (item *MenuItem) Show() {
+	showMenuItem(item)
 }
 
 // Checked returns if the menu item has a check mark

@@ -8,5 +8,6 @@ extern "C" {
 	__declspec(dllexport) void __cdecl setIcon(const wchar_t* iconFile);
 	__declspec(dllexport) void __cdecl setTooltip(const wchar_t* tooltip);
 	__declspec(dllexport) void __cdecl add_or_update_menu_item(int menuId, wchar_t* title, wchar_t* tooltip, short disabled, short checked);
+	__declspec(dllexport) void __cdecl hide_menu_item(int menuId);
 	__declspec(dllexport) void __cdecl quit();
 }

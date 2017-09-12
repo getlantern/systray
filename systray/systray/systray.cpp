@@ -41,22 +41,11 @@ void ShowMenu(HWND hWnd) {
 
 }
 
-int GetMenuItemId(int index) {
-	MENUITEMINFO menuItemInfo;
-	menuItemInfo.cbSize = sizeof(MENUITEMINFO);
-	menuItemInfo.fMask = MIIM_DATA;
-	if (0 == GetMenuItemInfo(hTrayMenu, index, TRUE, &menuItemInfo)) {
-		reportWindowsError("get menu item id");
-		return -1;
-	}
-	return menuItemInfo.dwItemData;
-}
-
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
 	switch (message) {
-		case WM_MENUCOMMAND:
+		case WM_COMMAND:
 			{
-				int menuId = GetMenuItemId(wParam);
+				int menuId = LOWORD(wParam);
 				if (menuId != -1) {
 					systray_menu_item_selected(menuId);
 				}
@@ -131,7 +120,6 @@ BOOL createMenu() {
 	MENUINFO menuInfo;
 	menuInfo.cbSize = sizeof(MENUINFO);
 	menuInfo.fMask = MIM_APPLYTOSUBMENUS | MIM_STYLE;
-	menuInfo.dwStyle = MNS_NOTIFYBYPOS;
 	return SetMenuInfo(hTrayMenu, &menuInfo);
 }
 
@@ -191,11 +179,11 @@ void setTooltip(const wchar_t* tooltip) {
 void add_or_update_menu_item(int menuId, wchar_t* title, wchar_t* tooltip, short disabled, short checked) {
 	MENUITEMINFO menuItemInfo;
 	menuItemInfo.cbSize = sizeof(MENUITEMINFO);
-	menuItemInfo.fMask = MIIM_FTYPE | MIIM_STRING | MIIM_DATA | MIIM_STATE;
+	menuItemInfo.fMask = MIIM_FTYPE | MIIM_STRING | MIIM_ID | MIIM_STATE;
 	menuItemInfo.fType = MFT_STRING;
 	menuItemInfo.dwTypeData = title;
 	menuItemInfo.cch = wcslen(title) + 1;
-	menuItemInfo.dwItemData = (ULONG_PTR)menuId;
+	menuItemInfo.wID = menuId;
 	menuItemInfo.fState = 0;
 	if (disabled == 1) {
 		menuItemInfo.fState |= MFS_DISABLED;
@@ -204,21 +192,18 @@ void add_or_update_menu_item(int menuId, wchar_t* title, wchar_t* tooltip, short
 		menuItemInfo.fState |= MFS_CHECKED;
 	}
 
-	int itemCount = GetMenuItemCount(hTrayMenu);
-	int i;
-	for (i = 0; i < itemCount; i++) {
-		int id = GetMenuItemId(i);
-		if (-1 == id) {
-			continue;
-		}
-		if (menuId == id) {
-			SetMenuItemInfo(hTrayMenu, i, TRUE, &menuItemInfo);
-			break;
-		}
+	// We set the menu item info based on the menuID
+	BOOL setOK = SetMenuItemInfo(hTrayMenu, menuId, FALSE, &menuItemInfo);
+	if (!setOK) {
+		// We insert the menu item using the menuID as a position. This is important
+		// because hidden items will end up here when shown again, so this ensures
+		// that their position stays consistent.
+		InsertMenuItem(hTrayMenu, menuId, TRUE, &menuItemInfo);
 	}
-	if (i == itemCount) {
-		InsertMenuItem(hTrayMenu, -1, TRUE, &menuItemInfo);
-	}
+}
+
+void hide_menu_item(int menuId) {
+	DeleteMenu(hTrayMenu, menuId, MF_BYCOMMAND);
 }
 
 void quit() {
