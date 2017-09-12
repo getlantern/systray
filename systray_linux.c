@@ -116,7 +116,7 @@ gboolean do_hide_menu_item(gpointer data) {
 	for(it = global_menu_items; it != NULL; it = it->next) {
 		MenuItemNode* item = (MenuItemNode*)(it->data);
 		if(item->menu_id == mii->menu_id){
-			gtk_widget_hide(GTK_MENU_ITEM(item->menu_item));
+			gtk_widget_hide(GTK_WIDGET(item->menu_item));
 			return;
 		}
 	}
@@ -129,7 +129,7 @@ gboolean do_show_menu_item(gpointer data) {
 	for(it = global_menu_items; it != NULL; it = it->next) {
 		MenuItemNode* item = (MenuItemNode*)(it->data);
 		if(item->menu_id == mii->menu_id){
-			gtk_widget_show(GTK_MENU_ITEM(item->menu_item));
+			gtk_widget_show(GTK_WIDGET(item->menu_item));
 			return;
 		}
 	}
