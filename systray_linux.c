@@ -117,9 +117,10 @@ gboolean do_hide_menu_item(gpointer data) {
 		MenuItemNode* item = (MenuItemNode*)(it->data);
 		if(item->menu_id == mii->menu_id){
 			gtk_widget_hide(GTK_WIDGET(item->menu_item));
-			return;
+			break;
 		}
 	}
+	return FALSE;
 }
 
 // runs in main thread, should always return FALSE to prevent gtk to execute it again
@@ -130,9 +131,10 @@ gboolean do_show_menu_item(gpointer data) {
 		MenuItemNode* item = (MenuItemNode*)(it->data);
 		if(item->menu_id == mii->menu_id){
 			gtk_widget_show(GTK_WIDGET(item->menu_item));
-			return;
+			break;
 		}
 	}
+	return FALSE;
 }
 
 // runs in main thread, should always return FALSE to prevent gtk to execute it again

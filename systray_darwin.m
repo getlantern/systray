@@ -127,7 +127,7 @@
     return;
   }
   menuItem = [menu itemAtIndex: existedMenuIndex];
-  [menuItem setHidden:NO];
+  [menuItem setHidden:FALSE];
 }
 
 - (void) quit
