@@ -25,6 +25,7 @@ var (
 	_setTitle                = mod.NewProc("setTitle")
 	_setTooltip              = mod.NewProc("setTooltip")
 	_add_or_update_menu_item = mod.NewProc("add_or_update_menu_item")
+	_add_separator           = mod.NewProc("add_separator")
 	_hide_menu_item          = mod.NewProc("hide_menu_item")
 )
 
@@ -130,6 +131,10 @@ func addOrUpdateMenuItem(item *MenuItem) {
 		uintptr(disabled),
 		uintptr(checked),
 	)
+}
+
+func addSeparator(id int32) {
+	_add_separator.Call(uintptr(id))
 }
 
 func hideMenuItem(item *MenuItem) {

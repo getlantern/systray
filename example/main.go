@@ -44,6 +44,7 @@ func onReady() {
 		systray.AddMenuItem("Ignored", "Ignored")
 		mUrl := systray.AddMenuItem("Open Lantern.org", "my home")
 		mQuit := systray.AddMenuItem("退出", "Quit the whole app")
+		systray.AddSeparator()
 		mToggle := systray.AddMenuItem("Toggle", "Toggle the Quit button")
 		shown := true
 		for {
