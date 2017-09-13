@@ -117,9 +117,13 @@ HWND InitInstance(HINSTANCE hInstance, int nCmdShow, TCHAR* szWindowClass) {
 
 BOOL createMenu() {
 	hTrayMenu = CreatePopupMenu();
+	if (!hTrayMenu) {
+		printf("Couldn't create hTrayMenu\n");
+		return FALSE;
+	}
 	MENUINFO menuInfo;
 	menuInfo.cbSize = sizeof(MENUINFO);
-	menuInfo.fMask = MIM_APPLYTOSUBMENUS | MIM_STYLE;
+	menuInfo.fMask = MIM_APPLYTOSUBMENUS;
 	return SetMenuInfo(hTrayMenu, &menuInfo);
 }
 
@@ -143,9 +147,15 @@ int nativeLoop(void (*systray_ready)(int ignored),
 	MyRegisterClass(hInstance, szWindowClass);
 	hWnd = InitInstance(hInstance, FALSE, szWindowClass); // Don't show window
 	if (!hWnd) {
+		reportWindowsError("create window");
 		return EXIT_FAILURE;
 	}
-	if (!createMenu() || !addNotifyIcon()) {
+	if (!createMenu()) {
+		reportWindowsError("create menu");
+		return EXIT_FAILURE;
+	}
+	if (!addNotifyIcon()) {
+		reportWindowsError("add notify icon");
 		return EXIT_FAILURE;
 	}
 	systray_ready(0);
