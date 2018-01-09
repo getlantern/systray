@@ -35,7 +35,7 @@ int nativeLoop(void) {
 	systray_ready();
 	gtk_main();
 	systray_on_exit();
-	return;
+	return 0;
 }
 
 // runs in main thread, should always return FALSE to prevent gtk to execute it again
