@@ -101,7 +101,7 @@ gboolean do_add_or_update_menu_item(gpointer data) {
 	}
 	GtkWidget * menu_item = GTK_WIDGET(((MenuItemNode*)(it->data))->menu_item);
 	gtk_widget_set_sensitive(menu_item, mii->disabled == 1 ? FALSE : TRUE);
-	gtk_widget_show_all(global_tray_menu);
+	gtk_widget_show(menu_item);
 
 	free(mii->title);
 	free(mii->tooltip);
@@ -112,6 +112,8 @@ gboolean do_add_or_update_menu_item(gpointer data) {
 gboolean do_add_separator(gpointer data) {
 	GtkWidget *separator = gtk_separator_menu_item_new();
 	gtk_menu_shell_append(GTK_MENU_SHELL(global_tray_menu), separator);
+	gtk_widget_show(separator);
+	return FALSE;
 }
 
 // runs in main thread, should always return FALSE to prevent gtk to execute it again
