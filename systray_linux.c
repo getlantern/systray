@@ -157,6 +157,7 @@ gboolean do_quit(gpointer data) {
 	}
 	// app indicator doesn't provide a way to remove it, hide it as a workaround
 	app_indicator_set_status(global_app_indicator, APP_INDICATOR_STATUS_PASSIVE);
+	gtk_main_quit();
 	return FALSE;
 }
 
