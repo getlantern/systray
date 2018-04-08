@@ -3,15 +3,22 @@
 package systray
 
 import (
-	"testing"
-	"sync/atomic"
-	"time"
-	"golang.org/x/sys/windows"
-	"unsafe"
+	"io/ioutil"
 	"runtime"
+	"sync/atomic"
+	"testing"
+	"time"
+	"unsafe"
+
+	"golang.org/x/sys/windows"
 )
 
+const iconFilePath = "example/icon/iconwin.ico"
+
 func TestBaseWindowsTray(t *testing.T) {
+	systrayReady = func() {}
+	systrayExit = func() {}
+
 	runtime.LockOSThread()
 
 	if err := wt.initInstance(); err != nil {
@@ -24,10 +31,10 @@ func TestBaseWindowsTray(t *testing.T) {
 
 	defer func() {
 		pDestroyWindow.Call(uintptr(wt.window))
-		wt.wcex.Unregister()
+		wt.wcex.unregister()
 	}()
 
-	if err := wt.setIcon("example/icon/iconwin.ico"); err != nil {
+	if err := wt.setIcon(iconFilePath); err != nil {
 		t.Errorf("SetIcon failed: %s", err)
 	}
 
@@ -72,7 +79,7 @@ func TestBaseWindowsTray(t *testing.T) {
 		t.Errorf("mergeMenuItem failed: %s", err)
 	}
 
-	time.AfterFunc(3*time.Second, quit)
+	time.AfterFunc(1*time.Second, quit)
 
 	m := struct {
 		WindowHandle windows.Handle
@@ -94,4 +101,32 @@ func TestBaseWindowsTray(t *testing.T) {
 		pTranslateMessage.Call(uintptr(unsafe.Pointer(&m)))
 		pDispatchMessage.Call(uintptr(unsafe.Pointer(&m)))
 	}
+}
+
+func TestWindowsRun(t *testing.T) {
+	onReady := func() {
+		b, err := ioutil.ReadFile(iconFilePath)
+		if err != nil {
+			t.Fatalf("Can't load icon file: %v", err)
+		}
+		SetIcon(b)
+		SetTitle("Test title с кириллицей")
+
+		bSomeBtn := AddMenuItem("Йа кнопко", "")
+		bSomeBtn.Check()
+		AddSeparator()
+		bQuit := AddMenuItem("Quit", "Quit the whole app")
+		go func() {
+			<-bQuit.ClickedCh
+			t.Log("Quit reqested")
+			Quit()
+		}()
+		time.AfterFunc(1*time.Second, Quit)
+	}
+
+	onExit := func() {
+		t.Log("Exit success")
+	}
+
+	Run(onReady, onExit)
 }
