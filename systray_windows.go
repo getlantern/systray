@@ -3,75 +3,49 @@
 package systray
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
-	"fmt"
-	"crypto/md5"
-	"encoding/hex"
-	"path/filepath"
 )
 
 // Helpful sources: https://github.com/golang/exp/blob/master/shiny/driver/internal/win32
 
-// https://msdn.microsoft.com/en-us/library/windows/desktop/bb762159
-const (
-	NIM_ADD    = 0x00000000
-	NIM_MODIFY = 0x00000001
-	NIM_DELETE = 0x00000002
-)
-
-const (
-	NIF_MESSAGE = 0x00000001
-	NIF_ICON    = 0x00000002
-	NIF_TIP     = 0x00000004
-)
-
-// https://msdn.microsoft.com/en-us/library/windows/desktop/ms644931(v=vs.85).aspx
-const (
-	WM_USER       = 0x0400
-	WM_COMMAND    = 0x0111
-	WM_DESTROY    = 0x0002
-	WM_ENDSESSION = 0x16
-	WM_RBUTTONUP  = 0x0205
-	WM_LBUTTONUP  = 0x0202
-
-	// custom messages
-	WM_SYSTRAY_MESSAGE = WM_USER + 1
-)
-
 var (
-	k32                  = windows.NewLazySystemDLL("Kernel32.dll")
-	s32                  = windows.NewLazySystemDLL("Shell32.dll")
-	u32                  = windows.NewLazySystemDLL("User32.dll")
-	pGetModuleHandle     = k32.NewProc("GetModuleHandleW")
-	pShellNotifyIcon     = s32.NewProc("Shell_NotifyIconW")
-	pCreatePopupMenu     = u32.NewProc("CreatePopupMenu")
-	pCreateWindowEx      = u32.NewProc("CreateWindowExW")
-	pDefWindowProc       = u32.NewProc("DefWindowProcW")
-	pDeleteMenu          = u32.NewProc("DeleteMenu")
-	pDestroyWindow       = u32.NewProc("DestroyWindow")
-	pDispatchMessage     = u32.NewProc("DispatchMessageW")
-	pGetCursorPos        = u32.NewProc("GetCursorPos")
-	pGetMenuItemID       = u32.NewProc("GetMenuItemID")
-	pGetMessage          = u32.NewProc("GetMessageW")
-	pInsertMenuItem      = u32.NewProc("InsertMenuItemW")
-	pLoadIcon            = u32.NewProc("LoadIconW")
-	pLoadImage           = u32.NewProc("LoadImageW")
-	pLoadCursor          = u32.NewProc("LoadCursorW")
-	pPostMessage         = u32.NewProc("PostMessageW")
-	pPostQuitMessage     = u32.NewProc("PostQuitMessage")
-	pRegisterClass       = u32.NewProc("RegisterClassExW")
-	pSetForegroundWindow = u32.NewProc("SetForegroundWindow")
-	pSetMenuInfo         = u32.NewProc("SetMenuInfo")
-	pSetMenuItemInfo     = u32.NewProc("SetMenuItemInfoW")
-	pShowWindow          = u32.NewProc("ShowWindow")
-	pTrackPopupMenu      = u32.NewProc("TrackPopupMenu")
-	pTranslateMessage    = u32.NewProc("TranslateMessage")
-	pUnregisterClass     = u32.NewProc("UnregisterClassW")
-	pUpdateWindow        = u32.NewProc("UpdateWindow")
+	k32                    = windows.NewLazySystemDLL("Kernel32.dll")
+	s32                    = windows.NewLazySystemDLL("Shell32.dll")
+	u32                    = windows.NewLazySystemDLL("User32.dll")
+	pGetModuleHandle       = k32.NewProc("GetModuleHandleW")
+	pShellNotifyIcon       = s32.NewProc("Shell_NotifyIconW")
+	pCreatePopupMenu       = u32.NewProc("CreatePopupMenu")
+	pCreateWindowEx        = u32.NewProc("CreateWindowExW")
+	pDefWindowProc         = u32.NewProc("DefWindowProcW")
+	pDeleteMenu            = u32.NewProc("DeleteMenu")
+	pDestroyWindow         = u32.NewProc("DestroyWindow")
+	pDispatchMessage       = u32.NewProc("DispatchMessageW")
+	pGetCursorPos          = u32.NewProc("GetCursorPos")
+	pGetMenuItemID         = u32.NewProc("GetMenuItemID")
+	pGetMessage            = u32.NewProc("GetMessageW")
+	pInsertMenuItem        = u32.NewProc("InsertMenuItemW")
+	pLoadIcon              = u32.NewProc("LoadIconW")
+	pLoadImage             = u32.NewProc("LoadImageW")
+	pLoadCursor            = u32.NewProc("LoadCursorW")
+	pPostMessage           = u32.NewProc("PostMessageW")
+	pPostQuitMessage       = u32.NewProc("PostQuitMessage")
+	pRegisterClass         = u32.NewProc("RegisterClassExW")
+	pRegisterWindowMessage = u32.NewProc("RegisterWindowMessageW")
+	pSetForegroundWindow   = u32.NewProc("SetForegroundWindow")
+	pSetMenuInfo           = u32.NewProc("SetMenuInfo")
+	pSetMenuItemInfo       = u32.NewProc("SetMenuItemInfoW")
+	pShowWindow            = u32.NewProc("ShowWindow")
+	pTrackPopupMenu        = u32.NewProc("TrackPopupMenu")
+	pTranslateMessage      = u32.NewProc("TranslateMessage")
+	pUnregisterClass       = u32.NewProc("UnregisterClassW")
+	pUpdateWindow          = u32.NewProc("UpdateWindow")
 )
 
 // Contains window class information.
@@ -88,7 +62,7 @@ type wndClassEx struct {
 
 // Registers a window class for subsequent use in calls to the CreateWindow or CreateWindowEx function.
 // https://msdn.microsoft.com/en-us/library/ms633587.aspx
-func (w *wndClassEx) Register() error {
+func (w *wndClassEx) register() error {
 	w.Size = uint32(unsafe.Sizeof(*w))
 	res, _, err := pRegisterClass.Call(uintptr(unsafe.Pointer(w)))
 	if res == 0 {
@@ -99,7 +73,7 @@ func (w *wndClassEx) Register() error {
 
 // Unregisters a window class, freeing the memory required for the class.
 // https://msdn.microsoft.com/en-us/library/ms644899.aspx
-func (w *wndClassEx) Unregister() error {
+func (w *wndClassEx) unregister() error {
 	res, _, err := pUnregisterClass.Call(
 		uintptr(unsafe.Pointer(w.ClassName)),
 		uintptr(w.Instance),
@@ -113,6 +87,7 @@ func (w *wndClassEx) Unregister() error {
 // Contains information that the system needs to display notifications in the notification area.
 // Used by Shell_NotifyIcon.
 // https://msdn.microsoft.com/en-us/library/windows/desktop/bb773352(v=vs.85).aspx
+// https://msdn.microsoft.com/en-us/library/windows/desktop/bb762159
 type notifyIconData struct {
 	Size                       uint32
 	Wnd                        windows.Handle
@@ -128,7 +103,43 @@ type notifyIconData struct {
 	BalloonIcon                windows.Handle
 }
 
-// Contains information about a menu item
+func (nid *notifyIconData) add() error {
+	const NIM_ADD = 0x00000000
+	res, _, err := pShellNotifyIcon.Call(
+		uintptr(NIM_ADD),
+		uintptr(unsafe.Pointer(nid)),
+	)
+	if res == 0 {
+		return err
+	}
+	return nil
+}
+
+func (nid *notifyIconData) modify() error {
+	const NIM_MODIFY = 0x00000001
+	res, _, err := pShellNotifyIcon.Call(
+		uintptr(NIM_MODIFY),
+		uintptr(unsafe.Pointer(nid)),
+	)
+	if res == 0 {
+		return err
+	}
+	return nil
+}
+
+func (nid *notifyIconData) delete() error {
+	const NIM_DELETE = 0x00000002
+	res, _, err := pShellNotifyIcon.Call(
+		uintptr(NIM_DELETE),
+		uintptr(unsafe.Pointer(nid)),
+	)
+	if res == 0 {
+		return err
+	}
+	return nil
+}
+
+// Contains information about a menu item.
 // https://msdn.microsoft.com/en-us/library/windows/desktop/ms647578(v=vs.85).aspx
 type menuItemInfo struct {
 	Size, Mask, Type, State     uint32
@@ -157,18 +168,18 @@ type winTray struct {
 	loadedImages map[string]windows.Handle
 	nid          *notifyIconData
 	wcex         *wndClassEx
+
+	wmSystrayMessage,
+	wmTaskbarCreated uint32
 }
 
 // Loads an image from file and shows it in tray.
 // LoadImage: https://msdn.microsoft.com/en-us/library/windows/desktop/ms648045(v=vs.85).aspx
 // Shell_NotifyIcon: https://msdn.microsoft.com/en-us/library/windows/desktop/bb762159(v=vs.85).aspx
 func (t *winTray) setIcon(src string) error {
-	const (
-		IMAGE_ICON = 1 // Loads an icon
-	)
-	const (
-		LR_LOADFROMFILE = 0x00000010 // Loads the stand-alone image from the file
-	)
+	const IMAGE_ICON = 1               // Loads an icon
+	const LR_LOADFROMFILE = 0x00000010 // Loads the stand-alone image from the file
+	const NIF_ICON = 0x00000002
 
 	// Save and reuse handles of loaded images
 	h, ok := t.loadedImages[src]
@@ -193,39 +204,25 @@ func (t *winTray) setIcon(src string) error {
 	}
 
 	t.nid.Icon = h
-	t.nid.Flags = NIF_ICON
+	t.nid.Flags |= NIF_ICON
 	t.nid.Size = uint32(unsafe.Sizeof(*t.nid))
 
-	showIconRes, _, err := pShellNotifyIcon.Call(
-		uintptr(NIM_MODIFY),
-		uintptr(unsafe.Pointer(t.nid)),
-	)
-	if showIconRes == 0 {
-		return err
-	}
-
-	return nil
+	return t.nid.modify()
 }
 
 // Sets tooltip on icon.
 // Shell_NotifyIcon: https://msdn.microsoft.com/en-us/library/windows/desktop/bb762159(v=vs.85).aspx
 func (t *winTray) setTooltip(src string) error {
+	const NIF_TIP = 0x00000004
 	b, err := windows.UTF16FromString(src)
 	if err != nil {
 		return err
 	}
 	copy(t.nid.Tip[:], b[:])
-	t.nid.Flags = NIF_TIP
+	t.nid.Flags |= NIF_TIP
 	t.nid.Size = uint32(unsafe.Sizeof(*t.nid))
-	showIconRes, _, err := pShellNotifyIcon.Call(
-		uintptr(NIM_MODIFY),
-		uintptr(unsafe.Pointer(t.nid)),
-	)
-	if showIconRes == 0 {
-		return err
-	}
 
-	return nil
+	return t.nid.modify()
 }
 
 var wt winTray
@@ -233,6 +230,13 @@ var wt winTray
 // WindowProc callback function that processes messages sent to a window.
 // https://msdn.microsoft.com/en-us/library/windows/desktop/ms633573(v=vs.85).aspx
 func (t *winTray) wndProc(hWnd windows.Handle, message uint32, wParam, lParam uintptr) (lResult uintptr) {
+	const (
+		WM_COMMAND    = 0x0111
+		WM_DESTROY    = 0x0002
+		WM_ENDSESSION = 0x16
+		WM_RBUTTONUP  = 0x0205
+		WM_LBUTTONUP  = 0x0202
+	)
 	switch message {
 	case WM_COMMAND:
 		menuId := int32(wParam)
@@ -245,19 +249,16 @@ func (t *winTray) wndProc(hWnd windows.Handle, message uint32, wParam, lParam ui
 		fallthrough
 	case WM_ENDSESSION:
 		if t.nid != nil {
-			pShellNotifyIcon.Call(
-				NIM_DELETE,
-				uintptr(unsafe.Pointer(t.nid)),
-			)
+			t.nid.delete()
 		}
-		if systrayExit != nil {
-			systrayExit()
-		}
-	case WM_SYSTRAY_MESSAGE:
+		systrayExit()
+	case t.wmSystrayMessage:
 		switch lParam {
 		case WM_RBUTTONUP, WM_LBUTTONUP:
 			t.showMenu()
 		}
+	case t.wmTaskbarCreated: // on explorer.exe restarts
+		t.nid.add()
 	default:
 		// Calls the default window procedure to provide default processing for any window messages that an application does not process.
 		// https://msdn.microsoft.com/en-us/library/windows/desktop/ms633572(v=vs.85).aspx
@@ -293,12 +294,26 @@ func (t *winTray) initInstance() error {
 		CS_HREDRAW = 0x0002
 		CS_VREDRAW = 0x0001
 	)
+	const NIF_MESSAGE = 0x00000001
+
+	// https://msdn.microsoft.com/en-us/library/windows/desktop/ms644931(v=vs.85).aspx
+	const WM_USER = 0x0400
 
 	const (
 		className  = "SystrayClass"
 		windowName = ""
 	)
-	wt.loadedImages = make(map[string]windows.Handle)
+
+	t.wmSystrayMessage = WM_USER + 1
+
+	taskbarEventNamePtr, _ := windows.UTF16PtrFromString("TaskbarCreated")
+	// https://msdn.microsoft.com/en-us/library/windows/desktop/ms644947
+	res, _, err := pRegisterWindowMessage.Call(
+		uintptr(unsafe.Pointer(taskbarEventNamePtr)),
+	)
+	t.wmTaskbarCreated = uint32(res)
+
+	t.loadedImages = make(map[string]windows.Handle)
 
 	instanceHandle, _, err := pGetModuleHandle.Call(0)
 	if instanceHandle == 0 {
@@ -336,11 +351,11 @@ func (t *winTray) initInstance() error {
 		Instance:   t.instance,
 		Icon:       t.icon,
 		Cursor:     t.cursor,
-		Background: windows.Handle(6), //(COLOR_WINDOW + 1)
+		Background: windows.Handle(6), // (COLOR_WINDOW + 1)
 		ClassName:  classNamePtr,
 		IconSm:     t.icon,
 	}
-	if err := t.wcex.Register(); err != nil {
+	if err := t.wcex.register(); err != nil {
 		return err
 	}
 
@@ -372,23 +387,15 @@ func (t *winTray) initInstance() error {
 		uintptr(t.window),
 	)
 
-	wt.nid = &notifyIconData{
-		Wnd:             windows.Handle(wt.window),
+	t.nid = &notifyIconData{
+		Wnd:             windows.Handle(t.window),
 		ID:              100,
 		Flags:           NIF_MESSAGE,
-		CallbackMessage: WM_SYSTRAY_MESSAGE,
+		CallbackMessage: t.wmSystrayMessage,
 	}
 	t.nid.Size = uint32(unsafe.Sizeof(*t.nid))
 
-	showIconRes, _, err := pShellNotifyIcon.Call(
-		uintptr(NIM_ADD),
-		uintptr(unsafe.Pointer(t.nid)),
-	)
-	if showIconRes == 0 {
-		return err
-	}
-
-	return nil
+	return t.nid.add()
 }
 
 func (t *winTray) createMenu() error {
@@ -558,25 +565,24 @@ func (t *winTray) showMenu() error {
 
 func nativeLoop() {
 	if err := wt.initInstance(); err != nil {
-		fmt.Printf("initInstance failed: %s", err)
+		log.Errorf("Unable to init instance: %v", err)
+		return
 	}
 
 	if err := wt.createMenu(); err != nil {
-		fmt.Printf("createMenu failed: %s", err)
+		log.Errorf("Unable to create menu: %v", err)
 		return
 	}
 
 	defer func() {
 		pDestroyWindow.Call(uintptr(wt.window))
-		wt.wcex.Unregister()
+		wt.wcex.unregister()
 	}()
 
-	if systrayReady != nil {
-		systrayReady()
-	}
+	go systrayReady()
 
 	// Main message pump.
-	m := struct {
+	m := &struct {
 		WindowHandle windows.Handle
 		Message      uint32
 		Wparam       uintptr
@@ -585,16 +591,22 @@ func nativeLoop() {
 		Pt           point
 	}{}
 	for {
-		ret, _, err := pGetMessage.Call(uintptr(unsafe.Pointer(&m)), 0, 0, 0)
-		res := int32(ret)
-		if res == -1 {
-			log.Errorf("win32 GetMessage failed: %v", err)
+		ret, _, err := pGetMessage.Call(uintptr(unsafe.Pointer(m)), 0, 0, 0)
+
+		// If the function retrieves a message other than WM_QUIT, the return value is nonzero.
+		// If the function retrieves the WM_QUIT message, the return value is zero.
+		// If there is an error, the return value is -1
+		// https://msdn.microsoft.com/en-us/library/windows/desktop/ms644936(v=vs.85).aspx
+		switch int32(ret) {
+		case -1:
+			log.Errorf("Error at message loop: %v", err)
 			return
-		} else if res == 0 { // WM_QUIT
-			break
+		case 0:
+			return
+		default:
+			pTranslateMessage.Call(uintptr(unsafe.Pointer(m)))
+			pDispatchMessage.Call(uintptr(unsafe.Pointer(m)))
 		}
-		pTranslateMessage.Call(uintptr(unsafe.Pointer(&m)))
-		pDispatchMessage.Call(uintptr(unsafe.Pointer(&m)))
 	}
 }
 
