@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"runtime"
 	"time"
 
 	"github.com/getlantern/systray"
@@ -35,7 +36,11 @@ func onReady() {
 
 	// We can manipulate the systray in other goroutines
 	go func() {
-		systray.SetIcon(icon.Data)
+		if runtime.GOOS == "darwin" {
+			systray.SetTemplateIcon(icon.Data)
+		} else {
+			systray.SetIcon(icon.Data)
+		}
 		systray.SetTitle("Awesome App")
 		systray.SetTooltip("Pretty awesome棒棒嗒")
 		mChange := systray.AddMenuItem("Change Me", "Change Me")

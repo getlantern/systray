@@ -31,6 +31,14 @@ func SetIcon(iconBytes []byte) {
 	C.setIcon(cstr, (C.int)(len(iconBytes)))
 }
 
+// SetTemplateIcon sets a templated systray icon for OSX. It is only available
+// on Mac. iconBytes should ideally be a resolution-independent pdf, and should
+// consist of black and clear colors (and an alpha  channel).
+func SetTemplateIcon(iconBytes []byte) {
+	cstr := (*C.char)(unsafe.Pointer(&iconBytes[0]))
+	C.setTemplateIcon(cstr, (C.int)(len(iconBytes)))
+}
+
 // SetTitle sets the systray title, only available on Mac.
 func SetTitle(title string) {
 	C.setTitle(C.CString(title))

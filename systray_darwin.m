@@ -163,6 +163,14 @@ void setIcon(const char* iconBytes, int length) {
   runInMainThread(@selector(setIcon:), (id)image);
 }
 
+void setTemplateIcon(const char* iconBytes, int length) {
+  NSData* buffer = [NSData dataWithBytes: iconBytes length:length];
+  NSImage *image = [[NSImage alloc] initWithData:buffer];
+  image.template = YES;
+  [image setSize:NSMakeSize(16, 16)];
+  runInMainThread(@selector(setIcon:), (id)image);
+}
+
 void setTitle(char* ctitle) {
   NSString* title = [[NSString alloc] initWithCString:ctitle
                                              encoding:NSUTF8StringEncoding];
