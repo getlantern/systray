@@ -16,6 +16,8 @@ import (
 )
 
 var (
+	// ClickedCh is the channel which will be notified when the systray icon is clicked
+	ClickedCh  = make(chan struct{})
 	hasStarted = int64(0)
 	hasQuit    = int64(0)
 )
@@ -177,5 +179,13 @@ func systrayMenuItemSelected(id int32) {
 	case item.ClickedCh <- struct{}{}:
 	// in case no one waiting for the channel
 	default:
+	}
+}
+
+func systrayClicked() {
+	select {
+	case ClickedCh <- struct{}{}:
+	default:
+		showMenu()
 	}
 }
