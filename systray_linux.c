@@ -48,9 +48,16 @@ void _unlink_temp_file() {
 
 // runs in main thread, should always return FALSE to prevent gtk to execute it again
 gboolean do_set_icon(gpointer data) {
-	GBytes* bytes = (GBytes*)data;
 	_unlink_temp_file();
-	strcpy(temp_file_name, "/tmp/systray_XXXXXX");
+	char *tmpdir = getenv("TMPDIR");
+	if (NULL == tmpdir) {
+		tmpdir = "/tmp";
+	}
+	strncpy(temp_file_name, tmpdir, PATH_MAX-1);
+	strncat(temp_file_name, "/systray_XXXXXX", PATH_MAX-1);
+	temp_file_name[PATH_MAX-1] = '\0';
+
+	GBytes* bytes = (GBytes*)data;
 	int fd = mkstemp(temp_file_name);
 	if (fd == -1) {
 		printf("failed to create temp icon file %s: %s\n", temp_file_name, strerror(errno));
