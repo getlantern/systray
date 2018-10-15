@@ -177,6 +177,9 @@ void setTooltip(char* ctooltip) {
 	free(ctooltip);
 }
 
+void setMenuItemIcon(const char* iconBytes, int length, int menuId) {
+}
+
 void add_or_update_menu_item(int menu_id, char* title, char* tooltip, short disabled, short checked) {
 	MenuItemInfo *mii = malloc(sizeof(MenuItemInfo));
 	mii->menu_id = menu_id;

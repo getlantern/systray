@@ -60,6 +60,13 @@ func addOrUpdateMenuItem(item *MenuItem) {
 	)
 }
 
+// SetIcon sets the icon of a menu item. Only available on Mac.
+// iconBytes should be the content of .ico/.jpg/.png
+func (item *MenuItem) SetIcon(iconBytes []byte) {
+	cstr := (*C.char)(unsafe.Pointer(&iconBytes[0]))
+	C.setMenuItemIcon(cstr, (C.int)(len(iconBytes)), C.int(item.id))
+}
+
 func addSeparator(id int32) {
 	C.add_separator(C.int(id))
 }
@@ -89,4 +96,34 @@ func systray_on_exit() {
 //export systray_menu_item_selected
 func systray_menu_item_selected(cID C.int) {
 	systrayMenuItemSelected(int32(cID))
+}
+
+// Text dialog things
+
+var (
+	eulaAcceptedCallback func()
+	eulaDeclinedCallback func()
+)
+
+func _showTextDialog(rtfFile []byte, onAccepted, onDeclined func()) {
+	eulaAcceptedCallback = onAccepted
+	eulaDeclinedCallback = onDeclined
+
+	cstr := (*C.char)(unsafe.Pointer(&rtfFile[0]))
+	C.showTextDialog(cstr)
+}
+
+//export onTextDialogClosed
+func onTextDialogClosed(accepted C.int) {
+	eulaAccepted := int32(accepted) == 1
+
+	if eulaAccepted && eulaAcceptedCallback != nil {
+		eulaAcceptedCallback()
+		eulaAcceptedCallback = nil
+	}
+
+	if !eulaAccepted && eulaDeclinedCallback != nil {
+		eulaDeclinedCallback()
+		eulaDeclinedCallback = nil
+	}
 }

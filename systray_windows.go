@@ -647,6 +647,11 @@ func SetTitle(title string) {
 	// do nothing
 }
 
+// SetIcon sets the icon of a menu item. Only available on Mac.
+func (item *MenuItem) SetIcon(iconBytes []byte) {
+	// do nothing
+}
+
 // SetTooltip sets the systray tooltip to display on mouse hover of the tray icon,
 // only available on Mac and Windows.
 func SetTooltip(tooltip string) {

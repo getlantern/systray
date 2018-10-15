@@ -64,15 +64,15 @@
 }
 
 - (void)setIcon:(NSImage *)image {
-  [statusItem setImage:image];
+  statusItem.button.image = image;
 }
 
 - (void)setTitle:(NSString *)title {
-  [statusItem setTitle:title];
+  statusItem.button.title = title;
 }
 
 - (void)setTooltip:(NSString *)tooltip {
-  [statusItem setToolTip:tooltip];
+  statusItem.button.toolTip = tooltip;
 }
 
 - (IBAction)menuHandler:(id)sender
@@ -102,9 +102,9 @@
     [menuItem setEnabled:TRUE];
   }
   if (item->checked == 1) {
-    [menuItem setState:NSOnState];
+    menuItem.state = NSControlStateValueOn;
   } else {
-    [menuItem setState:NSOffState];
+    menuItem.state = NSControlStateValueOff;
   }
 }
 
@@ -124,6 +124,19 @@
   [menuItem setHidden:TRUE];
 }
 
+- (void)setMenuItemIcon:(NSArray*)imageAndMenuId {
+  NSImage* image = [imageAndMenuId objectAtIndex:0];
+  NSNumber* menuId = [imageAndMenuId objectAtIndex:1];
+
+  NSMenuItem* menuItem;
+  int existedMenuIndex = [menu indexOfItemWithRepresentedObject: menuId];
+  if (existedMenuIndex == -1) {
+    return;
+  }
+  menuItem = [menu itemAtIndex: existedMenuIndex];
+  menuItem.image = image;
+}
+
 - (void) show_menu_item:(NSNumber*) menuId
 {
   NSMenuItem* menuItem;
@@ -133,6 +146,57 @@
   }
   menuItem = [menu itemAtIndex: existedMenuIndex];
   [menuItem setHidden:FALSE];
+}
+
+- (void)showTextDialog:(NSString*) str {
+    [NSApp activateIgnoringOtherApps: YES];
+    NSAlert *alert = [[NSAlert alloc] init];
+    [alert addButtonWithTitle:@"I Accept"];
+    [alert addButtonWithTitle:@"I Decline"];
+    [alert setMessageText:@"Orchesto EULA"];
+    [alert setInformativeText:
+      @"The Orchesto End-User License Agreement (EULA) must be accepted before Orchesto can start."];
+
+    // alert.icon = [NSImage new];
+
+    NSRect scrollViewFrame = NSMakeRect(10, self.window.frame.size.height / 2 - 200, 800, 500);
+    NSScrollView *scrollview = [[NSScrollView alloc]
+        initWithFrame:scrollViewFrame];
+
+    NSSize contentSize = [scrollview contentSize];
+    [scrollview setBorderType:NSBezelBorder];
+    [scrollview setHasVerticalScroller:YES];
+    [scrollview setHasHorizontalScroller:NO];
+    [scrollview setAutoresizingMask:NSViewWidthSizable|NSViewHeightSizable];
+
+    NSRect textViewFrame = NSMakeRect(0, 0, contentSize.width, contentSize.height);
+
+    NSTextView* txt = [[NSTextView alloc] initWithFrame:textViewFrame];
+    [txt setString:str];
+
+    [scrollview setDocumentView:txt];
+
+    alert.accessoryView = scrollview;
+
+    [[NSRunningApplication currentApplication] activateWithOptions:NSApplicationActivateIgnoringOtherApps];
+    [NSApp activateIgnoringOtherApps:YES];
+
+
+    NSModalResponse response = [alert runModal];
+
+    if (response == NSAlertFirstButtonReturn) {
+      onTextDialogClosed(1);
+    } else {
+      onTextDialogClosed(0);
+    }
+
+
+    // [alert beginSheetModalForWindow:[self window] completionHandler:^(NSModalResponse returnCode) {
+    // //Rest of your code goes in here.
+    // }];
+
+    [NSApp activateIgnoringOtherApps: YES];
+    // [alert beginSheetModalForWindow:[self window] modalDelegate:self didEndSelector:@selector(alertDidEnd:returnCode:contextInfo:) contextInfo:nil];
 }
 
 - (void) quit
@@ -160,7 +224,17 @@ void setIcon(const char* iconBytes, int length) {
   NSData* buffer = [NSData dataWithBytes: iconBytes length:length];
   NSImage *image = [[NSImage alloc] initWithData:buffer];
   [image setSize:NSMakeSize(16, 16)];
+  [image setTemplate:YES];
   runInMainThread(@selector(setIcon:), (id)image);
+}
+
+void setMenuItemIcon(const char* iconBytes, int length, int menuId) {
+  NSData* buffer = [NSData dataWithBytes: iconBytes length:length];
+  NSImage *image = [[NSImage alloc] initWithData:buffer];
+  [image setSize:NSMakeSize(16, 16)];
+
+  NSNumber *mId = [NSNumber numberWithInt:menuId];
+  runInMainThread(@selector(setMenuItemIcon:), @[image, (id)mId]);
 }
 
 void setTitle(char* ctitle) {
@@ -201,4 +275,10 @@ void show_menu_item(int menuId) {
 
 void quit() {
   runInMainThread(@selector(quit), nil);
+}
+
+void showTextDialog(char* rtfData) {
+    NSString* data = [[NSString alloc] initWithCString:rtfData
+                                       encoding:NSUTF8StringEncoding];
+    runInMainThread(@selector(showTextDialog:), data);
 }

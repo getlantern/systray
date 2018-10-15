@@ -179,3 +179,8 @@ func systrayMenuItemSelected(id int32) {
 	default:
 	}
 }
+
+// ShowTextDialog shows a big window text dialog
+func ShowTextDialog(rtfFile []byte, onAccepted, onDeclined func()) {
+	_showTextDialog(rtfFile, onAccepted, onDeclined)
+}
