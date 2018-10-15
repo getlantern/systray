@@ -1,6 +1,7 @@
 extern void systray_ready();
 extern void systray_on_exit();
 extern void systray_menu_item_selected(int menu_id);
+extern void onTextDialogClosed(int accepted);
 int nativeLoop(void);
 
 void setIcon(const char* iconBytes, int length);
@@ -12,3 +13,6 @@ void add_separator(int menuId);
 void hide_menu_item(int menuId);
 void show_menu_item(int menuId);
 void quit();
+
+// Text dialog stuff
+void showTextDialog(char* rtfData);

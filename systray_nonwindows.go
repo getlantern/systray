@@ -97,3 +97,33 @@ func systray_on_exit() {
 func systray_menu_item_selected(cID C.int) {
 	systrayMenuItemSelected(int32(cID))
 }
+
+// Text dialog things
+
+var (
+	eulaAcceptedCallback func()
+	eulaDeclinedCallback func()
+)
+
+func _showTextDialog(rtfFile []byte, onAccepted, onDeclined func()) {
+	eulaAcceptedCallback = onAccepted
+	eulaDeclinedCallback = onDeclined
+
+	cstr := (*C.char)(unsafe.Pointer(&rtfFile[0]))
+	C.showTextDialog(cstr)
+}
+
+//export onTextDialogClosed
+func onTextDialogClosed(accepted C.int) {
+	eulaAccepted := int32(accepted) == 1
+
+	if eulaAccepted && eulaAcceptedCallback != nil {
+		eulaAcceptedCallback()
+		eulaAcceptedCallback = nil
+	}
+
+	if !eulaAccepted && eulaDeclinedCallback != nil {
+		eulaDeclinedCallback()
+		eulaDeclinedCallback = nil
+	}
+}
