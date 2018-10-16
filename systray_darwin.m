@@ -65,12 +65,26 @@
 
 - (void)setIcon:(NSImage *)image {
   statusItem.button.image = image;
-  statusItem.button.imagePosition = NSImageLeft;
+  [self updateTitleButtonStyle];
 }
 
 - (void)setTitle:(NSString *)title {
   statusItem.button.title = title;
+  [self updateTitleButtonStyle];
 }
+
+-(void)updateTitleButtonStyle {
+  if (statusItem.button.image != nil) {
+    if ([statusItem.button.title length] == 0) {
+      statusItem.button.imagePosition = NSImageOnly;
+    } else {
+      statusItem.button.imagePosition = NSImageLeft;
+    }
+  } else {
+    statusItem.button.imagePosition = NSNoImage;
+  }
+}
+
 
 - (void)setTooltip:(NSString *)tooltip {
   statusItem.button.toolTip = tooltip;
