@@ -64,15 +64,30 @@
 }
 
 - (void)setIcon:(NSImage *)image {
-  [statusItem setImage:image];
+  statusItem.button.image = image;
+  [self updateTitleButtonStyle];
 }
 
 - (void)setTitle:(NSString *)title {
-  [statusItem setTitle:title];
+  statusItem.button.title = title;
+  [self updateTitleButtonStyle];
 }
 
+-(void)updateTitleButtonStyle {
+  if (statusItem.button.image != nil) {
+    if ([statusItem.button.title length] == 0) {
+      statusItem.button.imagePosition = NSImageOnly;
+    } else {
+      statusItem.button.imagePosition = NSImageLeft;
+    }
+  } else {
+    statusItem.button.imagePosition = NSNoImage;
+  }
+}
+
+
 - (void)setTooltip:(NSString *)tooltip {
-  [statusItem setToolTip:tooltip];
+  statusItem.button.toolTip = tooltip;
 }
 
 - (IBAction)menuHandler:(id)sender
@@ -97,14 +112,14 @@
   }
   [menuItem setToolTip:item->tooltip];
   if (item->disabled == 1) {
-    [menuItem setEnabled:FALSE];
+    menuItem.enabled = FALSE;
   } else {
-    [menuItem setEnabled:TRUE];
+    menuItem.enabled = TRUE;
   }
   if (item->checked == 1) {
-    [menuItem setState:NSOnState];
+    menuItem.state = NSControlStateValueOn;
   } else {
-    [menuItem setState:NSOffState];
+    menuItem.state = NSControlStateValueOff;
   }
 }
 
