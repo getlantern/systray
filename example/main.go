@@ -44,6 +44,10 @@ func onReady() {
 		systray.AddMenuItem("Ignored", "Ignored")
 		mUrl := systray.AddMenuItem("Open Lantern.org", "my home")
 		mQuit := systray.AddMenuItem("退出", "Quit the whole app")
+
+		// Sets the icon of a menu item. Only available on Mac.
+		mQuit.SetIcon(icon.Data)
+
 		systray.AddSeparator()
 		mToggle := systray.AddMenuItem("Toggle", "Toggle the Quit button")
 		shown := true
