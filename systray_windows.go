@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"syscall"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
@@ -524,6 +525,7 @@ func (t *winTray) addSeparatorMenuItem(menuId int32) error {
 func (t *winTray) hideMenuItem(menuId int32) error {
 	// https://msdn.microsoft.com/en-us/library/windows/desktop/ms647629(v=vs.85).aspx
 	const MF_BYCOMMAND = 0x00000000
+	const ERROR_SUCCESS = 0
 
 	res, _, err := pDeleteMenu.Call(
 		uintptr(t.menu),
@@ -531,6 +533,9 @@ func (t *winTray) hideMenuItem(menuId int32) error {
 		MF_BYCOMMAND,
 	)
 	if res == 0 {
+		if int(err.(syscall.Errno)) == ERROR_SUCCESS {
+			return nil
+		}
 		return err
 	}
 
