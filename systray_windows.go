@@ -463,8 +463,10 @@ func (t *winTray) addOrUpdateMenuItem(menuId int32, title string, disabled, chec
 
 	// The return value is the identifier of the specified menu item.
 	// If the menu item identifier is NULL or if the specified item opens a submenu, the return value is -1.
+	// If the given menu identifier is not found (becase we deleted the menu item when hiding it),
+	// the call will return the next integer that is available as an existing menu item.
 	res, _, err := pGetMenuItemID.Call(uintptr(t.menu), uintptr(menuId))
-	if int32(res) == -1 {
+	if int32(res) == -1 || int32(res) != menuId {
 		res, _, err = pInsertMenuItem.Call(
 			uintptr(t.menu),
 			uintptr(menuId),
