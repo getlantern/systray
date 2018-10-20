@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"syscall"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
@@ -463,8 +464,10 @@ func (t *winTray) addOrUpdateMenuItem(menuId int32, title string, disabled, chec
 
 	// The return value is the identifier of the specified menu item.
 	// If the menu item identifier is NULL or if the specified item opens a submenu, the return value is -1.
+	// If the given menu identifier is not found (becase we deleted the menu item when hiding it),
+	// the call will return the next integer that is available as an existing menu item.
 	res, _, err := pGetMenuItemID.Call(uintptr(t.menu), uintptr(menuId))
-	if int32(res) == -1 {
+	if int32(res) == -1 || int32(res) != menuId {
 		res, _, err = pInsertMenuItem.Call(
 			uintptr(t.menu),
 			uintptr(menuId),
@@ -522,6 +525,7 @@ func (t *winTray) addSeparatorMenuItem(menuId int32) error {
 func (t *winTray) hideMenuItem(menuId int32) error {
 	// https://msdn.microsoft.com/en-us/library/windows/desktop/ms647629(v=vs.85).aspx
 	const MF_BYCOMMAND = 0x00000000
+	const ERROR_SUCCESS = 0
 
 	res, _, err := pDeleteMenu.Call(
 		uintptr(t.menu),
@@ -529,6 +533,9 @@ func (t *winTray) hideMenuItem(menuId int32) error {
 		MF_BYCOMMAND,
 	)
 	if res == 0 {
+		if int(err.(syscall.Errno)) == ERROR_SUCCESS {
+			return nil
+		}
 		return err
 	}
 
