@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sort"
 	"syscall"
 	"unsafe"
 
@@ -172,6 +173,8 @@ type winTray struct {
 
 	wmSystrayMessage,
 	wmTaskbarCreated uint32
+
+	visibleItems []uint32
 }
 
 // Loads an image from file and shows it in tray.
@@ -462,29 +465,25 @@ func (t *winTray) addOrUpdateMenuItem(menuId int32, title string, disabled, chec
 	}
 	mi.Size = uint32(unsafe.Sizeof(mi))
 
-	// The return value is the identifier of the specified menu item.
-	// If the menu item identifier is NULL or if the specified item opens a submenu, the return value is -1.
-	// If the given menu identifier is not found (becase we deleted the menu item when hiding it),
-	// the call will return the next integer that is available as an existing menu item.
-	res, _, err := pGetMenuItemID.Call(uintptr(t.menu), uintptr(menuId))
-	if int32(res) == -1 || int32(res) != menuId {
+	// We set the menu item info based on the menuID
+	res, _, err := pSetMenuItemInfo.Call(
+		uintptr(t.menu),
+		uintptr(menuId),
+		0,
+		uintptr(unsafe.Pointer(&mi)),
+	)
+
+	if res == 0 {
+		t.addToVisibleItems(menuId)
+		position := t.getVisibleItemIndex(menuId)
 		res, _, err = pInsertMenuItem.Call(
 			uintptr(t.menu),
-			uintptr(menuId),
+			uintptr(position),
 			1,
 			uintptr(unsafe.Pointer(&mi)),
 		)
 		if res == 0 {
-			return err
-		}
-	} else {
-		res, _, err = pSetMenuItemInfo.Call(
-			uintptr(t.menu),
-			uintptr(menuId),
-			0,
-			uintptr(unsafe.Pointer(&mi)),
-		)
-		if res == 0 {
+			t.delFromVisibleItems(menuId)
 			return err
 		}
 	}
@@ -535,6 +534,7 @@ func (t *winTray) hideMenuItem(menuId int32) error {
 	if res == 0 && err.(syscall.Errno) != ERROR_SUCCESS {
 		return err
 	}
+	t.delFromVisibleItems(menuId)
 
 	return nil
 }
@@ -565,6 +565,30 @@ func (t *winTray) showMenu() error {
 	}
 
 	return nil
+}
+
+func (t *winTray) delFromVisibleItems(val int32) {
+	for i, itemval := range t.visibleItems {
+		if uint32(val) == itemval {
+			t.visibleItems = append(t.visibleItems[:i], t.visibleItems[i+1:]...)
+			break
+		}
+	}
+}
+
+func (t *winTray) addToVisibleItems(val int32) {
+	newvisible := append(t.visibleItems, uint32(val))
+	sort.Slice(newvisible, func(i, j int) bool { return newvisible[i] < newvisible[j] })
+	t.visibleItems = newvisible
+}
+
+func (t *winTray) getVisibleItemIndex(val int32) int {
+	for i, itemval := range t.visibleItems {
+		if uint32(val) == itemval {
+			return i
+		}
+	}
+	return -1
 }
 
 func nativeLoop() {
