@@ -508,9 +508,11 @@ func (t *winTray) addSeparatorMenuItem(menuId int32) error {
 
 	mi.Size = uint32(unsafe.Sizeof(mi))
 
+	t.addToVisibleItems(menuId)
+	position := t.getVisibleItemIndex(menuId)
 	res, _, err := pInsertMenuItem.Call(
 		uintptr(t.menu),
-		uintptr(menuId),
+		uintptr(position),
 		1,
 		uintptr(unsafe.Pointer(&mi)),
 	)
