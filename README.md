@@ -44,6 +44,34 @@ go get
 go run main.go
 ```
 
+## Building and the Console Window
+
+By default, the binary created by `go build` will cause a console window to be opened on both Windows and macOS when run.
+
+### Windows
+
+To prevent launching a console window when running on Windows, add these command-line build flags:
+
+```sh
+go build -ldflags -H=windowsgui
+```
+
+### macOS
+
+On macOS, you will need to create an application bundle to wrap the binary; simply folders with the following minimal structure and assets:
+
+```
+SystrayApp.app/
+  Contents/
+    Info.plist
+  MacOS/
+    go-executable
+  Resources/
+    SystrayApp.icns
+```
+
+Consult the [Official Apple Documentation here](https://developer.apple.com/library/archive/documentation/CoreFoundation/Conceptual/CFBundles/BundleTypes/BundleTypes.html#//apple_ref/doc/uid/10000123i-CH101-SW1).
+
 ## Credits
 
 - https://github.com/xilp/systray
