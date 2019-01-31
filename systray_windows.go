@@ -183,7 +183,7 @@ type winTray struct {
 func (t *winTray) setIcon(src string) error {
 	const IMAGE_ICON = 1               // Loads an icon
 	const LR_LOADFROMFILE = 0x00000010 // Loads the stand-alone image from the file
-	const LR_DEFAULTSIZE = 0x00000040  // Loads default-size icon for windows(16 x 16) if cx, cy are set to zero
+	const LR_DEFAULTSIZE = 0x00000040  // Loads default-size icon for windows(SM_CXICON x SM_CYICON) if cx, cy are set to zero
 	const NIF_ICON = 0x00000002
 
 	// Save and reuse handles of loaded images
