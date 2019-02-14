@@ -652,6 +652,14 @@ func quit() {
 	)
 }
 
+
+func SetIconFile(filepath string) {
+	if err := wt.setIcon(filepath); err != nil {
+		log.Errorf("Unable to set icon: %v", err)
+		return
+	}
+}
+
 // SetIcon sets the systray icon.
 // iconBytes should be the content of .ico for windows and .ico/.jpg/.png
 // for other platforms.
