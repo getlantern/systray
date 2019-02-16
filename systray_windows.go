@@ -11,16 +11,14 @@ import (
 	"sort"
 	"syscall"
 	"unsafe"
-
-	"golang.org/x/sys/windows"
 )
 
 // Helpful sources: https://github.com/golang/exp/blob/master/shiny/driver/internal/win32
 
 var (
-	k32                    = windows.NewLazySystemDLL("Kernel32.dll")
-	s32                    = windows.NewLazySystemDLL("Shell32.dll")
-	u32                    = windows.NewLazySystemDLL("User32.dll")
+	k32                    = syscall.NewLazyDLL("kernel32.dll")
+	s32                    = syscall.NewLazyDLL("shell32.dll")
+	u32                    = syscall.NewLazyDLL("user32.dll")
 	pGetModuleHandle       = k32.NewProc("GetModuleHandleW")
 	pShellNotifyIcon       = s32.NewProc("Shell_NotifyIconW")
 	pCreatePopupMenu       = u32.NewProc("CreatePopupMenu")
@@ -57,9 +55,9 @@ type wndClassEx struct {
 	Size, Style                        uint32
 	WndProc                            uintptr
 	ClsExtra, WndExtra                 int32
-	Instance, Icon, Cursor, Background windows.Handle
+	Instance, Icon, Cursor, Background syscall.Handle
 	MenuName, ClassName                *uint16
-	IconSm                             windows.Handle
+	IconSm                             syscall.Handle
 }
 
 // Registers a window class for subsequent use in calls to the CreateWindow or CreateWindowEx function.
@@ -92,17 +90,17 @@ func (w *wndClassEx) unregister() error {
 // https://msdn.microsoft.com/en-us/library/windows/desktop/bb762159
 type notifyIconData struct {
 	Size                       uint32
-	Wnd                        windows.Handle
+	Wnd                        syscall.Handle
 	ID, Flags, CallbackMessage uint32
-	Icon                       windows.Handle
+	Icon                       syscall.Handle
 	Tip                        [128]uint16
 	State, StateMask           uint32
 	Info                       [256]uint16
 	Timeout, Version           uint32
 	InfoTitle                  [64]uint16
 	InfoFlags                  uint32
-	GuidItem                   windows.GUID
-	BalloonIcon                windows.Handle
+	GuidItem                   syscall.GUID
+	BalloonIcon                syscall.Handle
 }
 
 func (nid *notifyIconData) add() error {
@@ -146,11 +144,11 @@ func (nid *notifyIconData) delete() error {
 type menuItemInfo struct {
 	Size, Mask, Type, State     uint32
 	ID                          uint32
-	SubMenu, Checked, Unchecked windows.Handle
+	SubMenu, Checked, Unchecked syscall.Handle
 	ItemData                    uintptr
 	TypeData                    *uint16
 	Cch                         uint32
-	Item                        windows.Handle
+	Item                        syscall.Handle
 }
 
 // The POINT structure defines the x- and y- coordinates of a point.
@@ -165,9 +163,9 @@ type winTray struct {
 	icon,
 	cursor,
 	window,
-	menu windows.Handle
+	menu syscall.Handle
 
-	loadedImages map[string]windows.Handle
+	loadedImages map[string]syscall.Handle
 	nid          *notifyIconData
 	wcex         *wndClassEx
 
@@ -189,7 +187,7 @@ func (t *winTray) setIcon(src string) error {
 	// Save and reuse handles of loaded images
 	h, ok := t.loadedImages[src]
 	if !ok {
-		srcPtr, err := windows.UTF16PtrFromString(src)
+		srcPtr, err := syscall.UTF16PtrFromString(src)
 		if err != nil {
 			return err
 		}
@@ -204,7 +202,7 @@ func (t *winTray) setIcon(src string) error {
 		if res == 0 {
 			return err
 		}
-		h = windows.Handle(res)
+		h = syscall.Handle(res)
 		t.loadedImages[src] = h
 	}
 
@@ -219,7 +217,7 @@ func (t *winTray) setIcon(src string) error {
 // Shell_NotifyIcon: https://msdn.microsoft.com/en-us/library/windows/desktop/bb762159(v=vs.85).aspx
 func (t *winTray) setTooltip(src string) error {
 	const NIF_TIP = 0x00000004
-	b, err := windows.UTF16FromString(src)
+	b, err := syscall.UTF16FromString(src)
 	if err != nil {
 		return err
 	}
@@ -234,7 +232,7 @@ var wt winTray
 
 // WindowProc callback function that processes messages sent to a window.
 // https://msdn.microsoft.com/en-us/library/windows/desktop/ms633573(v=vs.85).aspx
-func (t *winTray) wndProc(hWnd windows.Handle, message uint32, wParam, lParam uintptr) (lResult uintptr) {
+func (t *winTray) wndProc(hWnd syscall.Handle, message uint32, wParam, lParam uintptr) (lResult uintptr) {
 	const (
 		WM_COMMAND    = 0x0111
 		WM_DESTROY    = 0x0002
@@ -310,53 +308,53 @@ func (t *winTray) initInstance() error {
 	)
 
 	t.wmSystrayMessage = WM_USER + 1
-
-	taskbarEventNamePtr, _ := windows.UTF16PtrFromString("TaskbarCreated")
+	
+	taskbarEventNamePtr, _ := syscall.UTF16PtrFromString("TaskbarCreated")
 	// https://msdn.microsoft.com/en-us/library/windows/desktop/ms644947
 	res, _, err := pRegisterWindowMessage.Call(
 		uintptr(unsafe.Pointer(taskbarEventNamePtr)),
 	)
 	t.wmTaskbarCreated = uint32(res)
 
-	t.loadedImages = make(map[string]windows.Handle)
+	t.loadedImages = make(map[string]syscall.Handle)
 
 	instanceHandle, _, err := pGetModuleHandle.Call(0)
 	if instanceHandle == 0 {
 		return err
 	}
-	t.instance = windows.Handle(instanceHandle)
+	t.instance = syscall.Handle(instanceHandle)
 
 	// https://msdn.microsoft.com/en-us/library/windows/desktop/ms648072(v=vs.85).aspx
 	iconHandle, _, err := pLoadIcon.Call(0, uintptr(IDI_APPLICATION))
 	if iconHandle == 0 {
 		return err
 	}
-	t.icon = windows.Handle(iconHandle)
+	t.icon = syscall.Handle(iconHandle)
 
 	// https://msdn.microsoft.com/en-us/library/windows/desktop/ms648391(v=vs.85).aspx
 	cursorHandle, _, err := pLoadCursor.Call(0, uintptr(IDC_ARROW))
 	if cursorHandle == 0 {
 		return err
 	}
-	t.cursor = windows.Handle(cursorHandle)
+	t.cursor = syscall.Handle(cursorHandle)
 
-	classNamePtr, err := windows.UTF16PtrFromString(className)
+	classNamePtr, err := syscall.UTF16PtrFromString(className)
 	if err != nil {
 		return err
 	}
 
-	windowNamePtr, err := windows.UTF16PtrFromString(windowName)
+	windowNamePtr, err := syscall.UTF16PtrFromString(windowName)
 	if err != nil {
 		return err
 	}
 
 	t.wcex = &wndClassEx{
 		Style:      CS_HREDRAW | CS_VREDRAW,
-		WndProc:    windows.NewCallback(t.wndProc),
+		WndProc:    syscall.NewCallback(t.wndProc),
 		Instance:   t.instance,
 		Icon:       t.icon,
 		Cursor:     t.cursor,
-		Background: windows.Handle(6), // (COLOR_WINDOW + 1)
+		Background: syscall.Handle(6), // (COLOR_WINDOW + 1)
 		ClassName:  classNamePtr,
 		IconSm:     t.icon,
 	}
@@ -381,7 +379,7 @@ func (t *winTray) initInstance() error {
 	if windowHandle == 0 {
 		return err
 	}
-	t.window = windows.Handle(windowHandle)
+	t.window = syscall.Handle(windowHandle)
 
 	pShowWindow.Call(
 		uintptr(t.window),
@@ -393,7 +391,7 @@ func (t *winTray) initInstance() error {
 	)
 
 	t.nid = &notifyIconData{
-		Wnd:             windows.Handle(t.window),
+		Wnd:             syscall.Handle(t.window),
 		ID:              100,
 		Flags:           NIF_MESSAGE,
 		CallbackMessage: t.wmSystrayMessage,
@@ -410,12 +408,12 @@ func (t *winTray) createMenu() error {
 	if menuHandle == 0 {
 		return err
 	}
-	t.menu = windows.Handle(menuHandle)
+	t.menu = syscall.Handle(menuHandle)
 
 	// https://msdn.microsoft.com/en-us/library/windows/desktop/ms647575(v=vs.85).aspx
 	mi := struct {
 		Size, Mask, Style, Max uint32
-		Background             windows.Handle
+		Background             syscall.Handle
 		ContextHelpID          uint32
 		MenuData               uintptr
 	}{
@@ -446,7 +444,7 @@ func (t *winTray) addOrUpdateMenuItem(menuId int32, title string, disabled, chec
 		MFS_CHECKED  = 0x00000008
 		MFS_DISABLED = 0x00000003
 	)
-	titlePtr, err := windows.UTF16PtrFromString(title)
+	titlePtr, err := syscall.UTF16PtrFromString(title)
 	if err != nil {
 		return err
 	}
@@ -614,7 +612,7 @@ func nativeLoop() {
 
 	// Main message pump.
 	m := &struct {
-		WindowHandle windows.Handle
+		WindowHandle syscall.Handle
 		Message      uint32
 		Wparam       uintptr
 		Lparam       uintptr
