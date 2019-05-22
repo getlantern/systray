@@ -105,6 +105,11 @@ func AddSeparator() {
 	addSeparator(atomic.AddInt32(&currentID, 1))
 }
 
+// GetID get the id of menu item
+func (item *MenuItem) GetID() int32 {
+	return item.id
+}
+
 // SetTitle set the text to display on a menu item
 func (item *MenuItem) SetTitle(title string) {
 	item.title = title
