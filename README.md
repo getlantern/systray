@@ -64,10 +64,10 @@ On macOS, you will need to create an application bundle to wrap the binary; simp
 SystrayApp.app/
   Contents/
     Info.plist
-  MacOS/
-    go-executable
-  Resources/
-    SystrayApp.icns
+    MacOS/
+      go-executable
+    Resources/
+      SystrayApp.icns
 ```
 
 Consult the [Official Apple Documentation here](https://developer.apple.com/library/archive/documentation/CoreFoundation/Conceptual/CFBundles/BundleTypes/BundleTypes.html#//apple_ref/doc/uid/10000123i-CH101-SW1).
