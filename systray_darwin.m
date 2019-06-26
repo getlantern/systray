@@ -1,12 +1,16 @@
 #import <Cocoa/Cocoa.h>
 #include "systray.h"
 
-#ifndef NSControlStateValueOff
-  #define NSControlStateValueOff NSOffState
-#endif
+#if __MAC_OS_X_VERSION_MIN_REQUIRED < __MAC_10_14
 
-#ifndef NSControlStateValueOn
-  #define NSControlStateValueOn NSOnState
+    #ifndef NSControlStateValueOff
+      #define NSControlStateValueOff NSOffState
+    #endif
+
+    #ifndef NSControlStateValueOn
+      #define NSControlStateValueOn NSOnState
+    #endif
+
 #endif
 
 @interface MenuItem : NSObject
