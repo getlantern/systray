@@ -7,7 +7,6 @@ import (
 
 	"github.com/getlantern/systray"
 	"github.com/getlantern/systray/example/icon"
-	"github.com/skratchdot/open-golang/open"
 )
 
 func main() {
@@ -22,6 +21,7 @@ func main() {
 }
 
 func onReady() {
+	systray.EnableAppWindow("Lantern", 1024, 768)
 	systray.SetIcon(icon.Data)
 	systray.SetTitle("Awesome App")
 	systray.SetTooltip("Lantern")
@@ -42,7 +42,7 @@ func onReady() {
 		mChecked := systray.AddMenuItem("Unchecked", "Check Me")
 		mEnabled := systray.AddMenuItem("Enabled", "Enabled")
 		systray.AddMenuItem("Ignored", "Ignored")
-		mUrl := systray.AddMenuItem("Open Lantern.org", "my home")
+		mUrl := systray.AddMenuItem("Open UI", "my home")
 		mQuit := systray.AddMenuItem("退出", "Quit the whole app")
 
 		// Sets the icon of a menu item. Only available on Mac.
@@ -67,7 +67,7 @@ func onReady() {
 				mEnabled.SetTitle("Disabled")
 				mEnabled.Disable()
 			case <-mUrl.ClickedCh:
-				open.Run("https://www.getlantern.org")
+				systray.ShowAppWindow("https://www.getlantern.org")
 			case <-mToggle.ClickedCh:
 				if shown {
 					mQuitOrig.Hide()

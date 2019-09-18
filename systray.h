@@ -7,6 +7,8 @@ void setIcon(const char* iconBytes, int length);
 void setMenuItemIcon(const char* iconBytes, int length, int menuId);
 void setTitle(char* title);
 void setTooltip(char* tooltip);
+void configureAppWindow(char* title, int width, int height);
+void showAppWindow(char* url);
 void add_or_update_menu_item(int menuId, char* title, char* tooltip, short disabled, short checked);
 void add_separator(int menuId);
 void hide_menu_item(int menuId);

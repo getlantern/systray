@@ -70,6 +70,11 @@
   systray_ready();
 }
 
+- (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)sender
+{
+  return FALSE;
+}
+
 - (void)applicationWillTerminate:(NSNotification *)aNotification
 {
   systray_on_exit();

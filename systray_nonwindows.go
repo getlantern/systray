@@ -3,9 +3,10 @@
 package systray
 
 /*
-#cgo linux pkg-config: gtk+-3.0 appindicator3-0.1
+#cgo linux CFLAGS: -DWEBVIEW_GTK=1
+#cgo linux pkg-config: gtk+-3.0 webkit2gtk-4.0 appindicator3-0.1
 #cgo darwin CFLAGS: -DDARWIN -x objective-c -fobjc-arc
-#cgo darwin LDFLAGS: -framework Cocoa
+#cgo darwin LDFLAGS: -framework Cocoa -framework WebKit
 
 #include "systray.h"
 */
@@ -40,6 +41,17 @@ func SetTitle(title string) {
 // only available on Mac and Windows.
 func SetTooltip(tooltip string) {
 	C.setTooltip(C.CString(tooltip))
+}
+
+// EnableAppWindow enables a single application window for this app.
+func EnableAppWindow(title string, width int, height int) {
+	C.configureAppWindow(C.CString(title), C.int(width), C.int(height))
+}
+
+// ShowAppWindow shows the given URL in the application window. Only works if
+// configureAppWindow has been called first.
+func ShowAppWindow(url string) {
+	C.showAppWindow(C.CString(url))
 }
 
 func addOrUpdateMenuItem(item *MenuItem) {

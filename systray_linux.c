@@ -23,6 +23,8 @@ typedef struct {
 	short checked;
 } MenuItemInfo;
 
+void prepareBrowser();
+
 int nativeLoop(void) {
 	gtk_init(0, NULL);
 	global_app_indicator = app_indicator_new("systray", "",
@@ -31,6 +33,7 @@ int nativeLoop(void) {
 	global_tray_menu = gtk_menu_new();
 	app_indicator_set_menu(global_app_indicator, GTK_MENU(global_tray_menu));
 	systray_ready();
+	prepareBrowser();
 	gtk_main();
 	systray_on_exit();
 	return 0;
