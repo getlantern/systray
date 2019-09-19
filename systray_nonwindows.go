@@ -16,17 +16,12 @@ import (
 	"unsafe"
 )
 
-func nativeLoop() {
-	C.nativeLoop()
+func nativeLoop(title string, width int, height int) {
+	C.nativeLoop(C.CString(title), C.int(width), C.int(height))
 }
 
 func quit() {
 	C.quit()
-}
-
-// EnableAppWindow enables a single application window for this app.
-func EnableAppWindow(title string, width int, height int) {
-	C.configureAppWindow(C.CString(title), C.int(width), C.int(height))
 }
 
 // ShowAppWindow shows the given URL in the application window. Only works if

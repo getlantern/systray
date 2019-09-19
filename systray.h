@@ -1,7 +1,7 @@
 extern void systray_ready();
 extern void systray_on_exit();
 extern void systray_menu_item_selected(int menu_id);
-int nativeLoop(void);
+int nativeLoop(char* title, int width, int height);
 
 void setIcon(const char* iconBytes, int length);
 void setMenuItemIcon(const char* iconBytes, int length, int menuId);

@@ -5,7 +5,7 @@
 NSWindowController *windowController = nil;
 WKWebView *webView = nil;
 
-void doConfigureAppWindow(char* title, int width, int height)
+void configureAppWindow(char* title, int width, int height)
 {
   if (windowController != nil) {
     // already configured, ignore
@@ -47,13 +47,6 @@ void doConfigureAppWindow(char* title, int width, int height)
   // Window controller:
   windowController = [[NSWindowController alloc] initWithWindow:window];
   free(title);
-}
-
-void configureAppWindow(char* title, int width, int height)
-{
-  dispatch_async(dispatch_get_main_queue(), ^{
-    doConfigureAppWindow(title, width, height);
-  });
 }
 
 void doShowAppWindow(char* url)
