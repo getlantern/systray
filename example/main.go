@@ -17,11 +17,10 @@ func main() {
 		fmt.Println("Finished onExit")
 	}
 	// Should be called at the very beginning of main().
-	systray.Run(onReady, onExit)
+	systray.RunWithAppWindow("Lantern", 1024, 768, onReady, onExit)
 }
 
 func onReady() {
-	systray.EnableAppWindow("Lantern", 1024, 768)
 	systray.SetIcon(icon.Data)
 	systray.SetTitle("Awesome App")
 	systray.SetTooltip("Lantern")

@@ -24,6 +24,17 @@ func quit() {
 	C.quit()
 }
 
+// EnableAppWindow enables a single application window for this app.
+func EnableAppWindow(title string, width int, height int) {
+	C.configureAppWindow(C.CString(title), C.int(width), C.int(height))
+}
+
+// ShowAppWindow shows the given URL in the application window. Only works if
+// configureAppWindow has been called first.
+func ShowAppWindow(url string) {
+	C.showAppWindow(C.CString(url))
+}
+
 // SetIcon sets the systray icon.
 // iconBytes should be the content of .ico for windows and .ico/.jpg/.png
 // for other platforms.
@@ -41,17 +52,6 @@ func SetTitle(title string) {
 // only available on Mac and Windows.
 func SetTooltip(tooltip string) {
 	C.setTooltip(C.CString(tooltip))
-}
-
-// EnableAppWindow enables a single application window for this app.
-func EnableAppWindow(title string, width int, height int) {
-	C.configureAppWindow(C.CString(title), C.int(width), C.int(height))
-}
-
-// ShowAppWindow shows the given URL in the application window. Only works if
-// configureAppWindow has been called first.
-func ShowAppWindow(url string) {
-	C.showAppWindow(C.CString(url))
 }
 
 func addOrUpdateMenuItem(item *MenuItem) {
