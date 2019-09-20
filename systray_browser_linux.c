@@ -57,6 +57,6 @@ void showAppWindow(char* url)
     // Load a web page into the browser instance
     webkit_web_view_load_uri(web_view, url);
 
-    gdk_threads_add_idle(do_show_app_window, NULL);
+    g_idle_add(do_show_app_window, NULL);
     free(url);
 }
