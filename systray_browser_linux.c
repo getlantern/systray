@@ -1,8 +1,8 @@
 #include <gtk/gtk.h>
 #include <webkit2/webkit2.h>
 
-static GtkWidget *web_window = NULL;
-static WebKitWebView *webView = NULL;
+static GtkWindow *web_window = NULL;
+static WebKitWebView *web_view = NULL;
 
 static bool appShown = false;
 static gint x, y;
@@ -20,31 +20,33 @@ gboolean on_window_deleted(GtkWidget *window, GdkEvent *event, gpointer data)
 void configureAppWindow(char* title, int width, int height)
 {
     // Create an 800x600 window that will contain the browser instance
-    web_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_title(GTK_WINDOW(web_window), title);
-    gtk_window_set_default_size(GTK_WINDOW(web_window), width, height);
+    web_window = GTK_WINDOW(gtk_window_new(GTK_WINDOW_TOPLEVEL));
+    gtk_window_set_title(web_window, title);
+    gtk_window_set_default_size(web_window, width, height);
     g_signal_connect(G_OBJECT(web_window), "delete-event", G_CALLBACK(on_window_deleted), NULL);
 
     // Create a browser instance
-    webView = WEBKIT_WEB_VIEW(webkit_web_view_new());
+    web_view = WEBKIT_WEB_VIEW(webkit_web_view_new());
 
     // Put the browser area into the web window
-    gtk_container_add(GTK_CONTAINER(web_window), GTK_WIDGET(webView));
+    gtk_container_add(GTK_CONTAINER(web_window), GTK_WIDGET(web_view));
 
     // Make sure that when the browser area becomes visible, it will get mouse
     // and keyboard events
-    gtk_widget_grab_focus(GTK_WIDGET(webView));
+    gtk_widget_grab_focus(GTK_WIDGET(web_view));
     free(title);
 }
 
 gboolean do_show_app_window(gpointer data)
 {
     if (!appShown) {
-        gtk_widget_show_all(web_window);
+        gtk_widget_show_all(GTK_WIDGET(web_window));
         if (hasPosition) {
-            gtk_window_move(GTK_WINDOW(web_window), x, y);
+            gtk_window_move(web_window, x, y);
         }
         appShown = true;
+    } else {
+        gtk_window_present(web_window);
     }
     return FALSE;
 }
@@ -52,7 +54,7 @@ gboolean do_show_app_window(gpointer data)
 void showAppWindow(char* url)
 {
     // Load a web page into the browser instance
-    webkit_web_view_load_uri(webView, url);
+    webkit_web_view_load_uri(web_view, url);
 
     gdk_threads_add_idle(do_show_app_window, NULL);
     free(url);
