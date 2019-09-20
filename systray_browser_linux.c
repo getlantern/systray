@@ -4,13 +4,24 @@
 static GtkWidget *web_window = NULL;
 static WebKitWebView *webView = NULL;
 
-static gboolean closeWebViewCb(WebKitWebView* webView, GtkWidget* window);
+static gint x, y;
+static bool hasPosition = false;
 
-void prepareBrowser()
+gboolean on_window_deleted(GtkWidget *window, GdkEvent *event, gpointer data)
+{
+    gtk_window_get_position(GTK_WINDOW(window), &x, &y);
+    hasPosition = true;
+    gtk_widget_hide(window);
+    return TRUE;
+}
+
+void configureAppWindow(char* title, int width, int height)
 {
     // Create an 800x600 window that will contain the browser instance
     web_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_default_size(GTK_WINDOW(web_window), 800, 600);
+    gtk_window_set_title(GTK_WINDOW(web_window), title);
+    gtk_window_set_default_size(GTK_WINDOW(web_window), width, height);
+    g_signal_connect(G_OBJECT(web_window), "delete-event", G_CALLBACK(on_window_deleted), NULL);
 
     // Create a browser instance
     webView = WEBKIT_WEB_VIEW(webkit_web_view_new());
@@ -18,29 +29,26 @@ void prepareBrowser()
     // Put the browser area into the web window
     gtk_container_add(GTK_CONTAINER(web_window), GTK_WIDGET(webView));
 
-    g_signal_connect(webView, "close", G_CALLBACK(closeWebViewCb), web_window);
-
     // Make sure that when the browser area becomes visible, it will get mouse
     // and keyboard events
     gtk_widget_grab_focus(GTK_WIDGET(webView));
+    free(title);
 }
 
-gboolean do_open_in_browser(gpointer data)
+gboolean do_show_app_window(gpointer data)
 {
     gtk_widget_show_all(web_window);
-    return TRUE;
+    if (hasPosition) {
+        gtk_window_move(GTK_WINDOW(web_window), x, y);
+    }
+    return FALSE;
 }
 
-void openInBrowser(char* url)
+void showAppWindow(char* url)
 {
-        // Load a web page into the browser instance
+    // Load a web page into the browser instance
     webkit_web_view_load_uri(webView, url);
 
-    gdk_threads_add_idle(do_open_in_browser, url);
-}
-
-static gboolean closeWebViewCb(WebKitWebView* webView, GtkWidget* window)
-{
-    gtk_widget_destroy(window);
-    return TRUE;
+    gdk_threads_add_idle(do_show_app_window, NULL);
+    free(url);
 }
