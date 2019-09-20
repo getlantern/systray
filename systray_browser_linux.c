@@ -4,6 +4,7 @@
 static GtkWidget *web_window = NULL;
 static WebKitWebView *webView = NULL;
 
+static bool appShown = false;
 static gint x, y;
 static bool hasPosition = false;
 
@@ -12,6 +13,7 @@ gboolean on_window_deleted(GtkWidget *window, GdkEvent *event, gpointer data)
     gtk_window_get_position(GTK_WINDOW(window), &x, &y);
     hasPosition = true;
     gtk_widget_hide(window);
+    appShown = false;
     return TRUE;
 }
 
@@ -37,9 +39,12 @@ void configureAppWindow(char* title, int width, int height)
 
 gboolean do_show_app_window(gpointer data)
 {
-    gtk_widget_show_all(web_window);
-    if (hasPosition) {
-        gtk_window_move(GTK_WINDOW(web_window), x, y);
+    if (!appShown) {
+        gtk_widget_show_all(web_window);
+        if (hasPosition) {
+            gtk_window_move(GTK_WINDOW(web_window), x, y);
+        }
+        appShown = true;
     }
     return FALSE;
 }
