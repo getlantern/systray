@@ -23,6 +23,7 @@ void configureAppWindow(char* title, int width, int height)
     web_window = GTK_WINDOW(gtk_window_new(GTK_WINDOW_TOPLEVEL));
     gtk_window_set_title(web_window, title);
     gtk_window_set_default_size(web_window, width, height);
+    gtk_window_set_skip_taskbar_hint (web_window, TRUE);
     g_signal_connect(G_OBJECT(web_window), "delete-event", G_CALLBACK(on_window_deleted), NULL);
 
     // Create a browser instance
@@ -45,7 +46,7 @@ gboolean do_show_app_window(gpointer data)
             gtk_window_move(web_window, x, y);
         }
         appShown = true;
-    } else {
+    } else if (!gtk_window_is_active(web_window)) {
         gtk_window_present(web_window);
     }
     return FALSE;
