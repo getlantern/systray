@@ -14,7 +14,7 @@ void configureAppWindow(char* title, int width, int height)
 
   NSRect frame = NSMakeRect(0, 0, width, height);
   int mask = NSWindowStyleMaskTitled | NSWindowStyleMaskResizable | NSWindowStyleMaskClosable;
-  id window =
+  NSWindow *window =
     [[NSWindow alloc] initWithContentRect:frame
                                  styleMask:mask
                                    backing:NSBackingStoreBuffered
