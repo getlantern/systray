@@ -72,6 +72,35 @@ sudo apt-get install libgtk-3-dev libappindicator3-dev
 go build -ldflags -H=windowsgui
 ```
 
+You'll also need to include a Manifest for your windows app. Assuming your executable is named `app.exe`, create a file `app.manifest` like this:
+
+```
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
+    <assemblyIdentity version="1.0.0.0" processorArchitecture="*" name="App Name Here" type="win32"/>
+    <dependency>
+        <dependentAssembly>
+            <assemblyIdentity type="win32" name="Microsoft.Windows.Common-Controls" version="6.0.0.0" processorArchitecture="*" publicKeyToken="6595b64144ccf1df" language="*"/>
+        </dependentAssembly>
+    </dependency>
+    <application xmlns="urn:schemas-microsoft-com:asm.v3">
+        <windowsSettings>
+            <dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">PerMonitorV2, PerMonitor</dpiAwareness>
+            <dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">True</dpiAware>
+        </windowsSettings>
+    </application>
+</assembly>
+```
+
+Then either compile the manifest using the [rsrc](https://github.com/akavel/rsrc) tool, like this:
+
+```
+go get github.com/akavel/rsrc
+rsrc -manifest app.manifest -o rsrc.syso
+```
+
+or rename the app.manifest file to app.exe.manifest and distribute it with the application instead.
+
 ### macOS
 
 On macOS, you will need to create an application bundle to wrap the binary; simply folders with the following minimal structure and assets:

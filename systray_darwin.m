@@ -70,6 +70,11 @@
   systray_ready();
 }
 
+- (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)sender
+{
+  return FALSE;
+}
+
 - (void)applicationWillTerminate:(NSNotification *)aNotification
 {
   systray_on_exit();
@@ -182,9 +187,14 @@
 
 @end
 
-int nativeLoop(void) {
+void configureAppWindow(char* title, int width, int height);
+
+int nativeLoop(char* title, int width, int height) {
   AppDelegate *delegate = [[AppDelegate alloc] init];
   [[NSApplication sharedApplication] setDelegate:delegate];
+  if (strcmp(title, "") != 0) {
+    configureAppWindow(title, width, height);
+  }
   [NSApp run];
   return EXIT_SUCCESS;
 }

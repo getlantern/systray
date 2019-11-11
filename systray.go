@@ -50,10 +50,14 @@ var (
 )
 
 // Run initializes GUI and starts the event loop, then invokes the onReady
-// callback.
-// It blocks until systray.Quit() is called.
+// callback. It blocks until systray.Quit() is called.
 // Should be called at the very beginning of main() to lock at main thread.
 func Run(onReady func(), onExit func()) {
+	RunWithAppWindow("", 0, 0, onReady, onExit)
+}
+
+// RunWithAppWindow is like Run but also enables an application window with the given title.
+func RunWithAppWindow(title string, width int, height int, onReady func(), onExit func()) {
 	runtime.LockOSThread()
 	atomic.StoreInt64(&hasStarted, 1)
 
@@ -78,7 +82,7 @@ func Run(onReady func(), onExit func()) {
 	}
 	systrayExit = onExit
 
-	nativeLoop()
+	nativeLoop(title, width, height)
 }
 
 // Quit the systray
