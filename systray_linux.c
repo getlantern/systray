@@ -199,6 +199,11 @@ void add_or_update_menu_item(int menu_id, char* title, char* tooltip, short disa
 	g_idle_add(do_add_or_update_menu_item, mii);
 }
 
+void add_or_update_submenu_item(int parent_id, int menu_id, char* title, char* tooltip, short disabled, short checked) {
+	// TODO: add support for sub-menus
+	add_or_update_menu_item(int menu_id, char* title, char* tooltip, short disabled, short checked) ;
+}
+
 void add_separator(int menu_id) {
 	MenuItemInfo *mii = malloc(sizeof(MenuItemInfo));
 	mii->menu_id = menu_id;

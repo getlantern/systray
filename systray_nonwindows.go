@@ -58,13 +58,24 @@ func addOrUpdateMenuItem(item *MenuItem) {
 	if item.checked {
 		checked = 1
 	}
-	C.add_or_update_menu_item(
-		C.int(item.id),
-		C.CString(item.title),
-		C.CString(item.tooltip),
-		disabled,
-		checked,
-	)
+	if item.parent == nil {
+		C.add_or_update_menu_item(
+			C.int(item.id),
+			C.CString(item.title),
+			C.CString(item.tooltip),
+			disabled,
+			checked,
+		)
+	} else {
+		C.add_or_update_submenu_item(
+			C.int(item.parent.id),
+			C.int(item.id),
+			C.CString(item.title),
+			C.CString(item.tooltip),
+			disabled,
+			checked,
+		)
+	}
 }
 
 // SetIcon sets the icon of a menu item. Only available on Mac.

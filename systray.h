@@ -10,6 +10,7 @@ void setTooltip(char* tooltip);
 void configureAppWindow(char* title, int width, int height);
 void showAppWindow(char* url);
 void add_or_update_menu_item(int menuId, char* title, char* tooltip, short disabled, short checked);
+void add_or_update_submenu_item(int parent,int menuId, char* title, char* tooltip, short disabled, short checked);
 void add_separator(int menuId);
 void hide_menu_item(int menuId);
 void show_menu_item(int menuId);
