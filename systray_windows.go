@@ -125,6 +125,13 @@ func addOrUpdateMenuItem(item *MenuItem) {
 		item.id = atomic.AddInt32(&nextActionId, 1)
 		action = walk.NewAction()
 		action.Triggered().Attach(func() {
+			// Ensure there is at least one receiver to prevent deadlock
+			go func() {
+				select {
+				case <-item.ClickedCh:
+				}
+			}()
+
 			item.ClickedCh <- struct{}{}
 		})
 		if err := notifyIcon.ContextMenu().Actions().Add(action); err != nil {
