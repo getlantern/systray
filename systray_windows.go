@@ -122,7 +122,7 @@ func ShowAppWindow(url string) {
 func addOrUpdateMenuItem(item *MenuItem) {
 	action := actions[item.id]
 	if action == nil {
-		item.id = atomic.AddInt32(&nextActionId, 1)
+		item.id = nextActionId
 		action = walk.NewAction()
 		action.Triggered().Attach(func() {
 			// Ensure there is at least one receiver to prevent deadlock
@@ -138,6 +138,7 @@ func addOrUpdateMenuItem(item *MenuItem) {
 			fail("Unable to add menu item to systray", err)
 		}
 		actions[item.id] = action
+		atomic.AddInt32(&nextActionId, 1)
 	}
 	err := action.SetText(item.title)
 	if err != nil {
