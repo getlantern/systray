@@ -125,7 +125,12 @@ func addOrUpdateMenuItem(item *MenuItem) {
 		item.id = nextActionId
 		action = walk.NewAction()
 		action.Triggered().Attach(func() {
-			item.ClickedCh <- struct{}{}
+			select {
+			case item.ClickedCh <- struct{}{}:
+				// okay
+			default:
+				// no listener, ignore
+			}
 		})
 		if err := notifyIcon.ContextMenu().Actions().Add(action); err != nil {
 			fail("Unable to add menu item to systray", err)
