@@ -125,7 +125,6 @@ func AddSeparator() {
 }
 
 // AddSubMenuItem adds a nested sub-menu item with the designated title and tooltip.
-//
 // It can be safely invoked from different goroutines.
 func (item *MenuItem) AddSubMenuItem(title string, tooltip string) *MenuItem {
 	child := newMenuItem(title, tooltip, item)
