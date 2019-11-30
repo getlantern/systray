@@ -8,6 +8,7 @@ at the very beginning of main() to lock at main thread.
 package systray
 
 import (
+	"fmt"
 	"runtime"
 	"sync"
 	"sync/atomic"
@@ -36,6 +37,28 @@ type MenuItem struct {
 	disabled bool
 	// checked menu item has a tick before the title
 	checked bool
+	// parent item, for sub menus
+	parent *MenuItem
+}
+
+func (item *MenuItem) String() string {
+	if item.parent == nil {
+		return fmt.Sprintf("MenuItem[%d, %q]", item.id, item.title)
+	}
+	return fmt.Sprintf("MenuItem[%d, parent %d, %q]", item.id, item.parent.id, item.title)
+}
+
+// newMenuItem returns a populated MenuItem object
+func newMenuItem(title string, tooltip string, parent *MenuItem) *MenuItem {
+	return &MenuItem{
+		ClickedCh: 		make(chan struct{}),
+		id:        		atomic.AddInt32(&currentID, 1),
+		title:     		title,
+		tooltip:   		tooltip,
+		disabled:  		false,
+		checked:   		false,
+		parent:    		parent,
+	}
 }
 
 var (
@@ -97,9 +120,7 @@ func Quit() {
 //
 // It can be safely invoked from different goroutines.
 func AddMenuItem(title string, tooltip string) *MenuItem {
-	id := atomic.AddInt32(&currentID, 1)
-	item := &MenuItem{nil, id, title, tooltip, false, false}
-	item.ClickedCh = make(chan struct{})
+	item := newMenuItem(title, tooltip, nil)
 	item.update()
 	return item
 }
@@ -107,6 +128,16 @@ func AddMenuItem(title string, tooltip string) *MenuItem {
 // AddSeparator adds a separator bar to the menu
 func AddSeparator() {
 	addSeparator(atomic.AddInt32(&currentID, 1))
+}
+
+// AddSubMenuItem adds nested sub-menu item with designated title and tooltip, returning a channel
+// that notifies whenever that menu item is clicked.
+//
+// It can be safely invoked from different goroutines.
+func (item *MenuItem) AddSubMenuItem(title string, tooltip string) *MenuItem {
+	child := newMenuItem(title, tooltip, item)
+	child.update()
+	return child
 }
 
 // SetTitle set the text to display on a menu item
