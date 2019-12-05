@@ -3,6 +3,7 @@
 package systray
 
 import (
+	"crypto/md5"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -76,15 +77,21 @@ func quit() {
 // iconBytes should be the content of .ico for windows and .ico/.jpg/.png
 // for other platforms.
 func SetIcon(iconBytes []byte) {
-	filename := "systray.ico"
-	err := ioutil.WriteFile(filename, iconBytes, 0644)
-	if err != nil {
-		fail("Unable to save icon to disk", err)
-	}
-	defer os.Remove(filename)
+	md5 := md5.Sum(iconBytes)
+	filename := fmt.Sprintf("%x", md5) + ".ico"
+	// First, try to find a previously loaded icon in walk cache
 	icon, err := walk.Resources.Icon(filename)
 	if err != nil {
-		fail("Unable to load icon", err)
+		// Cache miss, load the icon
+		err := ioutil.WriteFile(filename, iconBytes, 0644)
+		if err != nil {
+			fail("Unable to save icon to disk", err)
+		}
+		defer os.Remove(filename)
+		icon, err = walk.Resources.Icon(filename)
+		if err != nil {
+			fail("Unable to load icon", err)
+		}
 	}
 	err = notifyIcon.SetIcon(icon)
 	if err != nil {
