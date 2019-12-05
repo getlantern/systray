@@ -19,7 +19,6 @@ var (
 
 	actions      = make(map[int32]*walk.Action)
 	menus        = make(map[int32]*walk.Menu)
-	nextActionId int32
 
 	okayToClose int32
 )
