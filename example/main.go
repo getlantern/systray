@@ -48,7 +48,7 @@ func onReady() {
 
 		subMenuTop := systray.AddMenuItem("SubMenu", "SubMenu Test (top)")
 		subMenuMiddle := subMenuTop.AddSubMenuItem("SubMenu - Level 2", "SubMenu Test (middle)")
-		subMenuMiddle.AddSubMenuItem("SubMenu - Level 3", "SubMenu Test (bottom)")
+		subMenuBottom := subMenuMiddle.AddSubMenuItem("SubMenu - Level 3", "SubMenu Test (bottom)")
 		subMenuBottom2 := subMenuMiddle.AddSubMenuItem("Panic!", "SubMenu Test (bottom)")
 
 		mUrl := systray.AddMenuItem("Open UI", "my home")
@@ -60,6 +60,20 @@ func onReady() {
 		systray.AddSeparator()
 		mToggle := systray.AddMenuItem("Toggle", "Toggle the Quit button")
 		shown := true
+		toggle := func() {
+			if shown {
+				subMenuBottom.Uncheck()
+				mQuitOrig.Hide()
+				mEnabled.Hide()
+				shown = false
+			} else {
+				subMenuBottom.Check()
+				mQuitOrig.Show()
+				mEnabled.Show()
+				shown = true
+			}
+		}
+
 		for {
 			select {
 			case <-mChange.ClickedCh:
@@ -79,16 +93,10 @@ func onReady() {
 				open.Run("https://www.getlantern.org")
 			case <-subMenuBottom2.ClickedCh:
 				panic("panic button pressed")
+			case <-subMenuBottom.ClickedCh:
+				toggle()
 			case <-mToggle.ClickedCh:
-				if shown {
-					mQuitOrig.Hide()
-					mEnabled.Hide()
-					shown = false
-				} else {
-					mQuitOrig.Show()
-					mEnabled.Show()
-					shown = true
-				}
+				toggle()
 			case <-mQuit.ClickedCh:
 				systray.Quit()
 				fmt.Println("Quit2 now...")
