@@ -78,7 +78,7 @@ func quit() {
 // for other platforms.
 func SetIcon(iconBytes []byte) {
 	md5 := md5.Sum(iconBytes)
-	filename := fmt.Sprintf("%x", md5) + ".ico"
+	filename := fmt.Sprintf("systray.%x.ico", md5)
 	// First, try to find a previously loaded icon in walk cache
 	icon, err := walk.Resources.Icon(filename)
 	if err != nil {
@@ -160,15 +160,21 @@ func addOrUpdateMenuItem(item *MenuItem) {
 }
 
 func (item *MenuItem) SetIcon(iconBytes []byte) {
-	filename := fmt.Sprintf("systray.%d.ico", item.id)
-	err := ioutil.WriteFile(filename, iconBytes, 0644)
-	if err != nil {
-		fail("Unable to save icon to disk", err)
-	}
-	defer os.Remove(filename)
+	md5 := md5.Sum(iconBytes)
+	filename := fmt.Sprintf("systray.%x.ico", md5)
+	// First, try to find a previously loaded icon in walk cache
 	icon, err := walk.Resources.Image(filename)
 	if err != nil {
-		fail("Unable to load icon", err)
+		// Cache miss, load the icon
+		err := ioutil.WriteFile(filename, iconBytes, 0644)
+		if err != nil {
+			fail("Unable to save icon to disk", err)
+		}
+		defer os.Remove(filename)
+		icon, err = walk.Resources.Image(filename)
+		if err != nil {
+			fail("Unable to load icon", err)
+		}
 	}
 	actions[item.id].SetImage(icon)
 }
