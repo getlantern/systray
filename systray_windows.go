@@ -6,6 +6,7 @@ import (
 	"crypto/md5"
 	"fmt"
 	"io/ioutil"
+	"path/filepath"
 	"os"
 	"sync/atomic"
 
@@ -79,15 +80,16 @@ func quit() {
 func SetIcon(iconBytes []byte) {
 	md5 := md5.Sum(iconBytes)
 	filename := fmt.Sprintf("systray.%x.ico", md5)
+	iconpath := filepath.Join(walk.Resources.RootDirPath(), filename)
 	// First, try to find a previously loaded icon in walk cache
 	icon, err := walk.Resources.Icon(filename)
 	if err != nil {
 		// Cache miss, load the icon
-		err := ioutil.WriteFile(filename, iconBytes, 0644)
+		err := ioutil.WriteFile(iconpath, iconBytes, 0644)
 		if err != nil {
 			fail("Unable to save icon to disk", err)
 		}
-		defer os.Remove(filename)
+		defer os.Remove(iconpath)
 		icon, err = walk.Resources.Icon(filename)
 		if err != nil {
 			fail("Unable to load icon", err)
@@ -162,15 +164,16 @@ func addOrUpdateMenuItem(item *MenuItem) {
 func (item *MenuItem) SetIcon(iconBytes []byte) {
 	md5 := md5.Sum(iconBytes)
 	filename := fmt.Sprintf("systray.%x.ico", md5)
+	iconpath := filepath.Join(walk.Resources.RootDirPath(), filename)
 	// First, try to find a previously loaded icon in walk cache
 	icon, err := walk.Resources.Image(filename)
 	if err != nil {
 		// Cache miss, load the icon
-		err := ioutil.WriteFile(filename, iconBytes, 0644)
+		err := ioutil.WriteFile(iconpath, iconBytes, 0644)
 		if err != nil {
 			fail("Unable to save icon to disk", err)
 		}
-		defer os.Remove(filename)
+		defer os.Remove(iconpath)
 		icon, err = walk.Resources.Image(filename)
 		if err != nil {
 			fail("Unable to load icon", err)
