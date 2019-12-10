@@ -32,7 +32,6 @@ func nativeLoop(title string, width int, height int) {
 		fail("Unable to create main window", err)
 	}
 	mainWindow.Closing().Attach(func(canceled *bool, reason walk.CloseReason) {
-		fmt.Println(reason)
 		// don't close app unless we're actually finished
 		actuallyClose := atomic.LoadInt32(&okayToClose) == 1
 		*canceled = !actuallyClose
