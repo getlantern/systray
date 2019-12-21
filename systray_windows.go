@@ -20,7 +20,7 @@ var (
 	notifyIcon *walk.NotifyIcon
 
 	actions      = make(map[int32]*walk.Action)
-	nextActionId int32
+	menus        = make(map[int32]*walk.Menu)
 
 	okayToClose int32
 )
@@ -127,11 +127,39 @@ func ShowAppWindow(url string) {
 	mainWindow.SetVisible(true)
 }
 
-func addOrUpdateMenuItem(item *MenuItem) {
+func getOrCreateMenu(item *MenuItem) *walk.Menu {
+	if item == nil {
+		return notifyIcon.ContextMenu()
+	}
+	menu := menus[item.id]
+	if menu != nil {
+		return menu
+	}
+	menu, err := walk.NewMenu()
+	if err != nil {
+		fail("Unable to create new menu", err)
+	}
+	menus[item.id] = menu
+	action := actions[item.id]
+	// If we already have an action in array, it means an action is already created (as a simple action)
+	// Get parent menu to remove it and create a menu entry instead
+	if action != nil {
+		parent := getOrCreateMenu(item.parent)
+		parent.Actions().Remove(action)
+		actions[item.id] = nil
+		updateAction(item, getOrCreateAction(item, menu))
+	}
+	return menu
+}
+
+func getOrCreateAction(item *MenuItem, menu *walk.Menu) *walk.Action {
 	action := actions[item.id]
 	if action == nil {
-		item.id = nextActionId
-		action = walk.NewAction()
+		if menu != nil {
+			action = walk.NewMenuAction(menu)
+		} else {
+			action = walk.NewAction()
+		}
 		action.Triggered().Attach(func() {
 			select {
 			case item.ClickedCh <- struct{}{}:
@@ -140,12 +168,15 @@ func addOrUpdateMenuItem(item *MenuItem) {
 				// no listener, ignore
 			}
 		})
-		if err := notifyIcon.ContextMenu().Actions().Add(action); err != nil {
+		if err := getOrCreateMenu(item.parent).Actions().Add(action); err != nil {
 			fail("Unable to add menu item to systray", err)
 		}
 		actions[item.id] = action
-		atomic.AddInt32(&nextActionId, 1)
 	}
+	return action
+}
+
+func updateAction(item *MenuItem, action *walk.Action) {
 	err := action.SetText(item.title)
 	if err != nil {
 		fail("Unable to set menu item text", err)
@@ -159,6 +190,10 @@ func addOrUpdateMenuItem(item *MenuItem) {
 		fail("Unable to set menu item enabled", err)
 	}
 	// TODO: add support for sub-menus
+}
+
+func addOrUpdateMenuItem(item *MenuItem) {
+	updateAction(item, getOrCreateAction(item, nil))
 }
 
 func (item *MenuItem) SetIcon(iconBytes []byte) {
