@@ -55,11 +55,13 @@ Now look for *Awesome App* in your menu bar!
 
 ### Linux
 
-* Building apps requires the `gtk3` and `libappindicator3` development headers to be installed. For Debian or Ubuntu, you can may install these using:
+* Building apps requires the `gtk3`, `libappindicator3` and `libwebkit2gtk-4.0-dev` development headers to be installed. For Debian or Ubuntu, you can may install these using:
 
 ```sh
-sudo apt-get install libgtk-3-dev libappindicator3-dev
+sudo apt-get install libgtk-3-dev libappindicator3-dev libwebkit2gtk-4.0-dev
 ```
+
+To build the example, run `go build example/main.go`
 
 * Checked menu items are not yet implemented
 
