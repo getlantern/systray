@@ -1,4 +1,6 @@
 example/example
+example/main
+example/main.exe
 *~
 *.swp
 *.exe

@@ -66,7 +66,7 @@ func onReady() {
 				mEnabled.SetTitle("Disabled")
 				mEnabled.Disable()
 			case <-mUrl.ClickedCh:
-				systray.ShowAppWindow("https://www.getlantern.org")
+				systray.ShowAppWindow("https://www.github.com/getlantern/lantern")
 			case <-mToggle.ClickedCh:
 				if shown {
 					mQuitOrig.Hide()
