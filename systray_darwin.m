@@ -187,8 +187,6 @@
 
 @end
 
-void configureAppWindow(char* title, int width, int height);
-
 int nativeLoop(char* title, int width, int height) {
   AppDelegate *delegate = [[AppDelegate alloc] init];
   [[NSApplication sharedApplication] setDelegate:delegate];

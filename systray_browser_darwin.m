@@ -3,6 +3,7 @@
 #include "systray.h"
 
 NSWindowController *windowController = nil;
+NSWindow *window = nil;
 WKWebView *webView = nil;
 
 void configureAppWindow(char* title, int width, int height)
@@ -12,15 +13,17 @@ void configureAppWindow(char* title, int width, int height)
     return;
   }
 
+  NSApplication *app = [NSApplication sharedApplication];
+  [app setActivationPolicy:NSApplicationActivationPolicyRegular];
+  [app activateIgnoringOtherApps:YES];
+
   NSRect frame = NSMakeRect(0, 0, width, height);
   int mask = NSWindowStyleMaskTitled | NSWindowStyleMaskResizable | NSWindowStyleMaskClosable;
-  NSWindow *window =
-    [[NSWindow alloc] initWithContentRect:frame
-                                 styleMask:mask
-                                   backing:NSBackingStoreBuffered
-                                     defer:NO];
+  window = [[NSWindow alloc] initWithContentRect:frame
+                              styleMask:mask
+                              backing:NSBackingStoreBuffered
+                              defer:NO];
   [window setTitle:[[NSString alloc] initWithUTF8String:title]];
-  [window makeKeyAndOrderFront:nil];
   [window center];
 
   NSView *contentView = [window contentView];
@@ -46,6 +49,7 @@ void configureAppWindow(char* title, int width, int height)
 
   // Window controller:
   windowController = [[NSWindowController alloc] initWithWindow:window];
+  
   free(title);
 }
 
@@ -55,12 +59,13 @@ void doShowAppWindow(char* url)
     // no app window to open
     return;
   }
+
   id nsURL = [NSURL URLWithString:[[NSString alloc] initWithUTF8String:url]];
   id req = [[NSURLRequest alloc] initWithURL: nsURL
                                  cachePolicy: NSURLRequestUseProtocolCachePolicy
                                  timeoutInterval: 5];
   [webView loadRequest:req];
-  [windowController.window orderFrontRegardless];
+  [windowController showWindow:window];
   free(url);
 }
 
