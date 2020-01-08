@@ -150,7 +150,7 @@ type menuItemInfo struct {
 	ItemData                    uintptr
 	TypeData                    *uint16
 	Cch                         uint32
-	Item                        windows.Handle
+	BMPItem                     windows.Handle
 }
 
 // The POINT structure defines the x- and y- coordinates of a point.
@@ -178,34 +178,13 @@ type winTray struct {
 }
 
 // Loads an image from file and shows it in tray.
-// LoadImage: https://msdn.microsoft.com/en-us/library/windows/desktop/ms648045(v=vs.85).aspx
 // Shell_NotifyIcon: https://msdn.microsoft.com/en-us/library/windows/desktop/bb762159(v=vs.85).aspx
 func (t *winTray) setIcon(src string) error {
-	const IMAGE_ICON = 1               // Loads an icon
-	const LR_LOADFROMFILE = 0x00000010 // Loads the stand-alone image from the file
-	const LR_DEFAULTSIZE = 0x00000040  // Loads default-size icon for windows(SM_CXICON x SM_CYICON) if cx, cy are set to zero
 	const NIF_ICON = 0x00000002
 
-	// Save and reuse handles of loaded images
-	h, ok := t.loadedImages[src]
-	if !ok {
-		srcPtr, err := windows.UTF16PtrFromString(src)
-		if err != nil {
-			return err
-		}
-		res, _, err := pLoadImage.Call(
-			0,
-			uintptr(unsafe.Pointer(srcPtr)),
-			IMAGE_ICON,
-			0,
-			0,
-			LR_LOADFROMFILE|LR_DEFAULTSIZE,
-		)
-		if res == 0 {
-			return err
-		}
-		h = windows.Handle(res)
-		t.loadedImages[src] = h
+	h, err := t.loadIconFrom(src)
+	if err != nil {
+		return err
 	}
 
 	t.nid.Icon = h
@@ -433,13 +412,14 @@ func (t *winTray) createMenu() error {
 	return nil
 }
 
-func (t *winTray) addOrUpdateMenuItem(menuId int32, title string, disabled, checked bool) error {
+func (t *winTray) addOrUpdateMenuItem(menuId int32, title string, disabled, checked bool, hIcon windows.Handle) error {
 	// https://msdn.microsoft.com/en-us/library/windows/desktop/ms647578(v=vs.85).aspx
 	const (
 		MIIM_FTYPE  = 0x00000100
 		MIIM_STRING = 0x00000040
 		MIIM_ID     = 0x00000002
 		MIIM_STATE  = 0x00000001
+		MIIM_BITMAP = 0x00000080
 	)
 	const MFT_STRING = 0x00000000
 	const (
@@ -463,6 +443,10 @@ func (t *winTray) addOrUpdateMenuItem(menuId int32, title string, disabled, chec
 	}
 	if checked {
 		mi.State |= MFS_CHECKED
+	}
+	if hIcon > 0 {
+		mi.Mask |= MIIM_BITMAP
+		mi.BMPItem = hIcon
 	}
 	mi.Size = uint32(unsafe.Sizeof(mi))
 
@@ -594,6 +578,37 @@ func (t *winTray) getVisibleItemIndex(val int32) int {
 	return -1
 }
 
+// Loads an image from file to be shown in tray or menu item.
+// LoadImage: https://msdn.microsoft.com/en-us/library/windows/desktop/ms648045(v=vs.85).aspx
+func (t *winTray) loadIconFrom(src string) (windows.Handle, error) {
+	const IMAGE_ICON = 1               // Loads an icon
+	const LR_LOADFROMFILE = 0x00000010 // Loads the stand-alone image from the file
+	const LR_DEFAULTSIZE = 0x00000040  // Loads default-size icon for windows(SM_CXICON x SM_CYICON) if cx, cy are set to zero
+
+	// Save and reuse handles of loaded images
+	h, ok := t.loadedImages[src]
+	if !ok {
+		srcPtr, err := windows.UTF16PtrFromString(src)
+		if err != nil {
+			return 0, err
+		}
+		res, _, err := pLoadImage.Call(
+			0,
+			uintptr(unsafe.Pointer(srcPtr)),
+			IMAGE_ICON,
+			0,
+			0,
+			LR_LOADFROMFILE|LR_DEFAULTSIZE,
+		)
+		if res == 0 {
+			return 0, err
+		}
+		h = windows.Handle(res)
+		t.loadedImages[src] = h
+	}
+	return h, nil
+}
+
 func nativeLoop() {
 	if err := wt.initInstance(); err != nil {
 		log.Errorf("Unable to init instance: %v", err)
@@ -652,25 +667,40 @@ func quit() {
 	)
 }
 
-// SetIcon sets the systray icon.
-// iconBytes should be the content of .ico for windows and .ico/.jpg/.png
-// for other platforms.
-func SetIcon(iconBytes []byte) {
+func iconBytesToFilePath(iconBytes []byte) (string, error) {
 	bh := md5.Sum(iconBytes)
 	dataHash := hex.EncodeToString(bh[:])
 	iconFilePath := filepath.Join(os.TempDir(), "systray_temp_icon_"+dataHash)
 
 	if _, err := os.Stat(iconFilePath); os.IsNotExist(err) {
 		if err := ioutil.WriteFile(iconFilePath, iconBytes, 0644); err != nil {
-			log.Errorf("Unable to write icon data to temp file: %v", err)
-			return
+			return "", err
 		}
 	}
+	return iconFilePath, nil
+}
 
+// SetIcon sets the systray icon.
+// iconBytes should be the content of .ico for windows and .ico/.jpg/.png
+// for other platforms.
+func SetIcon(iconBytes []byte) {
+	iconFilePath, err := iconBytesToFilePath(iconBytes)
+	if err != nil {
+		log.Errorf("Unable to write icon data to temp file: %v", err)
+		return
+	}
 	if err := wt.setIcon(iconFilePath); err != nil {
 		log.Errorf("Unable to set icon: %v", err)
 		return
 	}
+}
+
+// SetTemplateIcon sets the systray icon as a template icon (on macOS), falling back
+// to a regular icon on other platforms.
+// templateIconBytes and iconBytes should be the content of .ico for windows and
+// .ico/.jpg/.png for other platforms.
+func SetTemplateIcon(templateIconBytes []byte, regularIconBytes []byte) {
+	SetIcon(regularIconBytes)
 }
 
 // SetTitle sets the systray title, only available on Mac.
@@ -678,9 +708,26 @@ func SetTitle(title string) {
 	// do nothing
 }
 
-// SetIcon sets the icon of a menu item. Only available on Mac.
+// SetIcon sets the icon of a menu item. Only works on macOS and Windows.
+// iconBytes should be the content of .ico/.jpg/.png
 func (item *MenuItem) SetIcon(iconBytes []byte) {
-	// do nothing
+	iconFilePath, err := iconBytesToFilePath(iconBytes)
+	if err != nil {
+		log.Errorf("Unable to write icon data to temp file: %v", err)
+		return
+	}
+
+	h, err := wt.loadIconFrom(iconFilePath)
+	if err != nil {
+		log.Errorf("Unable to load icon from temp file: %v", err)
+		return
+	}
+
+	err = wt.addOrUpdateMenuItem(item.id, item.title, item.disabled, item.checked, h)
+	if err != nil {
+		log.Errorf("Unable to addOrUpdateMenuItem: %v", err)
+		return
+	}
 }
 
 // SetTooltip sets the systray tooltip to display on mouse hover of the tray icon,
@@ -693,11 +740,19 @@ func SetTooltip(tooltip string) {
 }
 
 func addOrUpdateMenuItem(item *MenuItem) {
-	err := wt.addOrUpdateMenuItem(item.id, item.title, item.disabled, item.checked)
+	err := wt.addOrUpdateMenuItem(item.id, item.title, item.disabled, item.checked, 0)
 	if err != nil {
 		log.Errorf("Unable to addOrUpdateMenuItem: %v", err)
 		return
 	}
+}
+
+// SetTemplateIcon sets the icon of a menu item as a template icon (on macOS). On Windows, it
+// falls back to the regular icon bytes and on Linux it does nothing.
+// templateIconBytes and regularIconBytes should be the content of .ico for windows and
+// .ico/.jpg/.png for other platforms.
+func (item *MenuItem) SetTemplateIcon(templateIconBytes []byte, regularIconBytes []byte) {
+	item.SetIcon(regularIconBytes)
 }
 
 func addSeparator(id int32) {

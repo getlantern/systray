@@ -167,7 +167,7 @@ gboolean do_quit(gpointer data) {
 	return FALSE;
 }
 
-void setIcon(const char* iconBytes, int length) {
+void setIcon(const char* iconBytes, int length, bool template) {
 	GBytes* bytes = g_bytes_new_static(iconBytes, length);
 	g_idle_add(do_set_icon, bytes);
 }
@@ -181,7 +181,7 @@ void setTooltip(char* ctooltip) {
 	free(ctooltip);
 }
 
-void setMenuItemIcon(const char* iconBytes, int length, int menuId) {
+void setMenuItemIcon(const char* iconBytes, int length, int menuId, bool template) {
 }
 
 void add_or_update_menu_item(int menu_id, char* title, char* tooltip, short disabled, short checked) {

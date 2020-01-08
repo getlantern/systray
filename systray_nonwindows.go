@@ -28,7 +28,7 @@ func quit() {
 // for other platforms.
 func SetIcon(iconBytes []byte) {
 	cstr := (*C.char)(unsafe.Pointer(&iconBytes[0]))
-	C.setIcon(cstr, (C.int)(len(iconBytes)))
+	C.setIcon(cstr, (C.int)(len(iconBytes)), false)
 }
 
 // SetTitle sets the systray title, only available on Mac.
@@ -58,13 +58,6 @@ func addOrUpdateMenuItem(item *MenuItem) {
 		disabled,
 		checked,
 	)
-}
-
-// SetIcon sets the icon of a menu item. Only available on Mac.
-// iconBytes should be the content of .ico/.jpg/.png
-func (item *MenuItem) SetIcon(iconBytes []byte) {
-	cstr := (*C.char)(unsafe.Pointer(&iconBytes[0]))
-	C.setMenuItemIcon(cstr, (C.int)(len(iconBytes)), C.int(item.id))
 }
 
 func addSeparator(id int32) {
