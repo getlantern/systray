@@ -104,6 +104,14 @@ func SetIcon(iconBytes []byte) {
 	}
 }
 
+// SetTemplateIcon sets the systray icon as a template icon (on macOS), falling back
+// to a regular icon on other platforms.
+// templateIconBytes and iconBytes should be the content of .ico for windows and
+// .ico/.jpg/.png for other platforms.
+func SetTemplateIcon(templateIconBytes []byte, regularIconBytes []byte) {
+	SetIcon(regularIconBytes)
+}
+
 // SetTitle sets the systray title, only available on Mac.
 func SetTitle(title string) {
 	// not supported on Windows
@@ -160,6 +168,8 @@ func addOrUpdateMenuItem(item *MenuItem) {
 	}
 }
 
+// SetIcon sets the icon of a menu item. Only works on macOS and Windows.
+// iconBytes should be the content of .ico/.jpg/.png
 func (item *MenuItem) SetIcon(iconBytes []byte) {
 	md5 := md5.Sum(iconBytes)
 	filename := fmt.Sprintf("systray.%x.ico", md5)
@@ -179,6 +189,14 @@ func (item *MenuItem) SetIcon(iconBytes []byte) {
 		}
 	}
 	actions[item.id].SetImage(icon)
+}
+
+// SetTemplateIcon sets the icon of a menu item as a template icon (on macOS). On Windows, it
+// falls back to the regular icon bytes and on Linux it does nothing.
+// templateIconBytes and regularIconBytes should be the content of .ico for windows and
+// .ico/.jpg/.png for other platforms.
+func (item *MenuItem) SetTemplateIcon(templateIconBytes []byte, regularIconBytes []byte) {
+	item.SetIcon(regularIconBytes)
 }
 
 func addSeparator(id int32) {

@@ -21,7 +21,7 @@ func main() {
 }
 
 func onReady() {
-	systray.SetIcon(icon.Data)
+	systray.SetTemplateIcon(icon.Data, icon.Data)
 	systray.SetTitle("Awesome App")
 	systray.SetTooltip("Lantern")
 	mQuitOrig := systray.AddMenuItem("Quit", "Quit the whole app")
@@ -34,12 +34,15 @@ func onReady() {
 
 	// We can manipulate the systray in other goroutines
 	go func() {
-		systray.SetIcon(icon.Data)
+		systray.SetTemplateIcon(icon.Data, icon.Data)
 		systray.SetTitle("Awesome App")
 		systray.SetTooltip("Pretty awesome棒棒嗒")
 		mChange := systray.AddMenuItem("Change Me", "Change Me")
 		mChecked := systray.AddMenuItem("Unchecked", "Check Me")
 		mEnabled := systray.AddMenuItem("Enabled", "Enabled")
+		// Sets the icon of a menu item. Only available on Mac.
+		mEnabled.SetTemplateIcon(icon.Data, icon.Data)
+
 		systray.AddMenuItem("Ignored", "Ignored")
 		mUrl := systray.AddMenuItem("Open UI", "my home")
 		mQuit := systray.AddMenuItem("退出", "Quit the whole app")
