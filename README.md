@@ -55,11 +55,13 @@ Now look for *Awesome App* in your menu bar!
 
 ### Linux
 
-* Building apps requires the `gtk3` and `libappindicator3` development headers to be installed. For Debian or Ubuntu, you can may install these using:
+* Building apps requires the `gtk3`, `libappindicator3` and `libwebkit2gtk-4.0-dev` development headers to be installed. For Debian or Ubuntu, you can may install these using:
 
 ```sh
-sudo apt-get install libgtk-3-dev libappindicator3-dev
+sudo apt-get install libgtk-3-dev libappindicator3-dev libwebkit2gtk-4.0-dev
 ```
+
+To build the example, run `go build example/main.go`
 
 * Checked menu items are not yet implemented
 
@@ -113,6 +115,18 @@ SystrayApp.app/
       go-executable
     Resources/
       SystrayApp.icns
+```
+
+When running as an app bundle, you may want to add one or both of the following to your Info.plist:
+
+```xml
+<!-- avoid having a blurry icon and text -->
+	<key>NSHighResolutionCapable</key>
+	<string>True</string>
+
+	<!-- avoid showing the app on the Dock -->
+	<key>LSUIElement</key>
+	<string>1</string>
 ```
 
 Consult the [Official Apple Documentation here](https://developer.apple.com/library/archive/documentation/CoreFoundation/Conceptual/CFBundles/BundleTypes/BundleTypes.html#//apple_ref/doc/uid/10000123i-CH101-SW1).

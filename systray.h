@@ -1,10 +1,12 @@
+#include "stdbool.h"
+
 extern void systray_ready();
 extern void systray_on_exit();
 extern void systray_menu_item_selected(int menu_id);
 int nativeLoop(char* title, int width, int height);
 
-void setIcon(const char* iconBytes, int length);
-void setMenuItemIcon(const char* iconBytes, int length, int menuId);
+void setIcon(const char* iconBytes, int length, bool template);
+void setMenuItemIcon(const char* iconBytes, int length, int menuId, bool template);
 void setTitle(char* title);
 void setTooltip(char* tooltip);
 void configureAppWindow(char* title, int width, int height);

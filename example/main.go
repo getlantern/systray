@@ -21,7 +21,7 @@ func main() {
 }
 
 func onReady() {
-	systray.SetIcon(icon.Data)
+	systray.SetTemplateIcon(icon.Data, icon.Data)
 	systray.SetTitle("Awesome App")
 	systray.SetTooltip("Lantern")
 	mQuitOrig := systray.AddMenuItem("Quit", "Quit the whole app")
@@ -34,12 +34,15 @@ func onReady() {
 
 	// We can manipulate the systray in other goroutines
 	go func() {
-		systray.SetIcon(icon.Data)
+		systray.SetTemplateIcon(icon.Data, icon.Data)
 		systray.SetTitle("Awesome App")
 		systray.SetTooltip("Pretty awesome棒棒嗒")
 		mChange := systray.AddMenuItem("Change Me", "Change Me")
 		mChecked := systray.AddMenuItem("Unchecked", "Check Me")
 		mEnabled := systray.AddMenuItem("Enabled", "Enabled")
+		// Sets the icon of a menu item. Only available on Mac.
+		mEnabled.SetTemplateIcon(icon.Data, icon.Data)
+
 		systray.AddMenuItem("Ignored", "Ignored")
 
 		subMenuTop := systray.AddMenuItem("SubMenu", "SubMenu Test (top)")
@@ -72,7 +75,7 @@ func onReady() {
 				mEnabled.SetTitle("Disabled")
 				mEnabled.Disable()
 			case <-mUrl.ClickedCh:
-				systray.ShowAppWindow("https://www.getlantern.org")
+				systray.ShowAppWindow("https://www.github.com/getlantern/lantern")
 			case <-subMenuBottom2.ClickedCh:
 				panic("panic button pressed")
 			case <-mToggle.ClickedCh:

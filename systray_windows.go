@@ -3,8 +3,10 @@
 package systray
 
 import (
+	"crypto/md5"
 	"fmt"
 	"io/ioutil"
+	"path/filepath"
 	"os"
 	"sync/atomic"
 
@@ -30,7 +32,6 @@ func nativeLoop(title string, width int, height int) {
 		fail("Unable to create main window", err)
 	}
 	mainWindow.Closing().Attach(func(canceled *bool, reason walk.CloseReason) {
-		fmt.Println(reason)
 		// don't close app unless we're actually finished
 		actuallyClose := atomic.LoadInt32(&okayToClose) == 1
 		*canceled = !actuallyClose
@@ -76,15 +77,22 @@ func quit() {
 // iconBytes should be the content of .ico for windows and .ico/.jpg/.png
 // for other platforms.
 func SetIcon(iconBytes []byte) {
-	filename := "systray.ico"
-	err := ioutil.WriteFile(filename, iconBytes, 0644)
-	if err != nil {
-		fail("Unable to save icon to disk", err)
-	}
-	defer os.Remove(filename)
+	md5 := md5.Sum(iconBytes)
+	filename := fmt.Sprintf("systray.%x.ico", md5)
+	iconpath := filepath.Join(walk.Resources.RootDirPath(), filename)
+	// First, try to find a previously loaded icon in walk cache
 	icon, err := walk.Resources.Icon(filename)
 	if err != nil {
-		fail("Unable to load icon", err)
+		// Cache miss, load the icon
+		err := ioutil.WriteFile(iconpath, iconBytes, 0644)
+		if err != nil {
+			fail("Unable to save icon to disk", err)
+		}
+		defer os.Remove(iconpath)
+		icon, err = walk.Resources.Icon(filename)
+		if err != nil {
+			fail("Unable to load icon", err)
+		}
 	}
 	err = notifyIcon.SetIcon(icon)
 	if err != nil {
@@ -94,6 +102,14 @@ func SetIcon(iconBytes []byte) {
 	if err != nil {
 		fail("Unable to make systray icon visible", err)
 	}
+}
+
+// SetTemplateIcon sets the systray icon as a template icon (on macOS), falling back
+// to a regular icon on other platforms.
+// templateIconBytes and iconBytes should be the content of .ico for windows and
+// .ico/.jpg/.png for other platforms.
+func SetTemplateIcon(templateIconBytes []byte, regularIconBytes []byte) {
+	SetIcon(regularIconBytes)
 }
 
 // SetTitle sets the systray title, only available on Mac.
@@ -122,15 +138,21 @@ func ShowAppWindow(url string) {
 func addOrUpdateMenuItem(item *MenuItem) {
 	action := actions[item.id]
 	if action == nil {
-		item.id = atomic.AddInt32(&nextActionId, 1)
+		item.id = nextActionId
 		action = walk.NewAction()
 		action.Triggered().Attach(func() {
-			item.ClickedCh <- struct{}{}
+			select {
+			case item.ClickedCh <- struct{}{}:
+				// okay
+			default:
+				// no listener, ignore
+			}
 		})
 		if err := notifyIcon.ContextMenu().Actions().Add(action); err != nil {
 			fail("Unable to add menu item to systray", err)
 		}
 		actions[item.id] = action
+		atomic.AddInt32(&nextActionId, 1)
 	}
 	err := action.SetText(item.title)
 	if err != nil {
@@ -147,18 +169,35 @@ func addOrUpdateMenuItem(item *MenuItem) {
 	// TODO: add support for sub-menus
 }
 
+// SetIcon sets the icon of a menu item. Only works on macOS and Windows.
+// iconBytes should be the content of .ico/.jpg/.png
 func (item *MenuItem) SetIcon(iconBytes []byte) {
-	filename := fmt.Sprintf("systray.%d.ico", item.id)
-	err := ioutil.WriteFile(filename, iconBytes, 0644)
-	if err != nil {
-		fail("Unable to save icon to disk", err)
-	}
-	defer os.Remove(filename)
+	md5 := md5.Sum(iconBytes)
+	filename := fmt.Sprintf("systray.%x.ico", md5)
+	iconpath := filepath.Join(walk.Resources.RootDirPath(), filename)
+	// First, try to find a previously loaded icon in walk cache
 	icon, err := walk.Resources.Image(filename)
 	if err != nil {
-		fail("Unable to load icon", err)
+		// Cache miss, load the icon
+		err := ioutil.WriteFile(iconpath, iconBytes, 0644)
+		if err != nil {
+			fail("Unable to save icon to disk", err)
+		}
+		defer os.Remove(iconpath)
+		icon, err = walk.Resources.Image(filename)
+		if err != nil {
+			fail("Unable to load icon", err)
+		}
 	}
 	actions[item.id].SetImage(icon)
+}
+
+// SetTemplateIcon sets the icon of a menu item as a template icon (on macOS). On Windows, it
+// falls back to the regular icon bytes and on Linux it does nothing.
+// templateIconBytes and regularIconBytes should be the content of .ico for windows and
+// .ico/.jpg/.png for other platforms.
+func (item *MenuItem) SetTemplateIcon(templateIconBytes []byte, regularIconBytes []byte) {
+	item.SetIcon(regularIconBytes)
 }
 
 func addSeparator(id int32) {
