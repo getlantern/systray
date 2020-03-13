@@ -61,12 +61,12 @@ func onReady() {
 		shown := true
 		toggle := func() {
 			if shown {
-				subMenuBottom.Uncheck()
+				subMenuBottom.Check()
 				mQuitOrig.Hide()
 				mEnabled.Hide()
 				shown = false
 			} else {
-				subMenuBottom.Check()
+				subMenuBottom.Uncheck()
 				mQuitOrig.Show()
 				mEnabled.Show()
 				shown = true
