@@ -6,10 +6,12 @@ import (
 	"crypto/md5"
 	"fmt"
 	"io/ioutil"
-	"path/filepath"
 	"os"
+	"path/filepath"
 	"sync/atomic"
 
+	"github.com/getlantern/appdir"
+	"github.com/getlantern/uuid"
 	"github.com/lxn/walk"
 )
 
@@ -26,6 +28,18 @@ var (
 )
 
 func nativeLoop(title string, width int, height int) {
+	if randomPath, uuidErr := uuid.NewRandom(); uuidErr != nil {
+		fail("Unable to generate guid for creating temp dir (this should never happen): %v", uuidErr)
+	} else {
+		tmpDir := filepath.Join(appdir.General("systray"), randomPath.String())
+		if dirErr := os.MkdirAll(tmpDir, 0755); dirErr != nil {
+			fail("Error creating temp dir: %s", dirErr)
+		} else {
+			walk.Resources.SetRootDirPath(tmpDir)
+			defer os.RemoveAll(tmpDir)
+		}
+	}
+
 	var err error
 	mainWindow, err = walk.NewMainWindow()
 	if err != nil {
@@ -78,7 +92,7 @@ func quit() {
 // for other platforms.
 func SetIcon(iconBytes []byte) {
 	md5 := md5.Sum(iconBytes)
-	filename := fmt.Sprintf("systray.%x.ico", md5)
+	filename := fmt.Sprintf("%x.ico", md5)
 	iconpath := filepath.Join(walk.Resources.RootDirPath(), filename)
 	// First, try to find a previously loaded icon in walk cache
 	icon, err := walk.Resources.Icon(filename)
@@ -172,7 +186,7 @@ func addOrUpdateMenuItem(item *MenuItem) {
 // iconBytes should be the content of .ico/.jpg/.png
 func (item *MenuItem) SetIcon(iconBytes []byte) {
 	md5 := md5.Sum(iconBytes)
-	filename := fmt.Sprintf("systray.%x.ico", md5)
+	filename := fmt.Sprintf("%x.ico", md5)
 	iconpath := filepath.Join(walk.Resources.RootDirPath(), filename)
 	// First, try to find a previously loaded icon in walk cache
 	icon, err := walk.Resources.Image(filename)
