@@ -44,6 +44,12 @@ func onReady() {
 		mEnabled.SetTemplateIcon(icon.Data, icon.Data)
 
 		systray.AddMenuItem("Ignored", "Ignored")
+
+		subMenuTop := systray.AddMenuItem("SubMenu", "SubMenu Test (top)")
+		subMenuMiddle := subMenuTop.AddSubMenuItem("SubMenu - Level 2", "SubMenu Test (middle)")
+		subMenuBottom := subMenuMiddle.AddSubMenuItem("SubMenu - Level 3", "SubMenu Test (bottom)")
+		subMenuBottom2 := subMenuMiddle.AddSubMenuItem("Panic!", "SubMenu Test (bottom)")
+
 		mUrl := systray.AddMenuItem("Open UI", "my home")
 		mQuit := systray.AddMenuItem("退出", "Quit the whole app")
 
@@ -53,6 +59,22 @@ func onReady() {
 		systray.AddSeparator()
 		mToggle := systray.AddMenuItem("Toggle", "Toggle the Quit button")
 		shown := true
+		toggle := func() {
+			if shown {
+				subMenuBottom.Check()
+				subMenuBottom2.Hide()
+				mQuitOrig.Hide()
+				mEnabled.Hide()
+				shown = false
+			} else {
+				subMenuBottom.Uncheck()
+				subMenuBottom2.Show()
+				mQuitOrig.Show()
+				mEnabled.Show()
+				shown = true
+			}
+		}
+
 		for {
 			select {
 			case <-mChange.ClickedCh:
@@ -70,16 +92,12 @@ func onReady() {
 				mEnabled.Disable()
 			case <-mUrl.ClickedCh:
 				systray.ShowAppWindow("https://www.github.com/getlantern/lantern")
+			case <-subMenuBottom2.ClickedCh:
+				panic("panic button pressed")
+			case <-subMenuBottom.ClickedCh:
+				toggle()
 			case <-mToggle.ClickedCh:
-				if shown {
-					mQuitOrig.Hide()
-					mEnabled.Hide()
-					shown = false
-				} else {
-					mQuitOrig.Show()
-					mEnabled.Show()
-					shown = true
-				}
+				toggle()
 			case <-mQuit.ClickedCh:
 				systray.Quit()
 				fmt.Println("Quit2 now...")

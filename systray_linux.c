@@ -189,7 +189,8 @@ void setTooltip(char* ctooltip) {
 void setMenuItemIcon(const char* iconBytes, int length, int menuId, bool template) {
 }
 
-void add_or_update_menu_item(int menu_id, char* title, char* tooltip, short disabled, short checked) {
+void add_or_update_menu_item(int menu_id, int parent_menu_id, char* title, char* tooltip, short disabled, short checked) {
+	// TODO: add support for sub-menus
 	MenuItemInfo *mii = malloc(sizeof(MenuItemInfo));
 	mii->menu_id = menu_id;
 	mii->title = title;

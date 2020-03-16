@@ -180,6 +180,7 @@ func addOrUpdateMenuItem(item *MenuItem) {
 	if err != nil {
 		fail("Unable to set menu item enabled", err)
 	}
+	// TODO: add support for sub-menus
 }
 
 // SetIcon sets the icon of a menu item. Only works on macOS and Windows.
