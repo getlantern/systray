@@ -110,8 +110,7 @@ func Quit() {
 	}
 }
 
-// AddMenuItem adds menu item with designated title and tooltip, returning a channel
-// that notifies whenever that menu item is clicked.
+// AddMenuItem adds a menu item with the designated title and tooltip.
 //
 // It can be safely invoked from different goroutines.
 func AddMenuItem(title string, tooltip string) *MenuItem {
@@ -125,8 +124,7 @@ func AddSeparator() {
 	addSeparator(atomic.AddInt32(&currentID, 1))
 }
 
-// AddSubMenuItem adds nested sub-menu item with designated title and tooltip, returning a channel
-// that notifies whenever that menu item is clicked.
+// AddSubMenuItem adds a nested sub-menu item with the designated title and tooltip.
 //
 // It can be safely invoked from different goroutines.
 func (item *MenuItem) AddSubMenuItem(title string, tooltip string) *MenuItem {
