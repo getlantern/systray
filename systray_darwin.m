@@ -181,13 +181,10 @@ NSMenuItem *find_menu_item(NSMenu *ourMenu, NSNumber *menuId) {
 
 - (void) hide_menu_item:(NSNumber*) menuId
 {
-  NSMenuItem* menuItem;
-  int existedMenuIndex = [menu indexOfItemWithRepresentedObject: menuId];
-  if (existedMenuIndex == -1) {
-    return;
+  NSMenuItem* menuItem = find_menu_item(menu, menuId);
+  if (menuItem != NULL) {
+    [menuItem setHidden:TRUE];
   }
-  menuItem = [menu itemAtIndex: existedMenuIndex];
-  [menuItem setHidden:TRUE];
 }
 
 - (void) setMenuItemIcon:(NSArray*)imageAndMenuId {
@@ -204,13 +201,10 @@ NSMenuItem *find_menu_item(NSMenu *ourMenu, NSNumber *menuId) {
 
 - (void) show_menu_item:(NSNumber*) menuId
 {
-  NSMenuItem* menuItem;
-  int existedMenuIndex = [menu indexOfItemWithRepresentedObject: menuId];
-  if (existedMenuIndex == -1) {
-    return;
+  NSMenuItem* menuItem = find_menu_item(menu, menuId);
+  if (menuItem != NULL) {
+    [menuItem setHidden:FALSE];
   }
-  menuItem = [menu itemAtIndex: existedMenuIndex];
-  [menuItem setHidden:FALSE];
 }
 
 - (void) quit
