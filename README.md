@@ -35,7 +35,15 @@ Have go v1.12+ or higher installed? Here's an example to get started on macOS:
 
 ```sh
 git clone https://github.com/getlantern/systray
-env GO111MODULE=on go run systray/example/main.go
+cd example
+env GO111MODULE=on go build
+./example
+```
+
+On Windows, you should build like this:
+
+```
+env GO111MODULE=on go build -ldflags "-H=windowsgui"
 ```
 
 The following text will then appear on the console:
