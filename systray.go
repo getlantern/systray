@@ -171,8 +171,12 @@ func (item *MenuItem) update() {
 
 func systrayMenuItemSelected(id int32) {
 	menuItemsLock.RLock()
-	item := menuItems[id]
+	item, ok := menuItems[id]
 	menuItemsLock.RUnlock()
+	if !ok {
+		log.Errorf("No menu item with ID %v", id)
+		return
+	}
 	select {
 	case item.ClickedCh <- struct{}{}:
 	// in case no one waiting for the channel
