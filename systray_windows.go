@@ -245,7 +245,8 @@ func (t *winTray) wndProc(hWnd windows.Handle, message uint32, wParam, lParam ui
 	switch message {
 	case WM_COMMAND:
 		menuItemId := int32(wParam)
-		if menuItemId != -1 {
+		// https://docs.microsoft.com/en-us/windows/win32/menurc/wm-command#menus
+		if menuItemId != 0 {
 			systrayMenuItemSelected(menuItemId)
 		}
 	case WM_DESTROY:
