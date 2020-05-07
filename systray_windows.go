@@ -18,28 +18,40 @@ import (
 // Helpful sources: https://github.com/golang/exp/blob/master/shiny/driver/internal/win32
 
 var (
-	k32                    = windows.NewLazySystemDLL("Kernel32.dll")
-	s32                    = windows.NewLazySystemDLL("Shell32.dll")
+	g32                     = windows.NewLazySystemDLL("Gdi32.dll")
+	pCreateCompatibleBitmap = g32.NewProc("CreateCompatibleBitmap")
+	pCreateCompatibleDC     = g32.NewProc("CreateCompatibleDC")
+	pDeleteDC               = g32.NewProc("DeleteDC")
+	pSelectObject           = g32.NewProc("SelectObject")
+
+	k32              = windows.NewLazySystemDLL("Kernel32.dll")
+	pGetModuleHandle = k32.NewProc("GetModuleHandleW")
+
+	s32              = windows.NewLazySystemDLL("Shell32.dll")
+	pShellNotifyIcon = s32.NewProc("Shell_NotifyIconW")
+
 	u32                    = windows.NewLazySystemDLL("User32.dll")
-	pGetModuleHandle       = k32.NewProc("GetModuleHandleW")
-	pShellNotifyIcon       = s32.NewProc("Shell_NotifyIconW")
 	pCreatePopupMenu       = u32.NewProc("CreatePopupMenu")
 	pCreateWindowEx        = u32.NewProc("CreateWindowExW")
 	pDefWindowProc         = u32.NewProc("DefWindowProcW")
 	pDeleteMenu            = u32.NewProc("DeleteMenu")
 	pDestroyWindow         = u32.NewProc("DestroyWindow")
 	pDispatchMessage       = u32.NewProc("DispatchMessageW")
+	pDrawIconEx            = u32.NewProc("DrawIconEx")
 	pGetCursorPos          = u32.NewProc("GetCursorPos")
+	pGetDC                 = u32.NewProc("GetDC")
 	pGetMenuItemID         = u32.NewProc("GetMenuItemID")
 	pGetMessage            = u32.NewProc("GetMessageW")
+	pGetSystemMetrics      = u32.NewProc("GetSystemMetrics")
 	pInsertMenuItem        = u32.NewProc("InsertMenuItemW")
+	pLoadCursor            = u32.NewProc("LoadCursorW")
 	pLoadIcon              = u32.NewProc("LoadIconW")
 	pLoadImage             = u32.NewProc("LoadImageW")
-	pLoadCursor            = u32.NewProc("LoadCursorW")
 	pPostMessage           = u32.NewProc("PostMessageW")
 	pPostQuitMessage       = u32.NewProc("PostQuitMessage")
 	pRegisterClass         = u32.NewProc("RegisterClassExW")
 	pRegisterWindowMessage = u32.NewProc("RegisterWindowMessageW")
+	pReleaseDC             = u32.NewProc("ReleaseDC")
 	pSetForegroundWindow   = u32.NewProc("SetForegroundWindow")
 	pSetMenuInfo           = u32.NewProc("SetMenuInfo")
 	pSetMenuItemInfo       = u32.NewProc("SetMenuItemInfoW")
@@ -609,6 +621,35 @@ func (t *winTray) loadIconFrom(src string) (windows.Handle, error) {
 	return h, nil
 }
 
+func (t *winTray) iconToBitmap(hIcon windows.Handle) (windows.Handle, error) {
+	const SM_CXSMICON = 49
+	const SM_CYSMICON = 50
+	const DI_NORMAL = 0x3
+	hDC, _, err := pGetDC.Call(uintptr(0))
+	if hDC == 0 {
+		return 0, err
+	}
+	defer pReleaseDC.Call(uintptr(0), hDC)
+	hMemDC, _, err := pCreateCompatibleDC.Call(hDC)
+	if hMemDC == 0 {
+		return 0, err
+	}
+	defer pDeleteDC.Call(hMemDC)
+	cx, _, _ := pGetSystemMetrics.Call(SM_CXSMICON)
+	cy, _, _ := pGetSystemMetrics.Call(SM_CYSMICON)
+	hMemBmp, _, err := pCreateCompatibleBitmap.Call(hDC, cx, cy)
+	if hMemBmp == 0 {
+		return 0, err
+	}
+	hOriginalBmp, _, _ := pSelectObject.Call(hMemDC, hMemBmp)
+	defer pSelectObject.Call(hMemDC, hOriginalBmp)
+	res, _, err := pDrawIconEx.Call(hMemDC, 0, 0, uintptr(hIcon), cx, cy, 0, uintptr(0), DI_NORMAL)
+	if res == 0 {
+		return 0, err
+	}
+	return windows.Handle(hMemBmp), nil
+}
+
 func nativeLoop() {
 	if err := wt.initInstance(); err != nil {
 		log.Errorf("Unable to init instance: %v", err)
@@ -720,6 +761,12 @@ func (item *MenuItem) SetIcon(iconBytes []byte) {
 	h, err := wt.loadIconFrom(iconFilePath)
 	if err != nil {
 		log.Errorf("Unable to load icon from temp file: %v", err)
+		return
+	}
+
+	h, err = wt.iconToBitmap(h)
+	if err != nil {
+		log.Errorf("Unable to convert icon to bitmap: %v", err)
 		return
 	}
 
