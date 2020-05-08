@@ -184,10 +184,15 @@ type winTray struct {
 	// which corresponds to the main popup menu.
 	menus map[uint32]windows.Handle
 	// menuOf keeps track of the menu each menu item belongs to.
-	menuOf       map[uint32]windows.Handle
-	visibleItems map[uint32][]uint32
-	nid          *notifyIconData
-	wcex         *wndClassEx
+	menuOf map[uint32]windows.Handle
+	// menuItemIcons maintains the bitmap of each menu item (if applies). It's
+	// needed to show the icon correctly when showing a previously hidden menu
+	// item again.
+	menuItemIcons map[uint32]windows.Handle
+	visibleItems  map[uint32][]uint32
+
+	nid  *notifyIconData
+	wcex *wndClassEx
 
 	wmSystrayMessage,
 	wmTaskbarCreated uint32
@@ -308,6 +313,7 @@ func (t *winTray) initInstance() error {
 	t.visibleItems = make(map[uint32][]uint32)
 	t.menus = make(map[uint32]windows.Handle)
 	t.menuOf = make(map[uint32]windows.Handle)
+	t.menuItemIcons = make(map[uint32]windows.Handle)
 
 	taskbarEventNamePtr, _ := windows.UTF16PtrFromString("TaskbarCreated")
 	// https://msdn.microsoft.com/en-us/library/windows/desktop/ms644947
@@ -455,7 +461,7 @@ func (t *winTray) convertToSubMenu(menuItemId uint32) (windows.Handle, error) {
 	return menu, nil
 }
 
-func (t *winTray) addOrUpdateMenuItem(menuItemId uint32, parentId uint32, title string, disabled, checked bool, hIcon windows.Handle) error {
+func (t *winTray) addOrUpdateMenuItem(menuItemId uint32, parentId uint32, title string, disabled, checked bool) error {
 	// https://msdn.microsoft.com/en-us/library/windows/desktop/ms647578(v=vs.85).aspx
 	const (
 		MIIM_FTYPE   = 0x00000100
@@ -489,6 +495,7 @@ func (t *winTray) addOrUpdateMenuItem(menuItemId uint32, parentId uint32, title 
 	if checked {
 		mi.State |= MFS_CHECKED
 	}
+	hIcon := t.menuItemIcons[menuItemId]
 	if hIcon > 0 {
 		mi.Mask |= MIIM_BITMAP
 		mi.BMPItem = hIcon
@@ -826,8 +833,9 @@ func (item *MenuItem) SetIcon(iconBytes []byte) {
 		log.Errorf("Unable to convert icon to bitmap: %v", err)
 		return
 	}
+	wt.menuItemIcons[uint32(item.id)] = h
 
-	err = wt.addOrUpdateMenuItem(uint32(item.id), item.parentId(), item.title, item.disabled, item.checked, h)
+	err = wt.addOrUpdateMenuItem(uint32(item.id), item.parentId(), item.title, item.disabled, item.checked)
 	if err != nil {
 		log.Errorf("Unable to addOrUpdateMenuItem: %v", err)
 		return
@@ -844,7 +852,7 @@ func SetTooltip(tooltip string) {
 }
 
 func addOrUpdateMenuItem(item *MenuItem) {
-	err := wt.addOrUpdateMenuItem(uint32(item.id), item.parentId(), item.title, item.disabled, item.checked, 0)
+	err := wt.addOrUpdateMenuItem(uint32(item.id), item.parentId(), item.title, item.disabled, item.checked)
 	if err != nil {
 		log.Errorf("Unable to addOrUpdateMenuItem: %v", err)
 		return
