@@ -238,6 +238,7 @@ func (t *winTray) wndProc(hWnd windows.Handle, message uint32, wParam, lParam ui
 	const (
 		WM_COMMAND    = 0x0111
 		WM_DESTROY    = 0x0002
+		WM_CLOSE      = 0x0010
 		WM_ENDSESSION = 0x16
 		WM_RBUTTONUP  = 0x0205
 		WM_LBUTTONUP  = 0x0202
@@ -249,6 +250,9 @@ func (t *winTray) wndProc(hWnd windows.Handle, message uint32, wParam, lParam ui
 		if menuItemId != 0 {
 			systrayMenuItemSelected(menuItemId)
 		}
+	case WM_CLOSE:
+		pDestroyWindow.Call(uintptr(t.window))
+		t.wcex.unregister()
 	case WM_DESTROY:
 		// same as WM_ENDSESSION, but throws 0 exit code after all
 		defer pPostQuitMessage.Call(uintptr(int32(0)))
@@ -709,6 +713,12 @@ func (t *winTray) iconToBitmap(hIcon windows.Handle) (windows.Handle, error) {
 }
 
 func nativeLoop() {
+	register()
+	go systrayReady()
+	run()
+}
+
+func register() {
 	if err := wt.initInstance(); err != nil {
 		log.Errorf("Unable to init instance: %v", err)
 		return
@@ -719,13 +729,9 @@ func nativeLoop() {
 		return
 	}
 
-	defer func() {
-		pDestroyWindow.Call(uintptr(wt.window))
-		wt.wcex.unregister()
-	}()
+}
 
-	go systrayReady()
-
+func run() {
 	// Main message pump.
 	m := &struct {
 		WindowHandle windows.Handle

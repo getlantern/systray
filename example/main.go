@@ -1,24 +1,53 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"time"
+
+	"github.com/lxn/walk"
 
 	"github.com/getlantern/systray"
 	"github.com/getlantern/systray/example/icon"
 	"github.com/skratchdot/open-golang/open"
 )
 
+var (
+	webview = flag.Bool("webview", false, "show a webview window along with the systray")
+)
+
 func main() {
+	flag.Parse()
 	onExit := func() {
-		fmt.Println("Starting onExit")
 		now := time.Now()
 		ioutil.WriteFile(fmt.Sprintf(`on_exit_%d.txt`, now.UnixNano()), []byte(now.String()), 0644)
-		fmt.Println("Finished onExit")
 	}
-	// Should be called at the very beginning of main().
-	systray.Run(onReady, onExit)
+
+	if *webview {
+		systray.Register(onExit)
+		onReady()
+		mainWindow, err := walk.NewMainWindow()
+		if err != nil {
+			panic(fmt.Sprintf("Failed to create main window: %v\n", err))
+		}
+		mainWindow.SetTitle("Webview")
+		mainWindow.SetWidth(800)
+		mainWindow.SetHeight(600)
+		layout := walk.NewVBoxLayout()
+		if err := mainWindow.SetLayout(layout); err != nil {
+			panic(fmt.Sprintf("Failed to set layout: %v\n", err))
+		}
+		webView, err := walk.NewWebView(mainWindow)
+		if err != nil {
+			panic(fmt.Sprintf("Failed to create webview window: %v\n", err))
+		}
+		webView.SetURL("https://www.getlantern.org")
+		mainWindow.SetVisible(true)
+		mainWindow.Run()
+	} else {
+		systray.Run(onReady, onExit)
+	}
 }
 
 func onReady() {

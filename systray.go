@@ -103,6 +103,22 @@ func Run(onReady func(), onExit func()) {
 	nativeLoop()
 }
 
+func Register(onExit func()) {
+	runtime.LockOSThread()
+	atomic.StoreInt64(&hasStarted, 1)
+	// unlike onReady, onExit runs in the event loop to make sure it has time to
+	// finish before the process terminates
+	if onExit == nil {
+		onExit = func() {}
+	}
+	systrayExit = onExit
+	register()
+}
+
+func Run2() {
+	run()
+}
+
 // Quit the systray
 func Quit() {
 	if atomic.LoadInt64(&hasStarted) == 1 && atomic.CompareAndSwapInt64(&hasQuit, 0, 1) {
