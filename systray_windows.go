@@ -179,12 +179,15 @@ type winTray struct {
 	cursor,
 	window windows.Handle
 
-	loadedImages         map[string]windows.Handle
-	menuIdToHandle       map[uint32]windows.Handle
-	menuIdToParentHandle map[uint32]windows.Handle
-	visibleItems         map[uint32][]uint32
-	nid                  *notifyIconData
-	wcex                 *wndClassEx
+	loadedImages map[string]windows.Handle
+	// menus keeps track of the submenus keyed by the menu item ID, plus 0
+	// which corresponds to the main popup menu.
+	menus map[uint32]windows.Handle
+	// menuOf keeps track of the menu each menu item belongs to.
+	menuOf       map[uint32]windows.Handle
+	visibleItems map[uint32][]uint32
+	nid          *notifyIconData
+	wcex         *wndClassEx
 
 	wmSystrayMessage,
 	wmTaskbarCreated uint32
@@ -236,9 +239,9 @@ func (t *winTray) wndProc(hWnd windows.Handle, message uint32, wParam, lParam ui
 	)
 	switch message {
 	case WM_COMMAND:
-		menuId := int32(wParam)
-		if menuId != -1 {
-			systrayMenuItemSelected(menuId)
+		menuItemId := int32(wParam)
+		if menuItemId != -1 {
+			systrayMenuItemSelected(menuItemId)
 		}
 	case WM_DESTROY:
 		// same as WM_ENDSESSION, but throws 0 exit code after all
@@ -303,8 +306,8 @@ func (t *winTray) initInstance() error {
 
 	t.wmSystrayMessage = WM_USER + 1
 	t.visibleItems = make(map[uint32][]uint32)
-	t.menuIdToHandle = make(map[uint32]windows.Handle)
-	t.menuIdToParentHandle = make(map[uint32]windows.Handle)
+	t.menus = make(map[uint32]windows.Handle)
+	t.menuOf = make(map[uint32]windows.Handle)
 
 	taskbarEventNamePtr, _ := windows.UTF16PtrFromString("TaskbarCreated")
 	// https://msdn.microsoft.com/en-us/library/windows/desktop/ms644947
@@ -405,8 +408,7 @@ func (t *winTray) createMenu() error {
 	if menuHandle == 0 {
 		return err
 	}
-	t.menuIdToHandle[0] = windows.Handle(menuHandle)
-	t.menuIdToParentHandle[0] = 0
+	t.menus[0] = windows.Handle(menuHandle)
 
 	// https://msdn.microsoft.com/en-us/library/windows/desktop/ms647575(v=vs.85).aspx
 	mi := struct {
@@ -420,7 +422,7 @@ func (t *winTray) createMenu() error {
 	mi.Size = uint32(unsafe.Sizeof(mi))
 
 	res, _, err := pSetMenuInfo.Call(
-		uintptr(t.menuIdToHandle[0]),
+		uintptr(t.menus[0]),
 		uintptr(unsafe.Pointer(&mi)),
 	)
 	if res == 0 {
@@ -429,33 +431,31 @@ func (t *winTray) createMenu() error {
 	return nil
 }
 
-func (t *winTray) convertToSubMenu(menuId uint32) (windows.Handle, error) {
+func (t *winTray) convertToSubMenu(menuItemId uint32) (windows.Handle, error) {
 	const MIIM_SUBMENU = 0x00000004
-	// Convert the parent menu item as a submenu
+
 	res, _, err := pCreateMenu.Call()
 	if res == 0 {
 		return 0, err
 	}
 	menu := windows.Handle(res)
-	mi := menuItemInfo{
-		Mask:    MIIM_SUBMENU,
-		SubMenu: menu,
-	}
+
+	mi := menuItemInfo{Mask: MIIM_SUBMENU, SubMenu: menu}
 	mi.Size = uint32(unsafe.Sizeof(mi))
 	res, _, err = pSetMenuItemInfo.Call(
-		uintptr(t.menuIdToParentHandle[menuId]),
-		uintptr(menuId),
+		uintptr(t.menuOf[menuItemId]),
+		uintptr(menuItemId),
 		0,
 		uintptr(unsafe.Pointer(&mi)),
 	)
 	if res == 0 {
 		return 0, err
 	}
-	t.menuIdToHandle[menuId] = menu
+	t.menus[menuItemId] = menu
 	return menu, nil
 }
 
-func (t *winTray) addOrUpdateMenuItem(menuId uint32, parentId uint32, title string, disabled, checked bool, hIcon windows.Handle) error {
+func (t *winTray) addOrUpdateMenuItem(menuItemId uint32, parentId uint32, title string, disabled, checked bool, hIcon windows.Handle) error {
 	// https://msdn.microsoft.com/en-us/library/windows/desktop/ms647578(v=vs.85).aspx
 	const (
 		MIIM_FTYPE   = 0x00000100
@@ -475,21 +475,10 @@ func (t *winTray) addOrUpdateMenuItem(menuId uint32, parentId uint32, title stri
 		return err
 	}
 
-	var res uintptr
-	insertDirectly := false
-	menu, exists := t.menuIdToHandle[parentId]
-	if !exists {
-		menu, err = t.convertToSubMenu(parentId)
-		if err != nil {
-			return err
-		}
-		t.menuIdToHandle[parentId] = menu
-		insertDirectly = true
-	}
 	mi := menuItemInfo{
 		Mask:     MIIM_FTYPE | MIIM_STRING | MIIM_ID | MIIM_STATE,
 		Type:     MFT_STRING,
-		ID:       uint32(menuId),
+		ID:       uint32(menuItemId),
 		TypeData: titlePtr,
 		Cch:      uint32(len(title)),
 	}
@@ -505,19 +494,27 @@ func (t *winTray) addOrUpdateMenuItem(menuId uint32, parentId uint32, title stri
 		mi.BMPItem = hIcon
 	}
 
-	if !insertDirectly {
+	var res uintptr
+	menu, exists := t.menus[parentId]
+	if !exists {
+		menu, err = t.convertToSubMenu(parentId)
+		if err != nil {
+			return err
+		}
+		t.menus[parentId] = menu
+	} else if t.getVisibleItemIndex(parentId, menuItemId) != -1 {
 		// We set the menu item info based on the menuID
 		res, _, err = pSetMenuItemInfo.Call(
 			uintptr(menu),
-			uintptr(menuId),
+			uintptr(menuItemId),
 			0,
 			uintptr(unsafe.Pointer(&mi)),
 		)
 	}
 
 	if res == 0 {
-		t.addToVisibleItems(parentId, menuId)
-		position := t.getVisibleItemIndex(parentId, menuId)
+		t.addToVisibleItems(parentId, menuItemId)
+		position := t.getVisibleItemIndex(parentId, menuItemId)
 		res, _, err = pInsertMenuItem.Call(
 			uintptr(menu),
 			uintptr(position),
@@ -525,16 +522,16 @@ func (t *winTray) addOrUpdateMenuItem(menuId uint32, parentId uint32, title stri
 			uintptr(unsafe.Pointer(&mi)),
 		)
 		if res == 0 {
-			t.delFromVisibleItems(parentId, menuId)
+			t.delFromVisibleItems(parentId, menuItemId)
 			return err
 		}
-		t.menuIdToParentHandle[menuId] = menu
+		t.menuOf[menuItemId] = menu
 	}
 
 	return nil
 }
 
-func (t *winTray) addSeparatorMenuItem(menuId, parentId uint32) error {
+func (t *winTray) addSeparatorMenuItem(menuItemId, parentId uint32) error {
 	// https://msdn.microsoft.com/en-us/library/windows/desktop/ms647578(v=vs.85).aspx
 	const (
 		MIIM_FTYPE = 0x00000100
@@ -546,14 +543,14 @@ func (t *winTray) addSeparatorMenuItem(menuId, parentId uint32) error {
 	mi := menuItemInfo{
 		Mask: MIIM_FTYPE | MIIM_ID | MIIM_STATE,
 		Type: MFT_SEPARATOR,
-		ID:   uint32(menuId),
+		ID:   uint32(menuItemId),
 	}
 
 	mi.Size = uint32(unsafe.Sizeof(mi))
 
-	t.addToVisibleItems(parentId, menuId)
-	position := t.getVisibleItemIndex(parentId, menuId)
-	menu := uintptr(t.menuIdToHandle[parentId])
+	t.addToVisibleItems(parentId, menuItemId)
+	position := t.getVisibleItemIndex(parentId, menuItemId)
+	menu := uintptr(t.menus[parentId])
 	res, _, err := pInsertMenuItem.Call(
 		menu,
 		uintptr(position),
@@ -567,21 +564,21 @@ func (t *winTray) addSeparatorMenuItem(menuId, parentId uint32) error {
 	return nil
 }
 
-func (t *winTray) hideMenuItem(menuId, parentId uint32) error {
+func (t *winTray) hideMenuItem(menuItemId, parentId uint32) error {
 	// https://msdn.microsoft.com/en-us/library/windows/desktop/ms647629(v=vs.85).aspx
 	const MF_BYCOMMAND = 0x00000000
 	const ERROR_SUCCESS syscall.Errno = 0
 
-	menu := uintptr(t.menuIdToHandle[parentId])
+	menu := uintptr(t.menus[parentId])
 	res, _, err := pDeleteMenu.Call(
 		menu,
-		uintptr(menuId),
+		uintptr(menuItemId),
 		MF_BYCOMMAND,
 	)
 	if res == 0 && err.(syscall.Errno) != ERROR_SUCCESS {
 		return err
 	}
-	t.delFromVisibleItems(parentId, menuId)
+	t.delFromVisibleItems(parentId, menuItemId)
 
 	return nil
 }
@@ -599,7 +596,7 @@ func (t *winTray) showMenu() error {
 	pSetForegroundWindow.Call(uintptr(t.window))
 
 	res, _, err = pTrackPopupMenu.Call(
-		uintptr(t.menuIdToHandle[0]),
+		uintptr(t.menus[0]),
 		TPM_BOTTOMALIGN|TPM_LEFTALIGN,
 		uintptr(p.X),
 		uintptr(p.Y),
