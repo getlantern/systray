@@ -1,8 +1,5 @@
 /*
 Package systray is a cross-platform Go library to place an icon and menu in the notification area.
-
-Methods can be called from any goroutine except Run(), which should be called
-at the very beginning of main() to lock at main thread.
 */
 package systray
 
@@ -16,11 +13,22 @@ import (
 )
 
 var (
-	hasStarted = int64(0)
-	hasQuit    = int64(0)
+	log = golog.LoggerFor("systray")
+
+	systrayReady  func()
+	systrayExit   func()
+	menuItems     = make(map[int32]*MenuItem)
+	menuItemsLock sync.RWMutex
+
+	currentID = int32(-1)
+	quitOnce  sync.Once
 )
 
-// MenuItem is used to keep track each menu item of systray
+func init() {
+	runtime.LockOSThread()
+}
+
+// MenuItem is used to keep track each menu item of systray.
 // Don't create it directly, use the one systray.AddMenuItem() returned
 type MenuItem struct {
 	// ClickedCh is the channel which will be notified when the menu item is clicked
@@ -60,25 +68,17 @@ func newMenuItem(title string, tooltip string, parent *MenuItem) *MenuItem {
 	}
 }
 
-var (
-	log = golog.LoggerFor("systray")
-
-	systrayReady  func()
-	systrayExit   func()
-	menuItems     = make(map[int32]*MenuItem)
-	menuItemsLock sync.RWMutex
-
-	currentID = int32(-1)
-)
-
 // Run initializes GUI and starts the event loop, then invokes the onReady
-// callback.
-// It blocks until systray.Quit() is called.
-// Should be called at the very beginning of main() to lock at main thread.
+// callback. It blocks until systray.Quit() is called.
 func Run(onReady func(), onExit func()) {
-	runtime.LockOSThread()
-	atomic.StoreInt64(&hasStarted, 1)
+	Register(onReady, onExit)
+	nativeLoop()
+}
 
+// Register initializes GUI and registers the callbacks but relies on the
+// caller to run the event loop somewhere else. It's useful if the program
+// needs to show other UI elements, for example, webview.
+func Register(onReady func(), onExit func()) {
 	if onReady == nil {
 		systrayReady = func() {}
 	} else {
@@ -92,38 +92,18 @@ func Run(onReady func(), onExit func()) {
 			close(readyCh)
 		}
 	}
-
 	// unlike onReady, onExit runs in the event loop to make sure it has time to
 	// finish before the process terminates
 	if onExit == nil {
 		onExit = func() {}
 	}
 	systrayExit = onExit
-
-	nativeLoop()
-}
-
-func Register(onExit func()) {
-	runtime.LockOSThread()
-	atomic.StoreInt64(&hasStarted, 1)
-	// unlike onReady, onExit runs in the event loop to make sure it has time to
-	// finish before the process terminates
-	if onExit == nil {
-		onExit = func() {}
-	}
-	systrayExit = onExit
-	register()
-}
-
-func Run2() {
-	run()
+	registerSystray()
 }
 
 // Quit the systray
 func Quit() {
-	if atomic.LoadInt64(&hasStarted) == 1 && atomic.CompareAndSwapInt64(&hasQuit, 0, 1) {
-		quit()
-	}
+	quitOnce.Do(quit)
 }
 
 // AddMenuItem adds a menu item with the designated title and tooltip.

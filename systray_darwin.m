@@ -209,9 +209,12 @@ NSMenuItem *find_menu_item(NSMenu *ourMenu, NSNumber *menuId) {
 
 @end
 
-int nativeLoop(void) {
+void registerSystray(void) {
   AppDelegate *delegate = [[AppDelegate alloc] init];
   [[NSApplication sharedApplication] setDelegate:delegate];
+}
+
+int nativeLoop(void) {
   [NSApp run];
   return EXIT_SUCCESS;
 }

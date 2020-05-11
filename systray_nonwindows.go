@@ -15,6 +15,10 @@ import (
 	"unsafe"
 )
 
+func registerSystray() {
+	C.registerSystray()
+}
+
 func nativeLoop() {
 	C.nativeLoop()
 }

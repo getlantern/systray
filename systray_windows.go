@@ -236,14 +236,17 @@ var wt winTray
 // https://msdn.microsoft.com/en-us/library/windows/desktop/ms633573(v=vs.85).aspx
 func (t *winTray) wndProc(hWnd windows.Handle, message uint32, wParam, lParam uintptr) (lResult uintptr) {
 	const (
-		WM_COMMAND    = 0x0111
-		WM_DESTROY    = 0x0002
-		WM_CLOSE      = 0x0010
-		WM_ENDSESSION = 0x16
 		WM_RBUTTONUP  = 0x0205
 		WM_LBUTTONUP  = 0x0202
+		WM_COMMAND    = 0x0111
+		WM_ENDSESSION = 0x0016
+		WM_CLOSE      = 0x0010
+		WM_DESTROY    = 0x0002
+		WM_CREATE     = 0x0001
 	)
 	switch message {
+	case WM_CREATE:
+		systrayReady()
 	case WM_COMMAND:
 		menuItemId := int32(wParam)
 		// https://docs.microsoft.com/en-us/windows/win32/menurc/wm-command#menus
@@ -712,13 +715,7 @@ func (t *winTray) iconToBitmap(hIcon windows.Handle) (windows.Handle, error) {
 	return windows.Handle(hMemBmp), nil
 }
 
-func nativeLoop() {
-	register()
-	go systrayReady()
-	run()
-}
-
-func register() {
+func registerSystray() {
 	if err := wt.initInstance(); err != nil {
 		log.Errorf("Unable to init instance: %v", err)
 		return
@@ -731,7 +728,7 @@ func register() {
 
 }
 
-func run() {
+func nativeLoop() {
 	// Main message pump.
 	m := &struct {
 		WindowHandle windows.Handle
