@@ -9,22 +9,32 @@ import (
 	"github.com/getlantern/systray"
 	"github.com/getlantern/systray/example/icon"
 	"github.com/skratchdot/open-golang/open"
+	"github.com/zserge/webview"
 )
 
 var (
-	webview = flag.Bool("webview", false, "show a webview window along with the systray")
+	useWebView = flag.Bool("webview", false, "show a webview window along with the systray")
+
+	wv webview.WebView
 )
 
 func main() {
 	flag.Parse()
 	onExit := func() {
 		now := time.Now()
+		if *useWebView {
+			wv.Destroy()
+		}
 		ioutil.WriteFile(fmt.Sprintf(`on_exit_%d.txt`, now.UnixNano()), []byte(now.String()), 0644)
 	}
 
-	if *webview {
+	if *useWebView {
+		wv = webview.New(true)
+		wv.SetTitle("Some Title")
+		wv.SetSize(800, 600, webview.HintNone)
+		wv.Navigate("https://www.getlantern.org")
 		systray.Register(onReady, onExit)
-		showWebviewOnWindows()
+		wv.Run()
 	} else {
 		systray.Run(onReady, onExit)
 	}
