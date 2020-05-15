@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"time"
@@ -11,23 +10,13 @@ import (
 	"github.com/skratchdot/open-golang/open"
 )
 
-var (
-	webview = flag.Bool("webview", false, "show a webview window along with the systray")
-)
-
 func main() {
-	flag.Parse()
 	onExit := func() {
 		now := time.Now()
 		ioutil.WriteFile(fmt.Sprintf(`on_exit_%d.txt`, now.UnixNano()), []byte(now.String()), 0644)
 	}
 
-	if *webview {
-		systray.Register(onReady, onExit)
-		showWebviewOnWindows()
-	} else {
-		systray.Run(onReady, onExit)
-	}
+	systray.Run(onReady, onExit)
 }
 
 func onReady() {

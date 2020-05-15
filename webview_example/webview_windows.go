@@ -5,23 +5,27 @@ import (
 	"github.com/lxn/walk"
 )
 
-func showWebviewOnWindows() {
+var webView *walk.WebView
+
+func configureWebview(title string, width, height int) {
 	mainWindow, err := walk.NewMainWindow()
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create main window: %v\n", err))
 	}
-	mainWindow.SetTitle("Webview")
-	mainWindow.SetWidth(800)
-	mainWindow.SetHeight(600)
+	mainWindow.SetTitle(title)
+	mainWindow.SetWidth(width)
+	mainWindow.SetHeight(height)
 	layout := walk.NewVBoxLayout()
 	if err := mainWindow.SetLayout(layout); err != nil {
 		panic(fmt.Sprintf("Failed to set layout: %v\n", err))
 	}
-	webView, err := walk.NewWebView(mainWindow)
+	webView, err = walk.NewWebView(mainWindow)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create webview window: %v\n", err))
 	}
-	webView.SetURL("https://www.getlantern.org")
-	mainWindow.SetVisible(true)
 	mainWindow.Run()
+	mainWindow.SetVisible(true)
+}
+func showWebview(url string) {
+	webView.SetURL(url)
 }
