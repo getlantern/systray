@@ -19,7 +19,7 @@ func onReady() {
 	systray.SetTooltip("Pretty awesome超级棒")
 	mQuit := systray.AddMenuItem("Quit", "Quit the whole app")
 
-	// Sets the icon of a menu item. Only available on Mac.
+	// Sets the icon of a menu item. Only available on Mac and Windows.
 	mQuit.SetIcon(icon.Data)
 }
 
@@ -58,6 +58,7 @@ Now look for *Awesome App* in your menu bar!
 
 ![Awesome App screenshot](example/screenshot.png)
 
+There's another example under `webview_example` which, as the name implies, demostrate how it can coexist with other UI elements like a webview window.
 ## Platform notes
 
 ### Linux
@@ -68,7 +69,7 @@ Now look for *Awesome App* in your menu bar!
 sudo apt-get install libgtk-3-dev libappindicator3-dev libwebkit2gtk-4.0-dev
 ```
 
-To build the example, run `go build example/main.go`. Before building, remove `example/rsrc.syso` which is only used on Windows.
+Before building the webview_example, remove `webview_example/rsrc.syso` which is only used on Windows.
 
 * Submenu and checked menu items are not yet implemented
 
