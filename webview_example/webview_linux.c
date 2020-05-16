@@ -50,7 +50,7 @@ gboolean do_show_app_window(gpointer data)
     return FALSE;
 }
 
-void showWebview(char* url)
+void showAppWindow(char* url)
 {
     // Load a web page into the browser instance
     webkit_web_view_load_uri(web_view, url);

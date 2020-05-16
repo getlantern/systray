@@ -63,10 +63,10 @@ There's another example under `webview_example` which, as the name implies, demo
 
 ### Linux
 
-* Building apps requires the `gtk3`, `libappindicator3` and `libwebkit2gtk-4.0-dev` development headers to be installed. For Debian or Ubuntu, you can may install these using:
+* Building apps requires gcc and the `gtk3`, `libappindicator3` and `libwebkit2gtk-4.0-dev` development headers to be installed. For Debian or Ubuntu, you can may install these using:
 
 ```sh
-sudo apt-get install libgtk-3-dev libappindicator3-dev libwebkit2gtk-4.0-dev
+sudo apt-get install gcc libgtk-3-dev libappindicator3-dev libwebkit2gtk-4.0-dev
 ```
 
 Before building the webview_example, remove `webview_example/rsrc.syso` which is only used on Windows.

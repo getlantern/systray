@@ -3,7 +3,7 @@
 package main
 
 /*
-#cgo linux pkg-config: gtk+-3.0 appindicator3-0.1
+#cgo linux pkg-config: webkit2gtk-4.0
 #cgo darwin CFLAGS: -DDARWIN -x objective-c -fobjc-arc
 #cgo darwin LDFLAGS: -framework Cocoa -framework Webkit
 
