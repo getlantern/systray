@@ -6,9 +6,11 @@ import (
 )
 
 var webView *walk.WebView
+var mainWindow *walk.MainWindow
+var err error
 
 func configureWebview(title string, width, height int) {
-	mainWindow, err := walk.NewMainWindow()
+	mainWindow, err = walk.NewMainWindow()
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create main window: %v\n", err))
 	}
@@ -23,9 +25,10 @@ func configureWebview(title string, width, height int) {
 	if err != nil {
 		panic(fmt.Sprintf("Failed to create webview window: %v\n", err))
 	}
+	mainWindow.SetVisible(false)
 	mainWindow.Run()
-	mainWindow.SetVisible(true)
 }
 func showWebview(url string) {
+	mainWindow.SetVisible(true)
 	webView.SetURL(url)
 }
