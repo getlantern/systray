@@ -58,18 +58,23 @@ Now look for *Awesome App* in your menu bar!
 
 ![Awesome App screenshot](example/screenshot.png)
 
-There's another example under `webview_example` which, as the name implies, demostrate how it can coexist with other UI elements like a webview window.
+## The Webview example
+
+The code under `webview_example` is to demostrate how it can co-exist with other UI elements.
+
 ## Platform notes
 
 ### Linux
 
-* Building apps requires gcc and the `gtk3`, `libappindicator3` and `libwebkit2gtk-4.0-dev` development headers to be installed. For Debian or Ubuntu, you can may install these using:
+* Building apps requires gcc as well as the `gtk3` and `libappindicator3` development headers to be installed. For Debian or Ubuntu, you may install these using:
 
 ```sh
-sudo apt-get install gcc libgtk-3-dev libappindicator3-dev libwebkit2gtk-4.0-dev
+sudo apt-get install gcc libgtk-3-dev libappindicator3-dev
 ```
 
-Before building the webview_example, remove `webview_example/rsrc.syso` which is only used on Windows.
+On Linux Mint, `libxapp-dev` is also required .
+
+To build `webview_example`, you also need to install `libwebkit2gtk-4.0-dev` and remove `webview_example/rsrc.syso` which is required on Windows.
 
 * Submenu and checked menu items are not yet implemented
 
@@ -114,4 +119,3 @@ Consult the [Official Apple Documentation here](https://developer.apple.com/libr
 
 - https://github.com/xilp/systray
 - https://github.com/cratonica/trayhost
-
