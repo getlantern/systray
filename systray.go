@@ -187,8 +187,8 @@ func (item *MenuItem) Uncheck() {
 // update propagates changes on a menu item to systray
 func (item *MenuItem) update() {
 	menuItemsLock.Lock()
-	defer menuItemsLock.Unlock()
 	menuItems[item.id] = item
+	menuItemsLock.Unlock()
 	addOrUpdateMenuItem(item)
 }
 
