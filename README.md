@@ -28,6 +28,8 @@ func onExit() {
 }
 ```
 
+See [full API](https://pkg.go.dev/github.com/getlantern/systray?tab=doc) as well as [CHANGELOG](https://github.com/getlantern/systray/tree/master/CHANGELOG.md).
+
 ## Try the example app!
 
 Have go v1.12+ or higher installed? Here's an example to get started on macOS:
