@@ -23,7 +23,7 @@ typedef struct {
 	short checked;
 } MenuItemInfo;
 
-int nativeLoop(void) {
+void registerSystray(void) {
 	gtk_init(0, NULL);
 	global_app_indicator = app_indicator_new("systray", "",
 			APP_INDICATOR_CATEGORY_APPLICATION_STATUS);
@@ -31,6 +31,9 @@ int nativeLoop(void) {
 	global_tray_menu = gtk_menu_new();
 	app_indicator_set_menu(global_app_indicator, GTK_MENU(global_tray_menu));
 	systray_ready();
+}
+
+int nativeLoop(void) {
 	gtk_main();
 	systray_on_exit();
 	return 0;
@@ -167,7 +170,7 @@ gboolean do_quit(gpointer data) {
 	return FALSE;
 }
 
-void setIcon(const char* iconBytes, int length) {
+void setIcon(const char* iconBytes, int length, bool template) {
 	GBytes* bytes = g_bytes_new_static(iconBytes, length);
 	g_idle_add(do_set_icon, bytes);
 }
@@ -181,10 +184,11 @@ void setTooltip(char* ctooltip) {
 	free(ctooltip);
 }
 
-void setMenuItemIcon(const char* iconBytes, int length, int menuId) {
+void setMenuItemIcon(const char* iconBytes, int length, int menuId, bool template) {
 }
 
-void add_or_update_menu_item(int menu_id, char* title, char* tooltip, short disabled, short checked) {
+void add_or_update_menu_item(int menu_id, int parent_menu_id, char* title, char* tooltip, short disabled, short checked) {
+	// TODO: add support for sub-menus
 	MenuItemInfo *mii = malloc(sizeof(MenuItemInfo));
 	mii->menu_id = menu_id;
 	mii->title = title;
