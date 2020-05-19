@@ -1,8 +1,24 @@
 # Changelog
 
+## [Unreleased](https://github.com/getlantern/systray/tree/HEAD)
+
+[Full Changelog](https://github.com/getlantern/systray/compare/v1.0.2...HEAD)
+
+**Merged pull requests:**
+
+- remove unused dependencies [\#145](https://github.com/getlantern/systray/pull/145) ([joesis](https://github.com/joesis))
+
+## [v1.0.2](https://github.com/getlantern/systray/tree/v1.0.2) (2020-05-19)
+
+[Full Changelog](https://github.com/getlantern/systray/compare/1.0.1...v1.0.2)
+
 ## [1.0.1](https://github.com/getlantern/systray/tree/1.0.1) (2020-05-18)
 
-[Full Changelog](https://github.com/getlantern/systray/compare/1.0.0...1.0.1)
+[Full Changelog](https://github.com/getlantern/systray/compare/v1.0.1...1.0.1)
+
+## [v1.0.1](https://github.com/getlantern/systray/tree/v1.0.1) (2020-05-18)
+
+[Full Changelog](https://github.com/getlantern/systray/compare/1.0.0...v1.0.1)
 
 **Merged pull requests:**
 
@@ -10,7 +26,11 @@
 
 ## [1.0.0](https://github.com/getlantern/systray/tree/1.0.0) (2020-05-18)
 
-[Full Changelog](https://github.com/getlantern/systray/compare/0.9.0...1.0.0)
+[Full Changelog](https://github.com/getlantern/systray/compare/v1.0.0...1.0.0)
+
+## [v1.0.0](https://github.com/getlantern/systray/tree/v1.0.0) (2020-05-18)
+
+[Full Changelog](https://github.com/getlantern/systray/compare/0.9.0...v1.0.0)
 
 **Merged pull requests:**
 
@@ -19,7 +39,11 @@
 
 ## [0.9.0](https://github.com/getlantern/systray/tree/0.9.0) (2020-03-24)
 
-[Full Changelog](https://github.com/getlantern/systray/compare/8e63b37ef27d94f6db79c4ffb941608e8f0dc2f9...0.9.0)
+[Full Changelog](https://github.com/getlantern/systray/compare/v0.9.0...0.9.0)
+
+## [v0.9.0](https://github.com/getlantern/systray/tree/v0.9.0) (2020-03-24)
+
+[Full Changelog](https://github.com/getlantern/systray/compare/8e63b37ef27d94f6db79c4ffb941608e8f0dc2f9...v0.9.0)
 
 **Merged pull requests:**
 
