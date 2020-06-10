@@ -78,6 +78,8 @@ func Run(onReady func(), onExit func()) {
 // Register initializes GUI and registers the callbacks but relies on the
 // caller to run the event loop somewhere else. It's useful if the program
 // needs to show other UI elements, for example, webview.
+// To overcome some OS weirdness, On macOS versions before Catalina, calling
+// this does exactly the same as Run().
 func Register(onReady func(), onExit func()) {
 	if onReady == nil {
 		systrayReady = func() {}

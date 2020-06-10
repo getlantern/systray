@@ -212,10 +212,18 @@ NSMenuItem *find_menu_item(NSMenu *ourMenu, NSNumber *menuId) {
 void registerSystray(void) {
   AppDelegate *delegate = [[AppDelegate alloc] init];
   [[NSApplication sharedApplication] setDelegate:delegate];
+  // A workaround to avoid crashing on macOS versions before Catalina. Somehow
+  // SIGSEGV would happen inside AppKit if [NSApp run] is called from a
+  // different function, even if that function is called right after this.
+  if (floor(NSAppKitVersionNumber) <= /*NSAppKitVersionNumber10_14*/ 1671){
+    [NSApp run];
+  }
 }
 
 int nativeLoop(void) {
-  [NSApp run];
+  if (floor(NSAppKitVersionNumber) > /*NSAppKitVersionNumber10_14*/ 1671){
+    [NSApp run];
+  }
   return EXIT_SUCCESS;
 }
 
