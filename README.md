@@ -62,7 +62,7 @@ Now look for *Awesome App* in your menu bar!
 
 ## The Webview example
 
-The code under `webview_example` is to demostrate how it can co-exist with other UI elements.
+The code under `webview_example` is to demostrate how it can co-exist with other UI elements. Note that the example doesn't work on macOS versions older than 10.15 Catalina.
 
 ## Platform notes
 
