@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.0.3](https://github.com/getlantern/systray/tree/1.0.3) (2020-06-11)
+
+[Full Changelog](https://github.com/getlantern/systray/compare/v1.0.3...1.0.3)
+
+## [v1.0.3](https://github.com/getlantern/systray/tree/v1.0.3) (2020-06-11)
+
+[Full Changelog](https://github.com/getlantern/systray/compare/v1.0.2...v1.0.3)
+
+**Merged pull requests:**
+
+- have a workaround to avoid crash on old macOS versions [\#153](https://github.com/getlantern/systray/pull/153) ([joesis](https://github.com/joesis))
+- Fix bug on darwin of setting icon for menu [\#147](https://github.com/getlantern/systray/pull/147) ([mangalaman93](https://github.com/mangalaman93))
+
 ## [v1.0.2](https://github.com/getlantern/systray/tree/v1.0.2) (2020-05-19)
 
 [Full Changelog](https://github.com/getlantern/systray/compare/1.0.1...v1.0.2)
@@ -26,20 +39,20 @@
 
 ## [v1.0.0](https://github.com/getlantern/systray/tree/v1.0.0) (2020-05-18)
 
-[Full Changelog](https://github.com/getlantern/systray/compare/0.9.0...v1.0.0)
+[Full Changelog](https://github.com/getlantern/systray/compare/v0.9.0...v1.0.0)
 
 **Merged pull requests:**
 
 - Backport all features and fixes from master [\#140](https://github.com/getlantern/systray/pull/140) ([joesis](https://github.com/joesis))
 - Check if the menu item is nil [\#137](https://github.com/getlantern/systray/pull/137) ([myleshorton](https://github.com/myleshorton))
 
-## [0.9.0](https://github.com/getlantern/systray/tree/0.9.0) (2020-03-24)
-
-[Full Changelog](https://github.com/getlantern/systray/compare/v0.9.0...0.9.0)
-
 ## [v0.9.0](https://github.com/getlantern/systray/tree/v0.9.0) (2020-03-24)
 
-[Full Changelog](https://github.com/getlantern/systray/compare/8e63b37ef27d94f6db79c4ffb941608e8f0dc2f9...v0.9.0)
+[Full Changelog](https://github.com/getlantern/systray/compare/0.9.0...v0.9.0)
+
+## [0.9.0](https://github.com/getlantern/systray/tree/0.9.0) (2020-03-24)
+
+[Full Changelog](https://github.com/getlantern/systray/compare/8e63b37ef27d94f6db79c4ffb941608e8f0dc2f9...0.9.0)
 
 **Merged pull requests:**
 
