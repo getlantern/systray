@@ -10,6 +10,7 @@ systray is a cross-platform Go library to place an icon and menu in the notifica
 
 ```go
 func main() {
+	// Should be called at the very beginning of main().
 	systray.Run(onReady, onExit)
 }
 
