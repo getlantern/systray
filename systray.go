@@ -24,10 +24,6 @@ var (
 	quitOnce  sync.Once
 )
 
-func init() {
-	runtime.LockOSThread()
-}
-
 // MenuItem is used to keep track each menu item of systray.
 // Don't create it directly, use the one systray.AddMenuItem() returned
 type MenuItem struct {
@@ -70,7 +66,9 @@ func newMenuItem(title string, tooltip string, parent *MenuItem) *MenuItem {
 
 // Run initializes GUI and starts the event loop, then invokes the onReady
 // callback. It blocks until systray.Quit() is called.
+// It should be called at the very beginning of main() to lock at main thread.
 func Run(onReady func(), onExit func()) {
+	runtime.LockOSThread()
 	Register(onReady, onExit)
 	nativeLoop()
 }
