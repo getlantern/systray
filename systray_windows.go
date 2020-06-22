@@ -680,6 +680,16 @@ func (t *winTray) loadIconFrom(src string) (windows.Handle, error) {
 		if res == 0 {
 			return 0, err
 		}
+		if err != nil {
+			// Check err to see if the underlying value is actually an error
+			// Documentation states that the error returned from LazyProc.Call will always be non nil and needs to be checked
+			// See: https://pkg.go.dev/golang.org/x/sys/windows?tab=doc#LazyProc.Call
+			// Fixes:  https://github.com/getlantern/systray/issues/148
+			if errno, isErrno := err.(syscall.Errno); isErrno && errno == windows.SEVERITY_SUCCESS {
+				// Clear error so that it is not propagated upwards to the caller
+				err = nil
+			}
+		}
 		h = windows.Handle(res)
 		t.loadedImages[src] = h
 	}
