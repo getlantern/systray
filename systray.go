@@ -15,6 +15,12 @@ import (
 var (
 	log = golog.LoggerFor("systray")
 
+	// MenuOpenedCh is the channel which will be notified when the popup menu is shown
+	MenuOpenedCh = make(chan struct{})
+
+	// MenuClosedCh is the channel which will be notified when the popup menu is closed
+	MenuClosedCh = make(chan struct{})
+	
 	systrayReady  func()
 	systrayExit   func()
 	menuItems     = make(map[int32]*MenuItem)

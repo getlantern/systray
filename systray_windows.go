@@ -599,6 +599,11 @@ func (t *winTray) hideMenuItem(menuItemId, parentId uint32) error {
 }
 
 func (t *winTray) showMenu() error {
+	select {
+	case MenuOpenedCh <- struct{}{}:
+	default:
+	}
+
 	const (
 		TPM_BOTTOMALIGN = 0x0020
 		TPM_LEFTALIGN   = 0x0000
@@ -621,6 +626,11 @@ func (t *winTray) showMenu() error {
 	)
 	if res == 0 {
 		return err
+	}
+
+	select {
+	case MenuClosedCh <- struct{}{}:
+	default:
 	}
 
 	return nil
