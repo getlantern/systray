@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"sync"
 	"syscall"
 	"unsafe"
 
@@ -179,20 +180,26 @@ type winTray struct {
 	cursor,
 	window windows.Handle
 
-	loadedImages map[string]windows.Handle
+	loadedImages   map[string]windows.Handle
+	muLoadedImages sync.RWMutex
 	// menus keeps track of the submenus keyed by the menu item ID, plus 0
 	// which corresponds to the main popup menu.
-	menus map[uint32]windows.Handle
+	menus   map[uint32]windows.Handle
+	muMenus sync.RWMutex
 	// menuOf keeps track of the menu each menu item belongs to.
-	menuOf map[uint32]windows.Handle
+	menuOf   map[uint32]windows.Handle
+	muMenuOf sync.RWMutex
 	// menuItemIcons maintains the bitmap of each menu item (if applies). It's
 	// needed to show the icon correctly when showing a previously hidden menu
 	// item again.
-	menuItemIcons map[uint32]windows.Handle
-	visibleItems  map[uint32][]uint32
+	menuItemIcons   map[uint32]windows.Handle
+	muMenuItemIcons sync.RWMutex
+	visibleItems    map[uint32][]uint32
+	muVisibleItems  sync.RWMutex
 
-	nid  *notifyIconData
-	wcex *wndClassEx
+	nid   *notifyIconData
+	muNID sync.RWMutex
+	wcex  *wndClassEx
 
 	wmSystrayMessage,
 	wmTaskbarCreated uint32
@@ -208,6 +215,8 @@ func (t *winTray) setIcon(src string) error {
 		return err
 	}
 
+	t.muNID.Lock()
+	defer t.muNID.Unlock()
 	t.nid.Icon = h
 	t.nid.Flags |= NIF_ICON
 	t.nid.Size = uint32(unsafe.Sizeof(*t.nid))
@@ -223,6 +232,9 @@ func (t *winTray) setTooltip(src string) error {
 	if err != nil {
 		return err
 	}
+
+	t.muNID.Lock()
+	defer t.muNID.Unlock()
 	copy(t.nid.Tip[:], b[:])
 	t.nid.Flags |= NIF_TIP
 	t.nid.Size = uint32(unsafe.Sizeof(*t.nid))
@@ -261,9 +273,11 @@ func (t *winTray) wndProc(hWnd windows.Handle, message uint32, wParam, lParam ui
 		defer pPostQuitMessage.Call(uintptr(int32(0)))
 		fallthrough
 	case WM_ENDSESSION:
+		t.muNID.Lock()
 		if t.nid != nil {
 			t.nid.delete()
 		}
+		t.muNID.Unlock()
 		systrayExit()
 	case t.wmSystrayMessage:
 		switch lParam {
@@ -271,7 +285,9 @@ func (t *winTray) wndProc(hWnd windows.Handle, message uint32, wParam, lParam ui
 			t.showMenu()
 		}
 	case t.wmTaskbarCreated: // on explorer.exe restarts
+		t.muNID.Lock()
 		t.nid.add()
+		t.muNID.Unlock()
 	default:
 		// Calls the default window procedure to provide default processing for any window messages that an application does not process.
 		// https://msdn.microsoft.com/en-us/library/windows/desktop/ms633572(v=vs.85).aspx
@@ -404,6 +420,8 @@ func (t *winTray) initInstance() error {
 		uintptr(t.window),
 	)
 
+	t.muNID.Lock()
+	defer t.muNID.Unlock()
 	t.nid = &notifyIconData{
 		Wnd:             windows.Handle(t.window),
 		ID:              100,
@@ -456,8 +474,11 @@ func (t *winTray) convertToSubMenu(menuItemId uint32) (windows.Handle, error) {
 
 	mi := menuItemInfo{Mask: MIIM_SUBMENU, SubMenu: menu}
 	mi.Size = uint32(unsafe.Sizeof(mi))
+	t.muMenuOf.RLock()
+	hMenu := t.menuOf[menuItemId]
+	t.muMenuOf.RUnlock()
 	res, _, err = pSetMenuItemInfo.Call(
-		uintptr(t.menuOf[menuItemId]),
+		uintptr(hMenu),
 		uintptr(menuItemId),
 		0,
 		uintptr(unsafe.Pointer(&mi)),
@@ -465,7 +486,9 @@ func (t *winTray) convertToSubMenu(menuItemId uint32) (windows.Handle, error) {
 	if res == 0 {
 		return 0, err
 	}
+	t.muMenus.Lock()
 	t.menus[menuItemId] = menu
+	t.muMenus.Unlock()
 	return menu, nil
 }
 
@@ -503,20 +526,26 @@ func (t *winTray) addOrUpdateMenuItem(menuItemId uint32, parentId uint32, title 
 	if checked {
 		mi.State |= MFS_CHECKED
 	}
+	t.muMenuItemIcons.RLock()
 	hIcon := t.menuItemIcons[menuItemId]
+	t.muMenuItemIcons.RUnlock()
 	if hIcon > 0 {
 		mi.Mask |= MIIM_BITMAP
 		mi.BMPItem = hIcon
 	}
 
 	var res uintptr
+	t.muMenus.RLock()
 	menu, exists := t.menus[parentId]
+	t.muMenus.RUnlock()
 	if !exists {
 		menu, err = t.convertToSubMenu(parentId)
 		if err != nil {
 			return err
 		}
+		t.muMenus.Lock()
 		t.menus[parentId] = menu
+		t.muMenus.Unlock()
 	} else if t.getVisibleItemIndex(parentId, menuItemId) != -1 {
 		// We set the menu item info based on the menuID
 		res, _, err = pSetMenuItemInfo.Call(
@@ -540,7 +569,9 @@ func (t *winTray) addOrUpdateMenuItem(menuItemId uint32, parentId uint32, title 
 			t.delFromVisibleItems(parentId, menuItemId)
 			return err
 		}
+		t.muMenuOf.Lock()
 		t.menuOf[menuItemId] = menu
+		t.muMenuOf.Unlock()
 	}
 
 	return nil
@@ -565,7 +596,9 @@ func (t *winTray) addSeparatorMenuItem(menuItemId, parentId uint32) error {
 
 	t.addToVisibleItems(parentId, menuItemId)
 	position := t.getVisibleItemIndex(parentId, menuItemId)
+	t.muMenus.RLock()
 	menu := uintptr(t.menus[parentId])
+	t.muMenus.RUnlock()
 	res, _, err := pInsertMenuItem.Call(
 		menu,
 		uintptr(position),
@@ -584,7 +617,9 @@ func (t *winTray) hideMenuItem(menuItemId, parentId uint32) error {
 	const MF_BYCOMMAND = 0x00000000
 	const ERROR_SUCCESS syscall.Errno = 0
 
+	t.muMenus.RLock()
 	menu := uintptr(t.menus[parentId])
+	t.muMenus.RUnlock()
 	res, _, err := pDeleteMenu.Call(
 		menu,
 		uintptr(menuItemId),
@@ -627,6 +662,8 @@ func (t *winTray) showMenu() error {
 }
 
 func (t *winTray) delFromVisibleItems(parent, val uint32) {
+	t.muVisibleItems.Lock()
+	defer t.muVisibleItems.Unlock()
 	visibleItems := t.visibleItems[parent]
 	for i, itemval := range visibleItems {
 		if val == itemval {
@@ -637,6 +674,8 @@ func (t *winTray) delFromVisibleItems(parent, val uint32) {
 }
 
 func (t *winTray) addToVisibleItems(parent, val uint32) {
+	t.muVisibleItems.Lock()
+	defer t.muVisibleItems.Unlock()
 	if visibleItems, exists := t.visibleItems[parent]; !exists {
 		t.visibleItems[parent] = []uint32{val}
 	} else {
@@ -647,6 +686,8 @@ func (t *winTray) addToVisibleItems(parent, val uint32) {
 }
 
 func (t *winTray) getVisibleItemIndex(parent, val uint32) int {
+	t.muVisibleItems.RLock()
+	defer t.muVisibleItems.RUnlock()
 	for i, itemval := range t.visibleItems[parent] {
 		if val == itemval {
 			return i
@@ -663,7 +704,9 @@ func (t *winTray) loadIconFrom(src string) (windows.Handle, error) {
 	const LR_DEFAULTSIZE = 0x00000040  // Loads default-size icon for windows(SM_CXICON x SM_CYICON) if cx, cy are set to zero
 
 	// Save and reuse handles of loaded images
+	t.muLoadedImages.RLock()
 	h, ok := t.loadedImages[src]
+	t.muLoadedImages.RUnlock()
 	if !ok {
 		srcPtr, err := windows.UTF16PtrFromString(src)
 		if err != nil {
@@ -681,7 +724,9 @@ func (t *winTray) loadIconFrom(src string) (windows.Handle, error) {
 			return 0, err
 		}
 		h = windows.Handle(res)
+		t.muLoadedImages.Lock()
 		t.loadedImages[src] = h
+		t.muLoadedImages.Unlock()
 	}
 	return h, nil
 }
@@ -837,7 +882,9 @@ func (item *MenuItem) SetIcon(iconBytes []byte) {
 		log.Errorf("Unable to convert icon to bitmap: %v", err)
 		return
 	}
+	wt.muMenuItemIcons.Lock()
 	wt.menuItemIcons[uint32(item.id)] = h
+	wt.muMenuItemIcons.Unlock()
 
 	err = wt.addOrUpdateMenuItem(uint32(item.id), item.parentId(), item.title, item.disabled, item.checked)
 	if err != nil {
