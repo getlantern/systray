@@ -1,5 +1,13 @@
 # Changelog
 
+## [v1.0.4](https://github.com/getlantern/systray/tree/v1.0.4) (2020-07-21)
+
+[Full Changelog](https://github.com/getlantern/systray/compare/1.0.3...v1.0.4)
+
+**Merged pull requests:**
+
+- protect shared data structures with proper mutexes [\#162](https://github.com/getlantern/systray/pull/162) ([joesis](https://github.com/joesis))
+
 ## [1.0.3](https://github.com/getlantern/systray/tree/1.0.3) (2020-06-11)
 
 [Full Changelog](https://github.com/getlantern/systray/compare/v1.0.3...1.0.3)
@@ -15,31 +23,31 @@
 
 ## [v1.0.2](https://github.com/getlantern/systray/tree/v1.0.2) (2020-05-19)
 
-[Full Changelog](https://github.com/getlantern/systray/compare/1.0.1...v1.0.2)
+[Full Changelog](https://github.com/getlantern/systray/compare/v1.0.1...v1.0.2)
 
 **Merged pull requests:**
 
 - remove unused dependencies [\#145](https://github.com/getlantern/systray/pull/145) ([joesis](https://github.com/joesis))
 
-## [1.0.1](https://github.com/getlantern/systray/tree/1.0.1) (2020-05-18)
-
-[Full Changelog](https://github.com/getlantern/systray/compare/v1.0.1...1.0.1)
-
 ## [v1.0.1](https://github.com/getlantern/systray/tree/v1.0.1) (2020-05-18)
 
-[Full Changelog](https://github.com/getlantern/systray/compare/1.0.0...v1.0.1)
+[Full Changelog](https://github.com/getlantern/systray/compare/1.0.1...v1.0.1)
+
+## [1.0.1](https://github.com/getlantern/systray/tree/1.0.1) (2020-05-18)
+
+[Full Changelog](https://github.com/getlantern/systray/compare/v1.0.0...1.0.1)
 
 **Merged pull requests:**
 
 - Unlock menuItemsLock before changing UI [\#144](https://github.com/getlantern/systray/pull/144) ([joesis](https://github.com/joesis))
 
-## [1.0.0](https://github.com/getlantern/systray/tree/1.0.0) (2020-05-18)
-
-[Full Changelog](https://github.com/getlantern/systray/compare/v1.0.0...1.0.0)
-
 ## [v1.0.0](https://github.com/getlantern/systray/tree/v1.0.0) (2020-05-18)
 
-[Full Changelog](https://github.com/getlantern/systray/compare/v0.9.0...v1.0.0)
+[Full Changelog](https://github.com/getlantern/systray/compare/1.0.0...v1.0.0)
+
+## [1.0.0](https://github.com/getlantern/systray/tree/1.0.0) (2020-05-18)
+
+[Full Changelog](https://github.com/getlantern/systray/compare/v0.9.0...1.0.0)
 
 **Merged pull requests:**
 
@@ -96,7 +104,6 @@
 - Made onExit run reliably and process terminate on quit [\#28](https://github.com/getlantern/systray/pull/28) ([oxtoacart](https://github.com/oxtoacart))
 - Added support for windows 64. Added static builds of the dlls. [\#19](https://github.com/getlantern/systray/pull/19) ([luckcolors](https://github.com/luckcolors))
 - Updates from lantern [\#16](https://github.com/getlantern/systray/pull/16) ([oxtoacart](https://github.com/oxtoacart))
-- Fixes wrong return type in systray\_linux.c. [\#11](https://github.com/getlantern/systray/pull/11) ([vlow](https://github.com/vlow))
 
 
 
