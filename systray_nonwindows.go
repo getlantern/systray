@@ -15,6 +15,10 @@ import (
 	"unsafe"
 )
 
+func registerSystray() {
+	C.registerSystray()
+}
+
 func nativeLoop() {
 	C.nativeLoop()
 }
@@ -31,7 +35,7 @@ func quit() {
 // for other platforms.
 func SetIcon(iconBytes []byte) {
 	cstr := (*C.char)(unsafe.Pointer(&iconBytes[0]))
-	C.setIcon(cstr, (C.int)(len(iconBytes)))
+	C.setIcon(cstr, (C.int)(len(iconBytes)), false)
 }
 
 // SetTitle sets the systray title, only available on Mac.
@@ -54,8 +58,13 @@ func addOrUpdateMenuItem(item *MenuItem) {
 	if item.checked {
 		checked = 1
 	}
+	var parentID int32 = 0
+	if item.parent != nil {
+		parentID = item.parent.id
+	}
 	C.add_or_update_menu_item(
 		C.int(item.id),
+		C.int(parentID),
 		C.CString(item.title),
 		C.CString(item.tooltip),
 		disabled,
