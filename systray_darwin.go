@@ -24,7 +24,8 @@ func SetTemplateIcon(templateIconBytes []byte, regularIconBytes []byte) {
 // SetIcon sets the icon of a menu item. Only works on macOS and Windows.
 // iconBytes should be the content of .ico/.jpg/.png
 func (item *MenuItem) SetIcon(iconBytes []byte) {
-	item.SetTemplateIcon(iconBytes, iconBytes)
+	cstr := (*C.char)(unsafe.Pointer(&iconBytes[0]))
+	C.setMenuItemIcon(cstr, (C.int)(len(iconBytes)), C.int(item.id), false)
 }
 
 // SetTemplateIcon sets the icon of a menu item as a template icon (on macOS). On Windows, it
