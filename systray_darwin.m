@@ -121,6 +121,7 @@ withParentMenuId: (int)theParentMenuId
       theMenu = parentItem.submenu;
     } else {
       theMenu = [[NSMenu alloc] init];
+      [theMenu setAutoenablesItems:NO];
       [parentItem setSubmenu:theMenu];
     }
   }
