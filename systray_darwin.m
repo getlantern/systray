@@ -121,6 +121,7 @@ withParentMenuId: (int)theParentMenuId
       theMenu = parentItem.submenu;
     } else {
       theMenu = [[NSMenu alloc] init];
+      [theMenu setAutoenablesItems:NO];
       [parentItem setSubmenu:theMenu];
     }
   }
@@ -169,9 +170,19 @@ NSMenuItem *find_menu_item(NSMenu *ourMenu, NSNumber *menuId) {
   return NULL;
 };
 
-- (void) add_separator:(NSNumber*) menuId
+- (void) add_separator:(NSArray*) ids
 {
-  [menu addItem: [NSMenuItem separatorItem]];
+  // NSNumber* menuId = [ids objectAtIndex:0]; // I'm not sure why we need `menuId`
+  NSNumber* parentId = [ids objectAtIndex:1];
+  NSMenu *theMenu = self->menu;
+  NSMenuItem *parentItem;
+  if ([parentId integerValue] > 0) {
+    parentItem = find_menu_item(menu, parentId);
+    if (parentItem.hasSubmenu) {
+      theMenu = parentItem.submenu;
+    }
+  }
+  [theMenu addItem: [NSMenuItem separatorItem]];
 }
 
 - (void) hide_menu_item:(NSNumber*) menuId
@@ -272,9 +283,10 @@ void add_or_update_menu_item(int menuId, int parentMenuId, char* title, char* to
   runInMainThread(@selector(add_or_update_menu_item:), (id)item);
 }
 
-void add_separator(int menuId) {
+void add_separator(int menuId, int parentMenuId) {
   NSNumber *mId = [NSNumber numberWithInt:menuId];
-  runInMainThread(@selector(add_separator:), (id)mId);
+  NSNumber *pId = [NSNumber numberWithInt:parentMenuId];
+  runInMainThread(@selector(add_separator:), @[(id)mId, (id)pId]);
 }
 
 void hide_menu_item(int menuId) {

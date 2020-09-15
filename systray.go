@@ -119,7 +119,7 @@ func AddMenuItem(title string, tooltip string) *MenuItem {
 
 // AddSeparator adds a separator bar to the menu
 func AddSeparator() {
-	addSeparator(atomic.AddInt32(&currentID, 1))
+	addSeparator(atomic.AddInt32(&currentID, 1), 0)
 }
 
 // AddSubMenuItem adds a nested sub-menu item with the designated title and tooltip.
@@ -128,6 +128,11 @@ func (item *MenuItem) AddSubMenuItem(title string, tooltip string) *MenuItem {
 	child := newMenuItem(title, tooltip, item)
 	child.update()
 	return child
+}
+
+// AddSeparator adds a separator to the item menu
+func (item *MenuItem) AddSeparator() {
+	addSeparator(item.id, item.id)
 }
 
 // SetTitle set the text to display on a menu item

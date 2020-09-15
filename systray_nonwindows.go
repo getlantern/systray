@@ -69,8 +69,8 @@ func addOrUpdateMenuItem(item *MenuItem) {
 	)
 }
 
-func addSeparator(id int32) {
-	C.add_separator(C.int(id))
+func addSeparator(id int32, parentID int32) {
+	C.add_separator(C.int(id), C.int(parentID))
 }
 
 func hideMenuItem(item *MenuItem) {
