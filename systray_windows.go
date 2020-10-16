@@ -718,7 +718,7 @@ func (t *winTray) loadIconFrom(src string) (windows.Handle, error) {
 			IMAGE_ICON,
 			0,
 			0,
-			LR_LOADFROMFILE|LR_DEFAULTSIZE,
+			LR_LOADFROMFILE,
 		)
 		if res == 0 {
 			return 0, err
