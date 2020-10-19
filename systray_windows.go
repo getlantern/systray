@@ -263,7 +263,7 @@ func (t *winTray) wndProc(hWnd windows.Handle, message uint32, wParam, lParam ui
 		menuItemId := int32(wParam)
 		// https://docs.microsoft.com/en-us/windows/win32/menurc/wm-command#menus
 		if menuItemId != -1 {
-			systrayMenuItemSelected(menuItemId)
+			systrayMenuItemSelected(uint32(wParam))
 		}
 	case WM_CLOSE:
 		pDestroyWindow.Call(uintptr(t.window))
@@ -918,8 +918,8 @@ func (item *MenuItem) SetTemplateIcon(templateIconBytes []byte, regularIconBytes
 	item.SetIcon(regularIconBytes)
 }
 
-func addSeparator(id int32) {
-	err := wt.addSeparatorMenuItem(uint32(id), 0)
+func addSeparator(id uint32) {
+	err := wt.addSeparatorMenuItem(id, 0)
 	if err != nil {
 		log.Errorf("Unable to addSeparator: %v", err)
 		return

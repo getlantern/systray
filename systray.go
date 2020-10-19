@@ -17,10 +17,10 @@ var (
 
 	systrayReady  func()
 	systrayExit   func()
-	menuItems     = make(map[int32]*MenuItem)
+	menuItems     = make(map[uint32]*MenuItem)
 	menuItemsLock sync.RWMutex
 
-	currentID = int32(-1)
+	currentID = uint32(0)
 	quitOnce  sync.Once
 )
 
@@ -35,7 +35,7 @@ type MenuItem struct {
 	ClickedCh chan struct{}
 
 	// id uniquely identify a menu item, not supposed to be modified
-	id int32
+	id uint32
 	// title is the text shown on menu item
 	title string
 	// tooltip is the text shown when pointing to menu item
@@ -59,7 +59,7 @@ func (item *MenuItem) String() string {
 func newMenuItem(title string, tooltip string, parent *MenuItem) *MenuItem {
 	return &MenuItem{
 		ClickedCh: make(chan struct{}),
-		id:        atomic.AddInt32(&currentID, 1),
+		id:        atomic.AddUint32(&currentID, 1),
 		title:     title,
 		tooltip:   tooltip,
 		disabled:  false,
@@ -119,7 +119,7 @@ func AddMenuItem(title string, tooltip string) *MenuItem {
 
 // AddSeparator adds a separator bar to the menu
 func AddSeparator() {
-	addSeparator(atomic.AddInt32(&currentID, 1))
+	addSeparator(atomic.AddUint32(&currentID, 1))
 }
 
 // AddSubMenuItem adds a nested sub-menu item with the designated title and tooltip.
@@ -194,7 +194,7 @@ func (item *MenuItem) update() {
 	addOrUpdateMenuItem(item)
 }
 
-func systrayMenuItemSelected(id int32) {
+func systrayMenuItemSelected(id uint32) {
 	menuItemsLock.RLock()
 	item, ok := menuItems[id]
 	menuItemsLock.RUnlock()
