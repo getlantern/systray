@@ -1,5 +1,15 @@
 # Changelog
 
+## [v1.0.5](https://github.com/getlantern/systray/tree/v1.0.5) (2020-10-19)
+
+[Full Changelog](https://github.com/getlantern/systray/compare/v1.0.4...v1.0.5)
+
+**Merged pull requests:**
+
+- start menu ID with positive, and change the type to uint32 [\#173](https://github.com/getlantern/systray/pull/173) ([joesis](https://github.com/joesis))
+- Allows disabling items in submenu on macOS [\#172](https://github.com/getlantern/systray/pull/172) ([joesis](https://github.com/joesis))
+- Does not use the template icon for regular icons [\#171](https://github.com/getlantern/systray/pull/171) ([sithembiso](https://github.com/sithembiso))
+
 ## [v1.0.4](https://github.com/getlantern/systray/tree/v1.0.4) (2020-07-21)
 
 [Full Changelog](https://github.com/getlantern/systray/compare/1.0.3...v1.0.4)
@@ -23,44 +33,44 @@
 
 ## [v1.0.2](https://github.com/getlantern/systray/tree/v1.0.2) (2020-05-19)
 
-[Full Changelog](https://github.com/getlantern/systray/compare/v1.0.1...v1.0.2)
+[Full Changelog](https://github.com/getlantern/systray/compare/1.0.1...v1.0.2)
 
 **Merged pull requests:**
 
 - remove unused dependencies [\#145](https://github.com/getlantern/systray/pull/145) ([joesis](https://github.com/joesis))
 
-## [v1.0.1](https://github.com/getlantern/systray/tree/v1.0.1) (2020-05-18)
-
-[Full Changelog](https://github.com/getlantern/systray/compare/1.0.1...v1.0.1)
-
 ## [1.0.1](https://github.com/getlantern/systray/tree/1.0.1) (2020-05-18)
 
-[Full Changelog](https://github.com/getlantern/systray/compare/v1.0.0...1.0.1)
+[Full Changelog](https://github.com/getlantern/systray/compare/v1.0.1...1.0.1)
+
+## [v1.0.1](https://github.com/getlantern/systray/tree/v1.0.1) (2020-05-18)
+
+[Full Changelog](https://github.com/getlantern/systray/compare/1.0.0...v1.0.1)
 
 **Merged pull requests:**
 
 - Unlock menuItemsLock before changing UI [\#144](https://github.com/getlantern/systray/pull/144) ([joesis](https://github.com/joesis))
 
-## [v1.0.0](https://github.com/getlantern/systray/tree/v1.0.0) (2020-05-18)
-
-[Full Changelog](https://github.com/getlantern/systray/compare/1.0.0...v1.0.0)
-
 ## [1.0.0](https://github.com/getlantern/systray/tree/1.0.0) (2020-05-18)
 
-[Full Changelog](https://github.com/getlantern/systray/compare/v0.9.0...1.0.0)
+[Full Changelog](https://github.com/getlantern/systray/compare/v1.0.0...1.0.0)
+
+## [v1.0.0](https://github.com/getlantern/systray/tree/v1.0.0) (2020-05-18)
+
+[Full Changelog](https://github.com/getlantern/systray/compare/0.9.0...v1.0.0)
 
 **Merged pull requests:**
 
 - Backport all features and fixes from master [\#140](https://github.com/getlantern/systray/pull/140) ([joesis](https://github.com/joesis))
 - Check if the menu item is nil [\#137](https://github.com/getlantern/systray/pull/137) ([myleshorton](https://github.com/myleshorton))
 
-## [v0.9.0](https://github.com/getlantern/systray/tree/v0.9.0) (2020-03-24)
-
-[Full Changelog](https://github.com/getlantern/systray/compare/0.9.0...v0.9.0)
-
 ## [0.9.0](https://github.com/getlantern/systray/tree/0.9.0) (2020-03-24)
 
-[Full Changelog](https://github.com/getlantern/systray/compare/8e63b37ef27d94f6db79c4ffb941608e8f0dc2f9...0.9.0)
+[Full Changelog](https://github.com/getlantern/systray/compare/v0.9.0...0.9.0)
+
+## [v0.9.0](https://github.com/getlantern/systray/tree/v0.9.0) (2020-03-24)
+
+[Full Changelog](https://github.com/getlantern/systray/compare/8e63b37ef27d94f6db79c4ffb941608e8f0dc2f9...v0.9.0)
 
 **Merged pull requests:**
 
@@ -102,8 +112,6 @@
 - Add ability to show/hide menu items [\#31](https://github.com/getlantern/systray/pull/31) ([oxtoacart](https://github.com/oxtoacart))
 - Exit handling improvements [\#29](https://github.com/getlantern/systray/pull/29) ([oxtoacart](https://github.com/oxtoacart))
 - Made onExit run reliably and process terminate on quit [\#28](https://github.com/getlantern/systray/pull/28) ([oxtoacart](https://github.com/oxtoacart))
-- Added support for windows 64. Added static builds of the dlls. [\#19](https://github.com/getlantern/systray/pull/19) ([luckcolors](https://github.com/luckcolors))
-- Updates from lantern [\#16](https://github.com/getlantern/systray/pull/16) ([oxtoacart](https://github.com/oxtoacart))
 
 
 
