@@ -35,7 +35,7 @@ func SetIcon(iconBytes []byte) {
 	C.setIcon(cstr, (C.int)(len(iconBytes)), false)
 }
 
-// SetTitle sets the systray title, only available on Mac.
+// SetTitle sets the systray title, only available on Mac and Linux.
 func SetTitle(title string) {
 	C.setTitle(C.CString(title))
 }
