@@ -850,7 +850,7 @@ func SetTemplateIcon(templateIconBytes []byte, regularIconBytes []byte) {
 	SetIcon(regularIconBytes)
 }
 
-// SetTitle sets the systray title, only available on Mac.
+// SetTitle sets the systray title, only available on Mac and Linux.
 func SetTitle(title string) {
 	// do nothing
 }
