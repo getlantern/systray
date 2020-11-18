@@ -44,6 +44,8 @@ type MenuItem struct {
 	disabled bool
 	// checked menu item has a tick before the title
 	checked bool
+	// has the menu item a checkbox (Linux)
+	isCheckable bool
 	// parent item, for sub menus
 	parent *MenuItem
 }
@@ -58,13 +60,14 @@ func (item *MenuItem) String() string {
 // newMenuItem returns a populated MenuItem object
 func newMenuItem(title string, tooltip string, parent *MenuItem) *MenuItem {
 	return &MenuItem{
-		ClickedCh: make(chan struct{}),
-		id:        atomic.AddUint32(&currentID, 1),
-		title:     title,
-		tooltip:   tooltip,
-		disabled:  false,
-		checked:   false,
-		parent:    parent,
+		ClickedCh:   make(chan struct{}),
+		id:          atomic.AddUint32(&currentID, 1),
+		title:       title,
+		tooltip:     tooltip,
+		disabled:    false,
+		checked:     false,
+		isCheckable: false,
+		parent:      parent,
 	}
 }
 
@@ -109,10 +112,21 @@ func Quit() {
 }
 
 // AddMenuItem adds a menu item with the designated title and tooltip.
-//
 // It can be safely invoked from different goroutines.
+// Created menu items are checkable on Windows and OSX by default. For Linux you have to use AddMenuItemCheckbox
 func AddMenuItem(title string, tooltip string) *MenuItem {
 	item := newMenuItem(title, tooltip, nil)
+	item.update()
+	return item
+}
+
+// AddMenuItemCheckbox adds a menu item with the designated title and tooltip and a checkbox for Linux.
+// It can be safely invoked from different goroutines.
+// On Windows and OSX this is the same as calling AddMenuItem
+func AddMenuItemCheckbox(title string, tooltip string, checked bool) *MenuItem {
+	item := newMenuItem(title, tooltip, nil)
+	item.isCheckable = true
+	item.checked = checked
 	item.update()
 	return item
 }
@@ -124,8 +138,20 @@ func AddSeparator() {
 
 // AddSubMenuItem adds a nested sub-menu item with the designated title and tooltip.
 // It can be safely invoked from different goroutines.
+// Created menu items are checkable on Windows and OSX by default. For Linux you have to use AddSubMenuItemCheckbox
 func (item *MenuItem) AddSubMenuItem(title string, tooltip string) *MenuItem {
 	child := newMenuItem(title, tooltip, item)
+	child.update()
+	return child
+}
+
+// AddSubMenuItemCheckbox adds a nested sub-menu item with the designated title and tooltip and a checkbox for Linux.
+// It can be safely invoked from different goroutines.
+// On Windows and OSX this is the same as calling AddSubMenuItem
+func (item *MenuItem) AddSubMenuItemCheckbox(title string, tooltip string, checked bool) *MenuItem {
+	child := newMenuItem(title, tooltip, item)
+	child.isCheckable = true
+	child.checked = checked
 	child.update()
 	return child
 }

@@ -13,6 +13,7 @@ static char temp_file_name[PATH_MAX] = "";
 typedef struct {
 	GtkWidget *menu_item;
 	int menu_id;
+	long signalHandlerId;
 } MenuItemNode;
 
 typedef struct {
@@ -21,6 +22,7 @@ typedef struct {
 	char* tooltip;
 	short disabled;
 	short checked;
+	short isCheckable;
 } MenuItemInfo;
 
 void registerSystray(void) {
@@ -90,22 +92,43 @@ gboolean do_add_or_update_menu_item(gpointer data) {
 	GList* it;
 	for(it = global_menu_items; it != NULL; it = it->next) {
 		MenuItemNode* item = (MenuItemNode*)(it->data);
-		if(item->menu_id == mii->menu_id){
+		if(item->menu_id == mii->menu_id) {
 			gtk_menu_item_set_label(GTK_MENU_ITEM(item->menu_item), mii->title);
+
+			if (mii->isCheckable) {
+				// We need to block the "activate" event, to emulate the same behaviour as in the windows version
+				// A Check/Uncheck does change the checkbox, but does not trigger the checkbox menuItem channel
+				g_signal_handler_block(GTK_CHECK_MENU_ITEM(item->menu_item), item->signalHandlerId);
+				gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(item->menu_item), mii->checked == 1);
+				g_signal_handler_unblock(GTK_CHECK_MENU_ITEM(item->menu_item), item->signalHandlerId);
+			}
 			break;
 		}
 	}
 
 	// menu id doesn't exist, add new item
 	if(it == NULL) {
-		GtkWidget *menu_item = gtk_menu_item_new_with_label(mii->title);
+		GtkWidget *menu_item;
+		if (mii->isCheckable) {
+			menu_item = gtk_check_menu_item_new_with_label(mii->title);
+			gtk_check_menu_item_set_active(GTK_CHECK_MENU_ITEM(menu_item), mii->checked == 1);
+		} else {
+			menu_item = gtk_menu_item_new_with_label(mii->title);
+		}
 		int *id = malloc(sizeof(int));
 		*id = mii->menu_id;
-		g_signal_connect_swapped(G_OBJECT(menu_item), "activate", G_CALLBACK(_systray_menu_item_selected), id);
+		long signalHandlerId = g_signal_connect_swapped(
+			G_OBJECT(menu_item),
+			"activate",
+			G_CALLBACK(_systray_menu_item_selected),
+			id
+		);
+
 		gtk_menu_shell_append(GTK_MENU_SHELL(global_tray_menu), menu_item);
 
 		MenuItemNode* new_item = malloc(sizeof(MenuItemNode));
 		new_item->menu_id = mii->menu_id;
+		new_item->signalHandlerId = signalHandlerId;
 		new_item->menu_item = menu_item;
 		GList* new_node = malloc(sizeof(GList));
 		new_node->data = new_item;
@@ -187,7 +210,7 @@ void setTooltip(char* ctooltip) {
 void setMenuItemIcon(const char* iconBytes, int length, int menuId, bool template) {
 }
 
-void add_or_update_menu_item(int menu_id, int parent_menu_id, char* title, char* tooltip, short disabled, short checked) {
+void add_or_update_menu_item(int menu_id, int parent_menu_id, char* title, char* tooltip, short disabled, short checked, short isCheckable) {
 	// TODO: add support for sub-menus
 	MenuItemInfo *mii = malloc(sizeof(MenuItemInfo));
 	mii->menu_id = menu_id;
@@ -195,6 +218,7 @@ void add_or_update_menu_item(int menu_id, int parent_menu_id, char* title, char*
 	mii->tooltip = tooltip;
 	mii->disabled = disabled;
 	mii->checked = checked;
+	mii->isCheckable = isCheckable;
 	g_idle_add(do_add_or_update_menu_item, mii);
 }
 

@@ -266,7 +266,7 @@ void setTooltip(char* ctooltip) {
   runInMainThread(@selector(setTooltip:), (id)tooltip);
 }
 
-void add_or_update_menu_item(int menuId, int parentMenuId, char* title, char* tooltip, short disabled, short checked) {
+void add_or_update_menu_item(int menuId, int parentMenuId, char* title, char* tooltip, short disabled, short checked, short isCheckable) {
   MenuItem* item = [[MenuItem alloc] initWithId: menuId withParentMenuId: parentMenuId withTitle: title withTooltip: tooltip withDisabled: disabled withChecked: checked];
   free(title);
   free(tooltip);

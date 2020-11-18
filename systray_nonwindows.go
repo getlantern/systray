@@ -55,6 +55,10 @@ func addOrUpdateMenuItem(item *MenuItem) {
 	if item.checked {
 		checked = 1
 	}
+	var isCheckable C.short
+	if item.isCheckable {
+		isCheckable = 1
+	}
 	var parentID uint32 = 0
 	if item.parent != nil {
 		parentID = item.parent.id
@@ -66,6 +70,7 @@ func addOrUpdateMenuItem(item *MenuItem) {
 		C.CString(item.tooltip),
 		disabled,
 		checked,
+		isCheckable,
 	)
 }
 

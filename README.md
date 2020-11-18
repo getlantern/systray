@@ -78,7 +78,7 @@ On Linux Mint, `libxapp-dev` is also required .
 
 To build `webview_example`, you also need to install `libwebkit2gtk-4.0-dev` and remove `webview_example/rsrc.syso` which is required on Windows.
 
-* Submenu and checked menu items are not yet implemented
+* Submenu items are not yet implemented
 
 
 ### Windows
