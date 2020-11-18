@@ -18,6 +18,7 @@ typedef struct {
 
 typedef struct {
 	int menu_id;
+	int parent_menu_id;
 	char* title;
 	char* tooltip;
 	short disabled;
@@ -27,8 +28,7 @@ typedef struct {
 
 void registerSystray(void) {
 	gtk_init(0, NULL);
-	global_app_indicator = app_indicator_new("systray", "",
-			APP_INDICATOR_CATEGORY_APPLICATION_STATUS);
+	global_app_indicator = app_indicator_new("systray", "", APP_INDICATOR_CATEGORY_APPLICATION_STATUS);
 	app_indicator_set_status(global_app_indicator, APP_INDICATOR_STATUS_ACTIVE);
 	global_tray_menu = gtk_menu_new();
 	app_indicator_set_menu(global_app_indicator, GTK_MENU(global_tray_menu));
@@ -86,6 +86,17 @@ void _systray_menu_item_selected(int *id) {
 	systray_menu_item_selected(*id);
 }
 
+GtkMenuItem* find_menu_by_id(int id) {
+	GList* it;
+	for(it = global_menu_items; it != NULL; it = it->next) {
+		MenuItemNode* item = (MenuItemNode*)(it->data);
+		if(item->menu_id == id) {
+			return GTK_MENU_ITEM(item->menu_item);
+		}
+	}
+	return NULL;
+}
+
 // runs in main thread, should always return FALSE to prevent gtk to execute it again
 gboolean do_add_or_update_menu_item(gpointer data) {
 	MenuItemInfo *mii = (MenuItemInfo*)data;
@@ -124,7 +135,19 @@ gboolean do_add_or_update_menu_item(gpointer data) {
 			id
 		);
 
-		gtk_menu_shell_append(GTK_MENU_SHELL(global_tray_menu), menu_item);
+		if (mii->parent_menu_id == 0) {
+			gtk_menu_shell_append(GTK_MENU_SHELL(global_tray_menu), menu_item);
+		} else {
+			GtkMenuItem* parentMenuItem = find_menu_by_id(mii->parent_menu_id);
+			GtkWidget* parentMenu = gtk_menu_item_get_submenu(parentMenuItem);
+
+			if(parentMenu == NULL) {
+				parentMenu = gtk_menu_new();
+				gtk_menu_item_set_submenu(parentMenuItem, parentMenu);
+			}
+
+			gtk_menu_shell_append(GTK_MENU_SHELL(parentMenu), menu_item);
+		}
 
 		MenuItemNode* new_item = malloc(sizeof(MenuItemNode));
 		new_item->menu_id = mii->menu_id;
@@ -139,8 +162,8 @@ gboolean do_add_or_update_menu_item(gpointer data) {
 		global_menu_items = new_node;
 		it = new_node;
 	}
-	GtkWidget * menu_item = GTK_WIDGET(((MenuItemNode*)(it->data))->menu_item);
-	gtk_widget_set_sensitive(menu_item, mii->disabled == 1 ? FALSE : TRUE);
+	GtkWidget* menu_item = GTK_WIDGET(((MenuItemNode*)(it->data))->menu_item);
+	gtk_widget_set_sensitive(menu_item, mii->disabled != 1);
 	gtk_widget_show(menu_item);
 
 	free(mii->title);
@@ -211,9 +234,9 @@ void setMenuItemIcon(const char* iconBytes, int length, int menuId, bool templat
 }
 
 void add_or_update_menu_item(int menu_id, int parent_menu_id, char* title, char* tooltip, short disabled, short checked, short isCheckable) {
-	// TODO: add support for sub-menus
 	MenuItemInfo *mii = malloc(sizeof(MenuItemInfo));
 	mii->menu_id = menu_id;
+	mii->parent_menu_id = parent_menu_id;
 	mii->title = title;
 	mii->tooltip = tooltip;
 	mii->disabled = disabled;
