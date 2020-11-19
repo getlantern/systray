@@ -23,6 +23,9 @@ func nativeLoop() {
 	C.nativeLoop()
 }
 
+func showMenu() {
+}
+
 func quit() {
 	C.quit()
 }
