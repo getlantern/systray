@@ -36,13 +36,12 @@ var (
 	pCreatePopupMenu       = u32.NewProc("CreatePopupMenu")
 	pCreateWindowEx        = u32.NewProc("CreateWindowExW")
 	pDefWindowProc         = u32.NewProc("DefWindowProcW")
-	pDeleteMenu            = u32.NewProc("DeleteMenu")
+	pRemoveMenu            = u32.NewProc("RemoveMenu")
 	pDestroyWindow         = u32.NewProc("DestroyWindow")
 	pDispatchMessage       = u32.NewProc("DispatchMessageW")
 	pDrawIconEx            = u32.NewProc("DrawIconEx")
 	pGetCursorPos          = u32.NewProc("GetCursorPos")
 	pGetDC                 = u32.NewProc("GetDC")
-	pGetMenuItemID         = u32.NewProc("GetMenuItemID")
 	pGetMessage            = u32.NewProc("GetMessageW")
 	pGetSystemMetrics      = u32.NewProc("GetSystemMetrics")
 	pInsertMenuItem        = u32.NewProc("InsertMenuItemW")
@@ -557,6 +556,14 @@ func (t *winTray) addOrUpdateMenuItem(menuItemId uint32, parentId uint32, title 
 	}
 
 	if res == 0 {
+		// Menu item does not already exist, create it
+		t.muMenus.RLock()
+		submenu, exists := t.menus[menuItemId]
+		t.muMenus.RUnlock()
+		if exists {
+			mi.Mask |= MIIM_SUBMENU
+			mi.SubMenu = submenu
+		}
 		t.addToVisibleItems(parentId, menuItemId)
 		position := t.getVisibleItemIndex(parentId, menuItemId)
 		res, _, err = pInsertMenuItem.Call(
@@ -613,14 +620,14 @@ func (t *winTray) addSeparatorMenuItem(menuItemId, parentId uint32) error {
 }
 
 func (t *winTray) hideMenuItem(menuItemId, parentId uint32) error {
-	// https://msdn.microsoft.com/en-us/library/windows/desktop/ms647629(v=vs.85).aspx
+	// https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-removemenu
 	const MF_BYCOMMAND = 0x00000000
 	const ERROR_SUCCESS syscall.Errno = 0
 
 	t.muMenus.RLock()
 	menu := uintptr(t.menus[parentId])
 	t.muMenus.RUnlock()
-	res, _, err := pDeleteMenu.Call(
+	res, _, err := pRemoveMenu.Call(
 		menu,
 		uintptr(menuItemId),
 		MF_BYCOMMAND,
