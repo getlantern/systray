@@ -667,7 +667,7 @@ func (t *winTray) delFromVisibleItems(parent, val uint32) {
 	visibleItems := t.visibleItems[parent]
 	for i, itemval := range visibleItems {
 		if val == itemval {
-			visibleItems = append(visibleItems[:i], visibleItems[i+1:]...)
+			t.visibleItems[parent] = append(visibleItems[:i], visibleItems[i+1:]...)
 			break
 		}
 	}
