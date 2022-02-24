@@ -1,5 +1,17 @@
 # Changelog
 
+## [v1.2.0](https://github.com/getlantern/systray/tree/v1.2.0) (2022-02-24)
+
+[Full Changelog](https://github.com/getlantern/systray/compare/v1.1.0...v1.2.0)
+
+** Merged pull requests:**
+
+- On Linux, set the title in addition to the label [\#200](https://github.com/getlantern/systray/pull/200) ([cocotyty](https://github.com/cocotyty))
+- Fix hiding/showing items with submenus on Windows [\#204](https://github.com/getlantern/systray/pull/204) ([simonlindholm](https://github.com/simonlindholm))
+- Fix delFromVisibleItems [\#205](https://github.com/getlantern/systray/pull/205) ([simonlindholm](https://github.com/simonlindholm))
+- Create menu before calling onReady on Windows [\#206](https://github.com/getlantern/systray/pull/206) ([simonlindholm](https://github.com/simonlindholm))
+- Support libayatana-appindicator on Linux [\#225](https://github.com/getlantern/systray/pull/225) ([Crosse](https://github.com/Crosse))
+
 ## [v1.1.0](https://github.com/getlantern/systray/tree/v1.1.0) (2020-11-18)
 
 [Full Changelog](https://github.com/getlantern/systray/compare/v1.0.5...v1.1.0)
