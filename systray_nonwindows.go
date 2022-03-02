@@ -1,14 +1,9 @@
 // +build !windows
+// go:build !windows
 
 package systray
 
-/*
-#cgo linux pkg-config: gtk+-3.0 appindicator3-0.1
-#cgo darwin CFLAGS: -DDARWIN -x objective-c -fobjc-arc
-#cgo darwin LDFLAGS: -framework Cocoa
-
-#include "systray.h"
-*/
+// #include "systray.h"
 import "C"
 
 import (
