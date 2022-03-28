@@ -82,7 +82,7 @@ If you need to support the older `libappindicator3` library instead, you can pas
 when building. For example:
 
 ```
-go build -tags=legacy_appindicator`
+go build -tags=legacy_appindicator
 ```
 
 To build `webview_example`, you also need to install `libwebkit2gtk-4.0-dev` and remove `webview_example/rsrc.syso` which is required on Windows.
