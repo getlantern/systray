@@ -16,7 +16,7 @@ func main() {
 		ioutil.WriteFile(fmt.Sprintf(`on_exit_%d.txt`, now.UnixNano()), []byte(now.String()), 0644)
 	}
 
-	systray.Run(onReady, onExit)
+	systray.Run(onReady, onExit, nil, nil)
 }
 
 func onReady() {

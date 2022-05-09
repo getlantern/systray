@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	systray.Register(onReady, nil)
+	systray.Register(onReady, nil, nil, nil)
 	configureWebview("Webview example", 1024, 768)
 }
 
