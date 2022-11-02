@@ -488,6 +488,29 @@ func (t *winTray) convertToSubMenu(menuItemId uint32) (windows.Handle, error) {
 	return menu, nil
 }
 
+func (t *winTray) dropSubMenu(menuItemId uint32) error {
+	const MIIM_SUBMENU = 0x00000004
+
+	mi := menuItemInfo{Mask: MIIM_SUBMENU, SubMenu: 0}
+	mi.Size = uint32(unsafe.Sizeof(mi))
+	t.muMenuOf.RLock()
+	hMenu := t.menuOf[menuItemId]
+	t.muMenuOf.RUnlock()
+	res, _, err := pSetMenuItemInfo.Call(
+		uintptr(hMenu),
+		uintptr(menuItemId),
+		0,
+		uintptr(unsafe.Pointer(&mi)),
+	)
+	if res == 0 {
+		return err
+	}
+	t.muMenus.Lock()
+	delete(t.menus, menuItemId)
+	t.muMenus.Unlock()
+	return nil
+}
+
 func (t *winTray) addOrUpdateMenuItem(menuItemId uint32, parentId uint32, title string, disabled, checked bool) error {
 	// https://msdn.microsoft.com/en-us/library/windows/desktop/ms647578(v=vs.85).aspx
 	const (
@@ -570,7 +593,7 @@ func (t *winTray) addOrUpdateMenuItem(menuItemId uint32, parentId uint32, title 
 			uintptr(unsafe.Pointer(&mi)),
 		)
 		if res == 0 {
-			t.delFromVisibleItems(parentId, menuItemId)
+			_ = t.delFromVisibleItems(parentId, menuItemId)
 			return err
 		}
 		t.muMenuOf.Lock()
@@ -632,9 +655,7 @@ func (t *winTray) hideMenuItem(menuItemId, parentId uint32) error {
 	if res == 0 && err.(syscall.Errno) != ERROR_SUCCESS {
 		return err
 	}
-	t.delFromVisibleItems(parentId, menuItemId)
-
-	return nil
+	return t.delFromVisibleItems(parentId, menuItemId)
 }
 
 func (t *winTray) showMenu() error {
@@ -665,7 +686,7 @@ func (t *winTray) showMenu() error {
 	return nil
 }
 
-func (t *winTray) delFromVisibleItems(parent, val uint32) {
+func (t *winTray) delFromVisibleItems(parent, val uint32) error {
 	t.muVisibleItems.Lock()
 	defer t.muVisibleItems.Unlock()
 	visibleItems := t.visibleItems[parent]
@@ -675,6 +696,10 @@ func (t *winTray) delFromVisibleItems(parent, val uint32) {
 			break
 		}
 	}
+	if parent != 0 && len(t.visibleItems[parent]) == 0 {
+		return t.dropSubMenu(parent)
+	}
+	return nil
 }
 
 func (t *winTray) addToVisibleItems(parent, val uint32) {
