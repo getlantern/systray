@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 package systray
@@ -277,8 +278,14 @@ func (t *winTray) wndProc(hWnd windows.Handle, message uint32, wParam, lParam ui
 		systrayExit()
 	case t.wmSystrayMessage:
 		switch lParam {
-		case WM_RBUTTONUP, WM_LBUTTONUP:
-			t.showMenu()
+		case WM_LBUTTONUP:
+			systrayLClick(func() error {
+				return t.showMenu()
+			})
+		case WM_RBUTTONUP:
+			systrayRClick(func() error {
+				return t.showMenu()
+			})
 		}
 	case t.wmTaskbarCreated: // on explorer.exe restarts
 		t.muNID.Lock()

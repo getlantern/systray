@@ -128,5 +128,15 @@ func TestWindowsRun(t *testing.T) {
 		t.Log("Exit success")
 	}
 
-	Run(onReady, onExit)
+	onLClick := func(showMenu func()(error)) {
+		t.Log("Mouse Left clicked")
+		_ = showMenu()
+	}
+
+	onRClick := func(showMenu func()(error)) {
+		t.Log("Mouse Right clicked")
+		_ = showMenu()
+	}
+
+	Run(onReady, onExit, onLClick, onRClick)
 }
