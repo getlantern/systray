@@ -1,4 +1,6 @@
+//go:build !windows
 // +build !windows
+
 // go:build !windows
 
 package systray
@@ -75,6 +77,12 @@ func addSeparator(id uint32) {
 
 func hideMenuItem(item *MenuItem) {
 	C.hide_menu_item(
+		C.int(item.id),
+	)
+}
+
+func deleteMenuItem(item *MenuItem) {
+	C.delete_menu_item(
 		C.int(item.id),
 	)
 }

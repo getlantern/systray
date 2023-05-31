@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 package systray
@@ -635,6 +636,10 @@ func (t *winTray) hideMenuItem(menuItemId, parentId uint32) error {
 	t.delFromVisibleItems(parentId, menuItemId)
 
 	return nil
+}
+
+func (t *winTray) deleteMenuItem(menuItemId, parentId uint32) error {
+	return hideMenuItem(menuItemId, parentId)
 }
 
 func (t *winTray) showMenu() error {

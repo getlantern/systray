@@ -52,6 +52,21 @@ func onReady() {
 		mUrl := systray.AddMenuItem("Open UI", "my home")
 		mQuit := systray.AddMenuItem("退出", "Quit the whole app")
 
+		mDelete := systray.AddMenuItem("Delete", "Delete itself")
+		delete := func() {
+			mDelete.RemoveSelf()
+		}
+
+		mDeleteChildren := systray.AddMenuItem("Delete Children", "Delete Children")
+		mChildren := systray.AddMenuItem("Children to be Deleted", "Children to be Deleted")
+		mChildren.AddSubMenuItem("Child 1", "Child 1")
+		child2 := mChildren.AddSubMenuItem("Child 2", "Child 2")
+		child2.AddSubMenuItem("Grandson 1", "Grandson 1")
+		child2.AddSubMenuItem("Grandson 2", "Grandson 2")
+		deleteChildren := func() {
+			mChildren.RemoveChildren()
+		}
+
 		// Sets the icon of a menu item. Only available on Mac.
 		mQuit.SetIcon(icon.Data)
 
@@ -97,6 +112,10 @@ func onReady() {
 				toggle()
 			case <-mToggle.ClickedCh:
 				toggle()
+			case <-mDelete.ClickedCh:
+				delete()
+			case <-mDeleteChildren.ClickedCh:
+				deleteChildren()
 			case <-mQuit.ClickedCh:
 				systray.Quit()
 				fmt.Println("Quit2 now...")
