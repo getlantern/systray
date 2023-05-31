@@ -48,6 +48,29 @@ type MenuItem struct {
 	isCheckable bool
 	// parent item, for sub menus
 	parent *MenuItem
+	//
+	children []*MenuItem
+}
+
+// GetChildren returns children of a MenuItem
+func (item *MenuItem) GetChildren() []*MenuItem {
+	return item.children
+}
+
+// RemoveSelf removes itself and its children recursively
+func (item *MenuItem) RemoveSelf() {
+	if len(item.children) > 0 {
+		item.RemoveChildren()
+	}
+	item.parent = nil
+	deleteMenuItem(item)
+}
+
+// RemoveChildren removes its children
+func (item *MenuItem) RemoveChildren() {
+	for _, cada := range item.children {
+		cada.RemoveSelf()
+	}
 }
 
 func (item *MenuItem) String() string {
@@ -58,8 +81,8 @@ func (item *MenuItem) String() string {
 }
 
 // newMenuItem returns a populated MenuItem object
-func newMenuItem(title string, tooltip string, parent *MenuItem) *MenuItem {
-	return &MenuItem{
+func newMenuItem(title string, tooltip string, parent *MenuItem) (item *MenuItem) {
+	item = &MenuItem{
 		ClickedCh:   make(chan struct{}),
 		id:          atomic.AddUint32(&currentID, 1),
 		title:       title,
@@ -68,7 +91,28 @@ func newMenuItem(title string, tooltip string, parent *MenuItem) *MenuItem {
 		checked:     false,
 		isCheckable: false,
 		parent:      parent,
+		children:    []*MenuItem{},
 	}
+	if parent != nil {
+		item.parent.children = append(item.parent.children, item)
+	}
+	return
+}
+
+// copyMenuItem returns a rehydrate MenuItem object
+func copyMenuItem(old *MenuItem) (copy *MenuItem) {
+	copy = &MenuItem{
+		ClickedCh:   old.ClickedCh,
+		id:          old.id,
+		title:       old.title,
+		tooltip:     old.tooltip,
+		disabled:    old.disabled,
+		checked:     old.checked,
+		isCheckable: old.isCheckable,
+		parent:      old.parent,
+		children:    old.children,
+	}
+	return
 }
 
 // Run initializes GUI and starts the event loop, then invokes the onReady

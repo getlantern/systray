@@ -186,6 +186,21 @@ gboolean do_add_separator(gpointer data) {
 }
 
 // runs in main thread, should always return FALSE to prevent gtk to execute it again
+gboolean do_delete_menu_item(gpointer data) {
+	MenuItemInfo *mii = (MenuItemInfo*)data;
+	GList* it;
+	for(it = global_menu_items; it != NULL; it = it->next) {
+		MenuItemNode* item = (MenuItemNode*)(it->data);
+		if(item->menu_id == mii->menu_id){
+			gtk_widget_destroy(GTK_WIDGET(item->menu_item));
+			// TODO: Tape up holes
+			break;
+		}
+	}
+	return FALSE;
+}
+
+// runs in main thread, should always return FALSE to prevent gtk to execute it again
 gboolean do_hide_menu_item(gpointer data) {
 	MenuItemInfo *mii = (MenuItemInfo*)data;
 	GList* it;
@@ -259,6 +274,12 @@ void add_separator(int menu_id) {
 }
 
 void hide_menu_item(int menu_id) {
+	MenuItemInfo *mii = malloc(sizeof(MenuItemInfo));
+	mii->menu_id = menu_id;
+	g_idle_add(do_hide_menu_item, mii);
+}
+
+void delete_menu_item(int menu_id) {
 	MenuItemInfo *mii = malloc(sizeof(MenuItemInfo));
 	mii->menu_id = menu_id;
 	g_idle_add(do_hide_menu_item, mii);
