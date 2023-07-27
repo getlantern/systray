@@ -5,8 +5,8 @@ import (
 	"io/ioutil"
 	"time"
 
-	"github.com/getlantern/systray"
-	"github.com/getlantern/systray/example/icon"
+	"github.com/PaiGack/systray"
+	"github.com/PaiGack/systray/example/icon"
 	"github.com/skratchdot/open-golang/open"
 )
 
@@ -59,6 +59,7 @@ func onReady() {
 		mToggle := systray.AddMenuItem("Toggle", "Toggle the Quit button")
 		shown := true
 		toggle := func() {
+			systray.ShowMessage("toggle", "toggle")
 			if shown {
 				subMenuBottom.Check()
 				subMenuBottom2.Hide()

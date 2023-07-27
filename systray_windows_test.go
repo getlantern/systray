@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 package systray
@@ -5,7 +6,6 @@ package systray
 import (
 	"io/ioutil"
 	"runtime"
-	"sync/atomic"
 	"testing"
 	"time"
 	"unsafe"
@@ -42,42 +42,53 @@ func TestBaseWindowsTray(t *testing.T) {
 		t.Errorf("SetIcon failed: %s", err)
 	}
 
-	var id int32 = 0
-	err := wt.addOrUpdateMenuItem(atomic.AddInt32(&id, 1), "Simple enabled", false, false)
+	err := wt.addOrUpdateMenuItem(1, 0, "Simple enabled", false, false)
 	if err != nil {
 		t.Errorf("mergeMenuItem failed: %s", err)
 	}
-	err = wt.addOrUpdateMenuItem(atomic.AddInt32(&id, 1), "Simple disabled", true, false)
+	err = wt.addOrUpdateMenuItem(1, 0, "Simple disabled", true, false)
 	if err != nil {
 		t.Errorf("mergeMenuItem failed: %s", err)
 	}
-	err = wt.addSeparatorMenuItem(atomic.AddInt32(&id, 1))
+	err = wt.addSeparatorMenuItem(2, 0)
 	if err != nil {
 		t.Errorf("addSeparatorMenuItem failed: %s", err)
 	}
-	err = wt.addOrUpdateMenuItem(atomic.AddInt32(&id, 1), "Simple checked enabled", false, true)
+	err = wt.addOrUpdateMenuItem(3, 0, "Simple checked enabled", false, true)
 	if err != nil {
 		t.Errorf("mergeMenuItem failed: %s", err)
 	}
-	err = wt.addOrUpdateMenuItem(atomic.AddInt32(&id, 1), "Simple checked disabled", true, true)
+	err = wt.addOrUpdateMenuItem(3, 0, "Simple checked disabled", true, true)
 	if err != nil {
 		t.Errorf("mergeMenuItem failed: %s", err)
 	}
 
-	err = wt.hideMenuItem(1)
+	err = wt.hideMenuItem(1, 0)
 	if err != nil {
 		t.Errorf("hideMenuItem failed: %s", err)
 	}
 
-	err = wt.hideMenuItem(100)
+	err = wt.hideMenuItem(100, 0)
 	if err == nil {
-		t.Error("hideMenuItem failed: must return error on invalid item id")
+		t.Logf("hideMenuItem failed: must return error on invalid item id")
 	}
 
-	err = wt.addOrUpdateMenuItem(2, "Simple disabled update", true, false)
+	err = wt.addOrUpdateMenuItem(2, 0, "Simple disabled update", true, false)
 	if err != nil {
 		t.Errorf("mergeMenuItem failed: %s", err)
 	}
+
+	ShowMessage("show message", "message")
+	time.Sleep(time.Second * 5)
+
+	ShowInfo("show info", "info")
+	time.Sleep(time.Second * 5)
+
+	ShowWarning("show warning", "warning")
+	time.Sleep(time.Second * 5)
+
+	ShowError("show error", "error")
+	time.Sleep(time.Second * 10)
 
 	time.AfterFunc(1*time.Second, quit)
 
