@@ -50,15 +50,15 @@ func TestBaseWindowsTray(t *testing.T) {
 	if err != nil {
 		t.Errorf("mergeMenuItem failed: %s", err)
 	}
-	err = wt.addSeparatorMenuItem(1, 0)
+	err = wt.addSeparatorMenuItem(2, 0)
 	if err != nil {
 		t.Errorf("addSeparatorMenuItem failed: %s", err)
 	}
-	err = wt.addOrUpdateMenuItem(1, 0, "Simple checked enabled", false, true)
+	err = wt.addOrUpdateMenuItem(3, 0, "Simple checked enabled", false, true)
 	if err != nil {
 		t.Errorf("mergeMenuItem failed: %s", err)
 	}
-	err = wt.addOrUpdateMenuItem(1, 0, "Simple checked disabled", true, true)
+	err = wt.addOrUpdateMenuItem(3, 0, "Simple checked disabled", true, true)
 	if err != nil {
 		t.Errorf("mergeMenuItem failed: %s", err)
 	}
@@ -78,7 +78,19 @@ func TestBaseWindowsTray(t *testing.T) {
 		t.Errorf("mergeMenuItem failed: %s", err)
 	}
 
-	time.AfterFunc(10*time.Second, quit)
+	ShowMessage("show message", "message")
+	time.Sleep(time.Second * 5)
+
+	ShowInfo("show info", "info")
+	time.Sleep(time.Second * 5)
+
+	ShowWarning("show warning", "warning")
+	time.Sleep(time.Second * 5)
+
+	ShowError("show error", "error")
+	time.Sleep(time.Second * 10)
+
+	time.AfterFunc(1*time.Second, quit)
 
 	m := struct {
 		WindowHandle windows.Handle

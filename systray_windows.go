@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 package systray
@@ -5,6 +6,7 @@ package systray
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -13,6 +15,7 @@ import (
 	"syscall"
 	"unsafe"
 
+	"github.com/lxn/win"
 	"golang.org/x/sys/windows"
 )
 
@@ -941,4 +944,47 @@ func hideMenuItem(item *MenuItem) {
 
 func showMenuItem(item *MenuItem) {
 	addOrUpdateMenuItem(item)
+}
+
+func showMessage(title, info string, iconType uint32) error {
+	nid := &win.NOTIFYICONDATA{
+		UID:  wt.nid.ID,
+		HWnd: win.HWND(wt.window),
+	}
+	nid.CbSize = uint32(unsafe.Sizeof(*nid) - unsafe.Sizeof(win.HICON(0)))
+
+	nid.UFlags = win.NIF_INFO
+	nid.DwInfoFlags = iconType
+
+	if title16, err := syscall.UTF16FromString(title); err == nil {
+		copy(nid.SzInfoTitle[:], title16)
+	}
+	if info16, err := syscall.UTF16FromString(info); err == nil {
+		copy(nid.SzInfo[:], info16)
+	}
+	if !win.Shell_NotifyIcon(win.NIM_MODIFY, nid) {
+		return fmt.Errorf("Shell_NotifyIcon")
+	}
+
+	return nil
+}
+
+// ShowMessage displays a neutral message balloon above the NotifyIcon.
+func ShowMessage(title, info string) error {
+	return showMessage(title, info, win.NIIF_NONE)
+}
+
+// ShowInfo displays an info message balloon above the NotifyIcon.
+func ShowInfo(title, info string) error {
+	return showMessage(title, info, win.NIIF_INFO)
+}
+
+// ShowWarning displays a warning message balloon above the NotifyIcon.
+func ShowWarning(title, info string) error {
+	return showMessage(title, info, win.NIIF_WARNING)
+}
+
+// ShowError displays an error message balloon above the NotifyIcon.
+func ShowError(title, info string) error {
+	return showMessage(title, info, win.NIIF_ERROR)
 }
