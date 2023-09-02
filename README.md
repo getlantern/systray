@@ -38,7 +38,7 @@ Have go v1.12+ or higher installed? Here's an example to get started on macOS:
 
 ```sh
 git clone https://github.com/getlantern/systray
-cd example
+cd systray/example
 env GO111MODULE=on go build
 ./example
 ```
