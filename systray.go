@@ -71,8 +71,8 @@ func newMenuItem(title string, tooltip string, parent *MenuItem) *MenuItem {
 	}
 }
 
-// Run initializes GUI and starts the event loop, then invokes the onReady
-// callback. It blocks until systray.Quit() is called.
+// Run initializes GUI and starts the event loop, then invokes the onReady callback. It blocks until
+// systray.Quit() is called. It must be run from the main thread on macOS.
 func Run(onReady func(), onExit func()) {
 	Register(onReady, onExit)
 	nativeLoop()
@@ -106,7 +106,7 @@ func Register(onReady func(), onExit func()) {
 	registerSystray()
 }
 
-// Quit the systray
+// Quit the systray. This can be called from any goroutine.
 func Quit() {
 	quitOnce.Do(quit)
 }

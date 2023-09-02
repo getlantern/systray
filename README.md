@@ -1,10 +1,12 @@
+# systray
+
 systray is a cross-platform Go library to place an icon and menu in the notification area.
 
 ## Features
 
 * Supported on Windows, macOS, and Linux
 * Menu items can be checked and/or disabled
-* Methods may be called from any Goroutine
+* Most functions may be called from any goroutine
 
 ## API
 
@@ -47,15 +49,6 @@ On Windows, you should build like this:
 
 ```
 env GO111MODULE=on go build -ldflags "-H=windowsgui"
-```
-
-The following text will then appear on the console:
-
-
-```sh
-go: finding github.com/skratchdot/open-golang latest
-go: finding github.com/getlantern/systray latest
-go: finding github.com/getlantern/golog latest
 ```
 
 Now look for *Awesome App* in your menu bar!
