@@ -36,3 +36,9 @@ func (item *MenuItem) SetTemplateIcon(templateIconBytes []byte, regularIconBytes
 	cstr := (*C.char)(unsafe.Pointer(&templateIconBytes[0]))
 	C.setMenuItemIcon(cstr, (C.int)(len(templateIconBytes)), C.int(item.id), true)
 }
+
+// SetRemovalAllowed sets whether a user can remove the systray icon or not.
+// This is only supported on macOS.
+func SetRemovalAllowed(allowed bool) {
+	C.setRemovalAllowed((C.bool)(allowed))
+}

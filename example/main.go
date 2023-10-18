@@ -37,6 +37,7 @@ func onReady() {
 		systray.SetTitle("Awesome App")
 		systray.SetTooltip("Pretty awesome棒棒嗒")
 		mChange := systray.AddMenuItem("Change Me", "Change Me")
+		mAllowRemoval := systray.AddMenuItem("Allow removal", "macOS only: allow removal of the icon when cmd is pressed")
 		mChecked := systray.AddMenuItemCheckbox("Unchecked", "Check Me", true)
 		mEnabled := systray.AddMenuItem("Enabled", "Enabled")
 		// Sets the icon of a menu item. Only available on Mac.
@@ -78,6 +79,8 @@ func onReady() {
 			select {
 			case <-mChange.ClickedCh:
 				mChange.SetTitle("I've Changed")
+			case <-mAllowRemoval.ClickedCh:
+				systray.SetRemovalAllowed(true)
 			case <-mChecked.ClickedCh:
 				if mChecked.Checked() {
 					mChecked.Uncheck()

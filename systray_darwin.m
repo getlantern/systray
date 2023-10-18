@@ -71,12 +71,27 @@ withParentMenuId: (int)theParentMenuId
   self->menu = [[NSMenu alloc] init];
   [self->menu setAutoenablesItems: FALSE];
   [self->statusItem setMenu:self->menu];
+  // Once the user has removed it, the item needs to be explicitly brought back,
+  // even restarting the application is insufficient.
+  // Since the interface from Go is relatively simple, for now we ensure it's always
+  // visible at application startup.
+  self->statusItem.visible = TRUE;
   systray_ready();
 }
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification
 {
   systray_on_exit();
+}
+
+- (void)setRemovalAllowed:(BOOL)allowed {
+  NSStatusItemBehavior behavior = [self->statusItem behavior];
+  if (allowed) {
+    behavior |= NSStatusItemBehaviorRemovalAllowed;
+  } else {
+    behavior &= ~NSStatusItemBehaviorRemovalAllowed;
+  }
+  self->statusItem.behavior = behavior;
 }
 
 - (void)setIcon:(NSImage *)image {
@@ -264,6 +279,12 @@ void setTooltip(char* ctooltip) {
                                                encoding:NSUTF8StringEncoding];
   free(ctooltip);
   runInMainThread(@selector(setTooltip:), (id)tooltip);
+}
+
+void setRemovalAllowed(bool allowed) {
+  // must use an object wrapper for the bool, to use with performSelectorOnMainThread:
+  NSNumber *allow = [NSNumber numberWithBool:(BOOL)allowed];
+  runInMainThread(@selector(setRemovalAllowed:), (id)allow);
 }
 
 void add_or_update_menu_item(int menuId, int parentMenuId, char* title, char* tooltip, short disabled, short checked, short isCheckable) {

@@ -116,6 +116,11 @@ When running as an app bundle, you may want to add one or both of the following 
 
 Consult the [Official Apple Documentation here](https://developer.apple.com/library/archive/documentation/CoreFoundation/Conceptual/CFBundles/BundleTypes/BundleTypes.html#//apple_ref/doc/uid/10000123i-CH101-SW1).
 
+On macOS, it's possible to set the underlying
+[`NSStatusItemBehavior`](https://developer.apple.com/documentation/appkit/nsstatusitembehavior?language=objc)
+with `systray.SetRemovalAllowed(true)`. When enabled, the user can cmd-drag the
+icon off the menu bar.
+
 ## Credits
 
 - https://github.com/xilp/systray
