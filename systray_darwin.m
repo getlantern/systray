@@ -252,10 +252,12 @@ void runInMainThread(SEL method, id object) {
 
 void setIcon(const char* iconBytes, int length, bool template) {
   NSData* buffer = [NSData dataWithBytes: iconBytes length:length];
-  NSImage *image = [[NSImage alloc] initWithData:buffer];
-  [image setSize:NSMakeSize(16, 16)];
-  image.template = template;
-  runInMainThread(@selector(setIcon:), (id)image);
+  @autoreleasepool {
+     NSImage *image = [[NSImage alloc] initWithData:buffer];
+     [image setSize:NSMakeSize(16, 16)];
+     image.template = template;
+     runInMainThread(@selector(setIcon:), (id)image);
+  }
 }
 
 void setMenuItemIcon(const char* iconBytes, int length, int menuId, bool template) {

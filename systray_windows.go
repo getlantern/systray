@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 package systray
@@ -22,6 +23,7 @@ var (
 	g32                     = windows.NewLazySystemDLL("Gdi32.dll")
 	pCreateCompatibleBitmap = g32.NewProc("CreateCompatibleBitmap")
 	pCreateCompatibleDC     = g32.NewProc("CreateCompatibleDC")
+	pCreateDIBSection       = g32.NewProc("CreateDIBSection")
 	pDeleteDC               = g32.NewProc("DeleteDC")
 	pSelectObject           = g32.NewProc("SelectObject")
 
@@ -170,6 +172,30 @@ type menuItemInfo struct {
 // https://msdn.microsoft.com/en-us/library/windows/desktop/dd162805(v=vs.85).aspx
 type point struct {
 	X, Y int32
+}
+
+// The BITMAPINFO structure defines the dimensions and color information for a DIB.
+// https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-bitmapinfo
+type bitmapInfo struct {
+	BmiHeader bitmapInfoHeader
+	BmiColors windows.Handle
+}
+
+// The BITMAPINFOHEADER structure contains information about the dimensions and color format of a device-independent bitmap (DIB).
+// https://learn.microsoft.com/en-us/previous-versions/dd183376(v=vs.85)
+// https://learn.microsoft.com/en-us/windows/win32/api/wingdi/ns-wingdi-bitmapinfoheader
+type bitmapInfoHeader struct {
+	BiSize          uint32
+	BiWidth         int32
+	BiHeight        int32
+	BiPlanes        uint16
+	BiBitCount      uint16
+	BiCompression   uint32
+	BiSizeImage     uint32
+	BiXPelsPerMeter int32
+	BiYPelsPerMeter int32
+	BiClrUsed       uint32
+	BiClrImportant  uint32
 }
 
 // Contains information about loaded resources
@@ -735,7 +761,7 @@ func (t *winTray) loadIconFrom(src string) (windows.Handle, error) {
 	return h, nil
 }
 
-func (t *winTray) iconToBitmap(hIcon windows.Handle) (windows.Handle, error) {
+func iconToBitmap(hIcon windows.Handle) (windows.Handle, error) {
 	const SM_CXSMICON = 49
 	const SM_CYSMICON = 50
 	const DI_NORMAL = 0x3
@@ -751,10 +777,7 @@ func (t *winTray) iconToBitmap(hIcon windows.Handle) (windows.Handle, error) {
 	defer pDeleteDC.Call(hMemDC)
 	cx, _, _ := pGetSystemMetrics.Call(SM_CXSMICON)
 	cy, _, _ := pGetSystemMetrics.Call(SM_CYSMICON)
-	hMemBmp, _, err := pCreateCompatibleBitmap.Call(hDC, cx, cy)
-	if hMemBmp == 0 {
-		return 0, err
-	}
+	hMemBmp, err := create32BitHBitmap(hMemDC, int32(cx), int32(cy))
 	hOriginalBmp, _, _ := pSelectObject.Call(hMemDC, hMemBmp)
 	defer pSelectObject.Call(hMemDC, hOriginalBmp)
 	res, _, err := pDrawIconEx.Call(hMemDC, 0, 0, uintptr(hIcon), cx, cy, 0, uintptr(0), DI_NORMAL)
@@ -762,6 +785,35 @@ func (t *winTray) iconToBitmap(hIcon windows.Handle) (windows.Handle, error) {
 		return 0, err
 	}
 	return windows.Handle(hMemBmp), nil
+}
+
+// https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-createdibsection
+func create32BitHBitmap(hDC uintptr, cx, cy int32) (uintptr, error) {
+	const BI_RGB uint32 = 0
+	const DIB_RGB_COLORS = 0
+	bmi := bitmapInfo{
+		BmiHeader: bitmapInfoHeader{
+			BiPlanes:      1,
+			BiCompression: BI_RGB,
+			BiWidth:       cx,
+			BiHeight:      cy,
+			BiBitCount:    32,
+		},
+	}
+	bmi.BmiHeader.BiSize = uint32(unsafe.Sizeof(bmi.BmiHeader))
+	var bits uintptr
+	hBitmap, _, err := pCreateDIBSection.Call(
+		hDC,
+		uintptr(unsafe.Pointer(&bmi)),
+		DIB_RGB_COLORS,
+		uintptr(unsafe.Pointer(&bits)),
+		uintptr(0),
+		0,
+	)
+	if hBitmap == 0 {
+		return 0, err
+	}
+	return hBitmap, nil
 }
 
 func registerSystray() {
@@ -882,7 +934,7 @@ func (item *MenuItem) SetIcon(iconBytes []byte) {
 		return
 	}
 
-	h, err = wt.iconToBitmap(h)
+	h, err = iconToBitmap(h)
 	if err != nil {
 		log.Errorf("Unable to convert icon to bitmap: %v", err)
 		return
