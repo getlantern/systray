@@ -8,6 +8,11 @@ func SetTemplateIcon(templateIconBytes []byte, regularIconBytes []byte) {
 	SetIcon(regularIconBytes)
 }
 
+// SetRemovalAllowed sets whether a user can remove the systray icon or not.
+// This is only supported on macOS.
+func SetRemovalAllowed(allowed bool) {
+}
+
 // SetIcon sets the icon of a menu item. Only works on macOS and Windows.
 // iconBytes should be the content of .ico/.jpg/.png
 func (item *MenuItem) SetIcon(iconBytes []byte) {
