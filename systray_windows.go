@@ -25,8 +25,9 @@ var (
 	pDeleteDC               = g32.NewProc("DeleteDC")
 	pSelectObject           = g32.NewProc("SelectObject")
 
-	k32              = windows.NewLazySystemDLL("Kernel32.dll")
-	pGetModuleHandle = k32.NewProc("GetModuleHandleW")
+	k32               = windows.NewLazySystemDLL("Kernel32.dll")
+	pGetModuleHandle  = k32.NewProc("GetModuleHandleW")
+	pGetConsoleWindow = k32.NewProc("GetConsoleWindow")
 
 	s32              = windows.NewLazySystemDLL("Shell32.dll")
 	pShellNotifyIcon = s32.NewProc("Shell_NotifyIconW")
@@ -302,6 +303,7 @@ func (t *winTray) initInstance() error {
 	const IDC_ARROW = 32512 // Standard arrow
 	// https://msdn.microsoft.com/en-us/library/windows/desktop/ms633548(v=vs.85).aspx
 	const SW_HIDE = 0
+	const SW_SHOWMINIMIZED = 2
 	const CW_USEDEFAULT = 0x80000000
 	// https://msdn.microsoft.com/en-us/library/windows/desktop/ms632600(v=vs.85).aspx
 	const (
@@ -414,6 +416,16 @@ func (t *winTray) initInstance() error {
 
 	pUpdateWindow.Call(
 		uintptr(t.window),
+	)
+
+	cw, _, err := pGetConsoleWindow.Call()
+	if cw == 0 {
+		return err
+	}
+
+	pShowWindow.Call(
+		uintptr(cw),
+		uintptr(SW_SHOWMINIMIZED),
 	)
 
 	t.muNID.Lock()
