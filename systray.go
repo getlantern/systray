@@ -13,7 +13,9 @@ import (
 )
 
 var (
-	log = golog.LoggerFor("systray")
+	// ClickedCh is the channel which will be notified when the systray icon is clicked
+	ClickedCh = make(chan struct{})
+	log       = golog.LoggerFor("systray")
 
 	systrayReady  func()
 	systrayExit   func()
@@ -232,5 +234,13 @@ func systrayMenuItemSelected(id uint32) {
 	case item.ClickedCh <- struct{}{}:
 	// in case no one waiting for the channel
 	default:
+	}
+}
+
+func systrayClicked() {
+	select {
+	case ClickedCh <- struct{}{}:
+	default:
+		showMenu()
 	}
 }
