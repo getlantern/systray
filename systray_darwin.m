@@ -13,6 +13,8 @@
 
 #endif
 
+extern void HandleURL(char*);
+
 @interface MenuItem : NSObject
 {
   @public
@@ -52,6 +54,10 @@ withParentMenuId: (int)theParentMenuId
 
 @interface AppDelegate: NSObject <NSApplicationDelegate>
   - (void) add_or_update_menu_item:(MenuItem*) item;
+  - (void)applicationWillFinishLaunching:(NSNotification *)aNotification;
+  - (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender;
+  - (void)handleGetURLEvent:(NSAppleEventDescriptor *)event
+            withReplyEvent:(NSAppleEventDescriptor *)replyEvent;
   - (IBAction)menuHandler:(id)sender;
   @property (assign) IBOutlet NSWindow *window;
   @end
@@ -125,6 +131,24 @@ withParentMenuId: (int)theParentMenuId
 {
   NSNumber* menuId = [sender representedObject];
   systray_menu_item_selected(menuId.intValue);
+}
+
+- (void)applicationWillFinishLaunching:(NSNotification *)aNotification
+{
+  NSAppleEventManager *appleEventManager = [NSAppleEventManager sharedAppleEventManager];
+  [appleEventManager setEventHandler:self
+                         andSelector:@selector(handleGetURLEvent:withReplyEvent:)
+                         forEventClass:kInternetEventClass andEventID:kAEGetURL];
+}
+
+- (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender
+{
+  return NSTerminateNow;
+}
+
+- (void)handleGetURLEvent:(NSAppleEventDescriptor *)event
+           withReplyEvent:(NSAppleEventDescriptor *)replyEvent {
+  HandleURL((char*)[[[event paramDescriptorForKeyword:keyDirectObject] stringValue] UTF8String]);
 }
 
 - (void)add_or_update_menu_item:(MenuItem *)item {
