@@ -1,4 +1,6 @@
+//go:build !windows
 // +build !windows
+
 // go:build !windows
 
 package systray
@@ -98,4 +100,14 @@ func systray_on_exit() {
 //export systray_menu_item_selected
 func systray_menu_item_selected(cID C.int) {
 	systrayMenuItemSelected(uint32(cID))
+}
+
+// only support on windows
+func OnLButtomUp(callbake func()) {
+	// do nothing
+}
+
+// only support on windows
+func OnRButtomUp(callbake func()) {
+	// do nothing
 }

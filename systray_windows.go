@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 package systray
@@ -202,6 +203,9 @@ type winTray struct {
 
 	wmSystrayMessage,
 	wmTaskbarCreated uint32
+	// tray icon click event callback functions
+	onLButtomUpCallbacks []func()
+	onRButtomUpCallbacks []func()
 }
 
 // Loads an image from file and shows it in tray.
@@ -241,6 +245,16 @@ func (t *winTray) setTooltip(src string) error {
 	return t.nid.modify()
 }
 
+// Set the callback function for `WM_LBUTTONUP`
+func (t *winTray) onLButtonUp(callback func()) {
+	t.onLButtomUpCallbacks = append(t.onLButtomUpCallbacks, callback)
+}
+
+// Set the callback function for `WM_RBUTTONUP`
+func (t *winTray) onRButtonUp(callback func()) {
+	t.onRButtomUpCallbacks = append(t.onRButtomUpCallbacks, callback)
+}
+
 var wt winTray
 
 // WindowProc callback function that processes messages sent to a window.
@@ -277,8 +291,19 @@ func (t *winTray) wndProc(hWnd windows.Handle, message uint32, wParam, lParam ui
 		systrayExit()
 	case t.wmSystrayMessage:
 		switch lParam {
-		case WM_RBUTTONUP, WM_LBUTTONUP:
+		case WM_LBUTTONUP:
+			if len(t.onLButtomUpCallbacks) == 0 {
+				t.showMenu()
+			} else {
+				for _, callback := range t.onLButtomUpCallbacks {
+					callback()
+				}
+			}
+		case WM_RBUTTONUP:
 			t.showMenu()
+			for _, callback := range t.onRButtomUpCallbacks {
+				callback()
+			}
 		}
 	case t.wmTaskbarCreated: // on explorer.exe restarts
 		t.muNID.Lock()
@@ -946,4 +971,16 @@ func hideMenuItem(item *MenuItem) {
 
 func showMenuItem(item *MenuItem) {
 	addOrUpdateMenuItem(item)
+}
+
+// Set the left mouse click event callback for the tray icon, which can be called repeatedly.
+// The callback function is executed according to the first in, first out rule
+func OnLButtomUp(callbake func()) {
+	wt.onLButtonUp(callbake)
+}
+
+// Set the left mouse click event callback for the tray icon, which can be called repeatedly.
+// The callback function is executed according to the first in, first out rule
+func OnRButtomUp(callbake func()) {
+	wt.onRButtonUp(callbake)
 }
