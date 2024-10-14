@@ -6,7 +6,7 @@ extern void systray_menu_item_selected(int menu_id);
 void registerSystray(void);
 int nativeLoop(void);
 
-void setIcon(const char* iconBytes, int length, bool template);
+void setIcon(const char* iconBytes, int length, int iconHeight, bool template);
 void setMenuItemIcon(const char* iconBytes, int length, int menuId, bool template);
 void setTitle(char* title);
 void setTooltip(char* tooltip);

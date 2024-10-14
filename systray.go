@@ -234,3 +234,24 @@ func systrayMenuItemSelected(id uint32) {
 	default:
 	}
 }
+
+type iconOptions struct {
+	height   int
+	template bool
+}
+
+// WithHeight resizes the provided icon image to the provided
+// height, in pixels (macOS only). The default systray icon
+// height is 16px.
+func WithHeight(pixels int) func(*iconOptions) {
+	return func(opts *iconOptions) {
+		opts.height = pixels
+	}
+}
+
+// WithTemplate is an alternate method to calling SetTemplateIcon.
+func WithTemplate() func(*iconOptions) {
+	return func(opts *iconOptions) {
+		opts.template = true
+	}
+}

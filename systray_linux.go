@@ -4,8 +4,8 @@ package systray
 // to a regular icon on other platforms.
 // templateIconBytes and iconBytes should be the content of .ico for windows and
 // .ico/.jpg/.png for other platforms.
-func SetTemplateIcon(templateIconBytes []byte, regularIconBytes []byte) {
-	SetIcon(regularIconBytes)
+func SetTemplateIcon(templateIconBytes []byte, regularIconBytes []byte, opts ...func(*iconOptions)) {
+	SetIcon(regularIconBytes, opts...)
 }
 
 // SetRemovalAllowed sets whether a user can remove the systray icon or not.

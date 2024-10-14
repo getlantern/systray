@@ -16,9 +16,13 @@ import (
 // to a regular icon on other platforms.
 // templateIconBytes and regularIconBytes should be the content of .ico for windows and
 // .ico/.jpg/.png for other platforms.
-func SetTemplateIcon(templateIconBytes []byte, regularIconBytes []byte) {
+func SetTemplateIcon(templateIconBytes []byte, regularIconBytes []byte, opts ...func(*iconOptions)) {
+	var io iconOptions
+	for _, opt := range opts {
+		opt(&io)
+	}
 	cstr := (*C.char)(unsafe.Pointer(&templateIconBytes[0]))
-	C.setIcon(cstr, (C.int)(len(templateIconBytes)), true)
+	C.setIcon(cstr, (C.int)(len(templateIconBytes)), (C.int)(io.height), true)
 }
 
 // SetIcon sets the icon of a menu item. Only works on macOS and Windows.
