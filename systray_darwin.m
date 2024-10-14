@@ -187,7 +187,17 @@ NSMenuItem *find_menu_item(NSMenu *ourMenu, NSNumber *menuId) {
 
 - (void) add_separator:(NSNumber*) menuId
 {
-  [menu addItem: [NSMenuItem separatorItem]];
+  if ([menuId intValue] == 0) {
+    [menu addItem: [NSMenuItem separatorItem]];
+    return;
+  }
+
+  NSMenuItem* menuItem = find_menu_item(menu, menuId);
+  if (menuItem != NULL) {
+    if (menuItem.hasSubmenu) {
+      [menuItem.submenu addItem: [NSMenuItem separatorItem]];
+    }
+  }
 }
 
 - (void) hide_menu_item:(NSNumber*) menuId

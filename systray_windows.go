@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 package systray
@@ -10,6 +11,7 @@ import (
 	"path/filepath"
 	"sort"
 	"sync"
+	"sync/atomic"
 	"syscall"
 	"unsafe"
 
@@ -581,7 +583,7 @@ func (t *winTray) addOrUpdateMenuItem(menuItemId uint32, parentId uint32, title 
 	return nil
 }
 
-func (t *winTray) addSeparatorMenuItem(menuItemId, parentId uint32) error {
+func (t *winTray) addSeparatorMenuItem(menuID uint32) error {
 	// https://msdn.microsoft.com/en-us/library/windows/desktop/ms647578(v=vs.85).aspx
 	const (
 		MIIM_FTYPE = 0x00000100
@@ -593,15 +595,15 @@ func (t *winTray) addSeparatorMenuItem(menuItemId, parentId uint32) error {
 	mi := menuItemInfo{
 		Mask: MIIM_FTYPE | MIIM_ID | MIIM_STATE,
 		Type: MFT_SEPARATOR,
-		ID:   uint32(menuItemId),
+		ID:   atomic.AddUint32(&currentID, 1),
 	}
 
 	mi.Size = uint32(unsafe.Sizeof(mi))
 
-	t.addToVisibleItems(parentId, menuItemId)
-	position := t.getVisibleItemIndex(parentId, menuItemId)
+	t.addToVisibleItems(menuID, mi.ID)
+	position := t.getVisibleItemIndex(menuID, mi.ID)
 	t.muMenus.RLock()
-	menu := uintptr(t.menus[parentId])
+	menu := uintptr(t.menus[menuID])
 	t.muMenus.RUnlock()
 	res, _, err := pInsertMenuItem.Call(
 		menu,
@@ -928,8 +930,8 @@ func (item *MenuItem) SetTemplateIcon(templateIconBytes []byte, regularIconBytes
 	item.SetIcon(regularIconBytes)
 }
 
-func addSeparator(id uint32) {
-	err := wt.addSeparatorMenuItem(id, 0)
+func addSeparator(menuID uint32) {
+	err := wt.addSeparatorMenuItem(menuID)
 	if err != nil {
 		log.Errorf("Unable to addSeparator: %v", err)
 		return

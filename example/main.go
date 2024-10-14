@@ -48,6 +48,7 @@ func onReady() {
 		subMenuTop := systray.AddMenuItem("SubMenuTop", "SubMenu Test (top)")
 		subMenuMiddle := subMenuTop.AddSubMenuItem("SubMenuMiddle", "SubMenu Test (middle)")
 		subMenuBottom := subMenuMiddle.AddSubMenuItemCheckbox("SubMenuBottom - Toggle Panic!", "SubMenu Test (bottom) - Hide/Show Panic!", false)
+		subMenuMiddle.AddSeparator()
 		subMenuBottom2 := subMenuMiddle.AddSubMenuItem("SubMenuBottom - Panic!", "SubMenu Test (bottom)")
 
 		mUrl := systray.AddMenuItem("Open UI", "my home")

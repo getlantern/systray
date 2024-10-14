@@ -179,8 +179,16 @@ gboolean do_add_or_update_menu_item(gpointer data) {
 }
 
 gboolean do_add_separator(gpointer data) {
+	MenuItemInfo *mii = (MenuItemInfo*)data;
+	GtkMenuItem* menuItem = find_menu_by_id(mii->menu_id);
+	GtkWidget* menu = gtk_menu_item_get_submenu(menuItem);
+
+	if(menu == NULL) {
+		menu = global_tray_menu;
+	}
+
 	GtkWidget *separator = gtk_separator_menu_item_new();
-	gtk_menu_shell_append(GTK_MENU_SHELL(global_tray_menu), separator);
+	gtk_menu_shell_append(GTK_MENU_SHELL(menu), separator);
 	gtk_widget_show(separator);
 	return FALSE;
 }
