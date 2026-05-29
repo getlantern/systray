@@ -262,6 +262,18 @@ func (t *winTray) wndProc(hWnd windows.Handle, message uint32, wParam, lParam ui
 			systrayMenuItemSelected(uint32(wParam))
 		}
 	case WM_CLOSE:
+		// Explicitly remove the tray icon from the Shell before destroying the
+		// window. Under the lock, we pull a local reference and clear the pointer
+		// to safely invoke the Win32 deletion syscall outside the mutex context.
+		t.muNID.Lock()
+		nidToClose := t.nid
+		t.nid = nil
+		t.muNID.Unlock()
+
+		if nidToClose != nil {
+			nidToClose.delete()
+		}
+
 		pDestroyWindow.Call(uintptr(t.window))
 		t.wcex.unregister()
 	case WM_DESTROY:
@@ -270,10 +282,13 @@ func (t *winTray) wndProc(hWnd windows.Handle, message uint32, wParam, lParam ui
 		fallthrough
 	case WM_ENDSESSION:
 		t.muNID.Lock()
-		if t.nid != nil {
-			t.nid.delete()
-		}
+		nidToEnd := t.nid
+		t.nid = nil
 		t.muNID.Unlock()
+
+		if nidToEnd != nil {
+			nidToEnd.delete()
+		}
 		systrayExit()
 	case t.wmSystrayMessage:
 		switch lParam {
